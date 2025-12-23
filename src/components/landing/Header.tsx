@@ -1,157 +1,58 @@
 import { useState } from "react";
-import { Menu, X, ChevronDown, Settings } from "lucide-react";
+import { Menu, X, ChevronDown, Sparkles, Zap } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
 
 const Header = () => {
-  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-
-  const scrollToSection = (sectionId: string) => {
-    const element = document.getElementById(sectionId);
-    if (element) {
-      element.scrollIntoView({ behavior: "smooth" });
-    }
-    setMobileMenuOpen(false);
-  };
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
 
   return (
-    <header className="sticky top-0 z-50 w-full border-b border-border/40 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
-      <div className="container flex h-16 items-center justify-between">
-        {/* Logo */}
-        <div className="flex items-center gap-2">
-          <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary">
-            <span className="text-lg font-bold text-primary-foreground">W</span>
+    <header className="fixed top-0 left-0 right-0 z-50 glass border-b border-border/50">
+      <div className="container mx-auto px-4">
+        <div className="flex items-center justify-between h-16 md:h-20">
+          <a href="/" className="flex items-center gap-2 group">
+            <div className="w-10 h-10 md:w-12 md:h-12 rounded-xl bg-gradient-to-br from-primary via-accent to-secondary flex items-center justify-center shadow-lg group-hover:scale-105 transition-transform">
+              <Zap className="w-6 h-6 md:w-7 md:h-7 text-foreground" />
+            </div>
+            <div className="flex flex-col">
+              <span className="font-display text-xl md:text-2xl tracking-wide text-foreground">ElixrLabs</span>
+              <span className="text-[10px] md:text-xs text-muted-foreground -mt-1 hidden sm:block">Level Up Your College Life</span>
+            </div>
+          </a>
+
+          <nav className="hidden lg:flex items-center gap-1">
+            {["Resources", "AI Tutor", "Practice", "Leaderboard"].map((item) => (
+              <a key={item} href={`#${item.toLowerCase().replace(" ", "-")}`} className="px-4 py-2 text-sm font-semibold text-muted-foreground hover:text-foreground transition-colors rounded-lg hover:bg-muted/50">
+                {item}
+              </a>
+            ))}
+          </nav>
+
+          <div className="flex items-center gap-3">
+            <a href="#" className="hidden md:block text-sm font-semibold text-muted-foreground hover:text-foreground transition-colors">Log in</a>
+            <Button className="hidden sm:flex bg-gradient-to-b from-secondary to-secondary/80 text-secondary-foreground font-bold hover:from-secondary/90 hover:to-secondary/70 shadow-lg border-2 border-secondary/20">
+              <Sparkles className="w-4 h-4 mr-2" />Start Free
+            </Button>
+            <button className="lg:hidden p-2 rounded-lg hover:bg-muted transition-colors" onClick={() => setIsMenuOpen(!isMenuOpen)}>
+              {isMenuOpen ? <X className="w-6 h-6 text-foreground" /> : <Menu className="w-6 h-6 text-foreground" />}
+            </button>
           </div>
         </div>
-
-        {/* Desktop Navigation */}
-        <nav className="hidden md:flex items-center gap-6">
-          <button
-            onClick={() => scrollToSection("features")}
-            className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors"
-          >
-            University
-          </button>
-          
-          <DropdownMenu>
-            <DropdownMenuTrigger className="flex items-center gap-1 text-sm font-medium text-muted-foreground hover:text-foreground transition-colors">
-              MCAT <ChevronDown className="h-4 w-4" />
-            </DropdownMenuTrigger>
-            <DropdownMenuContent>
-              <DropdownMenuItem onClick={() => scrollToSection("features")}>
-                MCAT Overview
-              </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => scrollToSection("how-it-works")}>
-                Study Plans
-              </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => scrollToSection("testimonials")}>
-                Success Stories
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
-
-          <DropdownMenu>
-            <DropdownMenuTrigger className="flex items-center gap-1 text-sm font-medium text-muted-foreground hover:text-foreground transition-colors">
-              LSAT <ChevronDown className="h-4 w-4" />
-            </DropdownMenuTrigger>
-            <DropdownMenuContent>
-              <DropdownMenuItem onClick={() => scrollToSection("features")}>
-                LSAT Overview
-              </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => scrollToSection("how-it-works")}>
-                Study Plans
-              </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => scrollToSection("testimonials")}>
-                Success Stories
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
-
-          <button
-            onClick={() => scrollToSection("features")}
-            className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors"
-          >
-            DAT
-          </button>
-
-          <button
-            onClick={() => scrollToSection("features")}
-            className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors"
-          >
-            High School
-          </button>
-        </nav>
-
-        {/* Desktop Right Side */}
-        <div className="hidden md:flex items-center gap-4">
-          <button className="text-muted-foreground hover:text-foreground transition-colors">
-            <Settings className="h-5 w-5" />
-          </button>
-          <button className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors">
-            Log in
-          </button>
-          <Button className="bg-primary hover:bg-primary/90 text-primary-foreground rounded-full px-6">
-            Get Started for Free
-          </Button>
-        </div>
-
-        {/* Mobile Menu Button */}
-        <button
-          className="md:hidden text-foreground"
-          onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-        >
-          {mobileMenuOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
-        </button>
       </div>
 
-      {/* Mobile Menu */}
-      {mobileMenuOpen && (
-        <div className="md:hidden border-t border-border bg-background">
-          <nav className="container py-4 flex flex-col gap-4">
-            <button
-              onClick={() => scrollToSection("features")}
-              className="text-left text-sm font-medium text-muted-foreground hover:text-foreground transition-colors"
-            >
-              University
-            </button>
-            <button
-              onClick={() => scrollToSection("features")}
-              className="text-left text-sm font-medium text-muted-foreground hover:text-foreground transition-colors"
-            >
-              MCAT
-            </button>
-            <button
-              onClick={() => scrollToSection("features")}
-              className="text-left text-sm font-medium text-muted-foreground hover:text-foreground transition-colors"
-            >
-              LSAT
-            </button>
-            <button
-              onClick={() => scrollToSection("features")}
-              className="text-left text-sm font-medium text-muted-foreground hover:text-foreground transition-colors"
-            >
-              DAT
-            </button>
-            <button
-              onClick={() => scrollToSection("features")}
-              className="text-left text-sm font-medium text-muted-foreground hover:text-foreground transition-colors"
-            >
-              High School
-            </button>
-            <div className="pt-4 border-t border-border flex flex-col gap-3">
-              <button className="text-left text-sm font-medium text-muted-foreground hover:text-foreground transition-colors">
-                Log in
-              </button>
-              <Button className="bg-primary hover:bg-primary/90 text-primary-foreground rounded-full w-full">
-                Get Started for Free
+      {isMenuOpen && (
+        <div className="lg:hidden glass border-t border-border/50 animate-slide-up">
+          <div className="container mx-auto px-4 py-4">
+            <nav className="flex flex-col gap-2">
+              {["Resources", "AI Tutor", "Practice", "Leaderboard"].map((item) => (
+                <a key={item} href="#" className="px-4 py-3 rounded-xl text-foreground font-semibold hover:bg-muted transition-colors" onClick={() => setIsMenuOpen(false)}>{item}</a>
+              ))}
+              <hr className="border-border my-2" />
+              <a href="#" className="px-4 py-3 rounded-xl text-muted-foreground font-semibold hover:bg-muted transition-colors">Log in</a>
+              <Button className="mt-2 bg-gradient-to-b from-secondary to-secondary/80 text-secondary-foreground font-bold">
+                <Sparkles className="w-4 h-4 mr-2" />Start Free
               </Button>
-            </div>
-          </nav>
+            </nav>
+          </div>
         </div>
       )}
     </header>
