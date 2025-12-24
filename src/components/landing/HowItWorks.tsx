@@ -1,42 +1,61 @@
-import { UserPlus, Target, Trophy, Zap } from "lucide-react";
+import { UserPlus, BookOpen, Trophy } from "lucide-react";
 
 const steps = [
-  { step: 1, icon: UserPlus, title: "Create Your Character", description: "Sign up with your college email and customize your scholar profile.", color: "from-primary to-primary/60", emoji: "🧙‍♂️" },
-  { step: 2, icon: Target, title: "Set Your Quest", description: "Tell us your goals - upcoming exams, weak subjects, or skills to master.", color: "from-accent to-accent/60", emoji: "🎯" },
-  { step: 3, icon: Zap, title: "Train & Battle", description: "Access resources, practice with PYQs, challenge friends, and earn XP.", color: "from-secondary to-secondary/60", emoji: "⚡" },
-  { step: 4, icon: Trophy, title: "Claim Victory", description: "Dominate exams, climb leaderboards, and unlock legendary achievements.", color: "from-yellow-500 to-orange-500", emoji: "👑" },
+  {
+    number: "01",
+    title: "Create Your Account",
+    description: "Sign up for free and get instant access to our learning platform.",
+    icon: UserPlus,
+  },
+  {
+    number: "02",
+    title: "Choose Your Course",
+    description: "Pick from our wide range of test prep courses tailored to your goals.",
+    icon: BookOpen,
+  },
+  {
+    number: "03",
+    title: "Achieve Your Goals",
+    description: "Study with expert guidance and track your progress to success.",
+    icon: Trophy,
+  },
 ];
 
-const HowItWorks = () => (
-  <section id="how-it-works" className="py-20 md:py-32 relative overflow-hidden bg-muted/30">
-    <div className="absolute bottom-0 right-0 w-96 h-96 bg-accent/10 rounded-full blur-3xl" />
-    <div className="container mx-auto px-4 relative z-10">
-      <div className="text-center max-w-3xl mx-auto mb-16">
-        <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-accent/20 border border-accent/30 mb-6">
-          <span className="text-xl">🗺️</span><span className="text-sm font-bold text-foreground">Your Journey</span>
+const HowItWorks = () => {
+  return (
+    <section id="how-it-works" className="py-16 md:py-24 bg-muted/30">
+      <div className="container">
+        <div className="text-center mb-12">
+          <h2 className="text-3xl md:text-4xl font-display font-semibold text-foreground mb-4">
+            How It Works
+          </h2>
+          <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
+            Getting started is simple. Follow these three easy steps to begin your journey to success.
+          </p>
         </div>
-        <h2 className="font-display text-4xl md:text-6xl text-foreground mb-4">Begin Your Quest</h2>
-        <p className="text-lg text-muted-foreground">From rookie scholar to legendary academic warrior in 4 simple steps</p>
-      </div>
-      <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-8">
-        {steps.map((step) => (
-          <div key={step.step} className="relative group">
-            <div className="absolute -top-4 left-1/2 -translate-x-1/2 z-10">
-              <div className={`w-12 h-12 rounded-full bg-gradient-to-br ${step.color} flex items-center justify-center font-display text-xl text-foreground shadow-lg border-4 border-background`}>{step.step}</div>
-            </div>
-            <div className="game-card p-6 pt-10 text-center hover-lift h-full">
-              <div className="text-5xl mb-4 group-hover:scale-125 transition-transform">{step.emoji}</div>
-              <div className={`w-16 h-16 mx-auto rounded-2xl bg-gradient-to-br ${step.color} flex items-center justify-center mb-4 shadow-lg`}>
-                <step.icon className="w-8 h-8 text-foreground" />
+
+        <div className="grid md:grid-cols-3 gap-8">
+          {steps.map((step, index) => (
+            <div key={index} className="relative">
+              {/* Connector Line */}
+              {index < steps.length - 1 && (
+                <div className="hidden md:block absolute top-16 left-1/2 w-full h-0.5 bg-border" />
+              )}
+              
+              <div className="relative bg-card rounded-2xl p-8 text-center shadow-sm hover:shadow-md transition-shadow">
+                <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-primary text-primary-foreground mb-6">
+                  <step.icon className="h-7 w-7" />
+                </div>
+                <span className="block text-sm font-bold text-primary mb-2">{step.number}</span>
+                <h3 className="text-xl font-semibold text-foreground mb-3">{step.title}</h3>
+                <p className="text-muted-foreground">{step.description}</p>
               </div>
-              <h3 className="font-display text-xl text-foreground mb-2">{step.title}</h3>
-              <p className="text-sm text-muted-foreground">{step.description}</p>
             </div>
-          </div>
-        ))}
+          ))}
+        </div>
       </div>
-    </div>
-  </section>
-);
+    </section>
+  );
+};
 
 export default HowItWorks;

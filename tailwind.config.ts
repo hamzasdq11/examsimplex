@@ -14,8 +14,8 @@ export default {
     },
     extend: {
       fontFamily: {
-        sans: ['Nunito', 'sans-serif'],
-        display: ['Bangers', 'cursive'],
+        sans: ['Inter', 'sans-serif'],
+        display: ['Playfair Display', 'serif'],
       },
       colors: {
         border: "hsl(var(--border))",
@@ -50,25 +50,12 @@ export default {
         card: {
           DEFAULT: "hsl(var(--card))",
           foreground: "hsl(var(--card-foreground))",
-          purple: "hsl(var(--card-purple))",
+          cyan: "hsl(var(--card-cyan))",
+          lavender: "hsl(var(--card-lavender))",
           blue: "hsl(var(--card-blue))",
           pink: "hsl(var(--card-pink))",
-          green: "hsl(var(--card-green))",
-          orange: "hsl(var(--card-orange))",
-          cyan: "hsl(var(--card-cyan))",
-        },
-        xp: {
-          DEFAULT: "hsl(var(--xp-bar))",
-          bg: "hsl(var(--xp-bar-bg))",
-        },
-        level: {
-          gold: "hsl(var(--level-gold))",
-        },
-        badge: {
-          bronze: "hsl(var(--badge-bronze))",
-          silver: "hsl(var(--badge-silver))",
-          gold: "hsl(var(--badge-gold))",
-          diamond: "hsl(var(--badge-diamond))",
+          purple: "hsl(var(--card-purple))",
+          mint: "hsl(var(--card-mint))",
         },
         sidebar: {
           DEFAULT: "hsl(var(--sidebar-background))",
@@ -88,56 +75,30 @@ export default {
       },
       keyframes: {
         "accordion-down": {
-          from: { height: "0" },
-          to: { height: "var(--radix-accordion-content-height)" },
+          from: {
+            height: "0",
+          },
+          to: {
+            height: "var(--radix-accordion-content-height)",
+          },
         },
         "accordion-up": {
-          from: { height: "var(--radix-accordion-content-height)" },
-          to: { height: "0" },
+          from: {
+            height: "var(--radix-accordion-content-height)",
+          },
+          to: {
+            height: "0",
+          },
         },
         "float": {
           "0%, 100%": { transform: "translateY(0)" },
           "50%": { transform: "translateY(-10px)" },
-        },
-        "bounce-slow": {
-          "0%, 100%": { transform: "translateY(0)" },
-          "50%": { transform: "translateY(-20px)" },
-        },
-        "spin-slow": {
-          from: { transform: "rotate(0deg)" },
-          to: { transform: "rotate(360deg)" },
-        },
-        "pulse-glow": {
-          "0%, 100%": { opacity: "1", boxShadow: "0 0 20px currentColor" },
-          "50%": { opacity: "0.8", boxShadow: "0 0 40px currentColor" },
-        },
-        "scale-in": {
-          from: { transform: "scale(0.9)", opacity: "0" },
-          to: { transform: "scale(1)", opacity: "1" },
-        },
-        "slide-up": {
-          from: { transform: "translateY(20px)", opacity: "0" },
-          to: { transform: "translateY(0)", opacity: "1" },
-        },
-        "slide-in-right": {
-          from: { transform: "translateX(100%)" },
-          to: { transform: "translateX(0)" },
         },
       },
       animation: {
         "accordion-down": "accordion-down 0.2s ease-out",
         "accordion-up": "accordion-up 0.2s ease-out",
         "float": "float 3s ease-in-out infinite",
-        "bounce-slow": "bounce-slow 4s ease-in-out infinite",
-        "spin-slow": "spin-slow 10s linear infinite",
-        "pulse-glow": "pulse-glow 2s ease-in-out infinite",
-        "scale-in": "scale-in 0.3s ease-out",
-        "slide-up": "slide-up 0.5s ease-out",
-        "slide-in-right": "slide-in-right 0.3s ease-out",
-      },
-      backgroundImage: {
-        'gradient-radial': 'radial-gradient(var(--tw-gradient-stops))',
-        'hero-pattern': 'url("data:image/svg+xml,%3Csvg width=\'60\' height=\'60\' viewBox=\'0 0 60 60\' xmlns=\'http://www.w3.org/2000/svg\'%3E%3Cg fill=\'none\' fill-rule=\'evenodd\'%3E%3Cg fill=\'%235C2D91\' fill-opacity=\'0.05\'%3E%3Cpath d=\'M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z\'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E")',
       },
     },
   },

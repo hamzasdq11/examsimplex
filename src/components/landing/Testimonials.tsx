@@ -1,50 +1,75 @@
-import { Star, Quote } from "lucide-react";
+import { Star } from "lucide-react";
 
 const testimonials = [
-  { name: "Arjun Sharma", role: "B.Tech CSE, IIT Delhi", level: 24, badge: "🏆 Grand Scholar", content: "ElixrLabs completely changed how I study. The gamification keeps me motivated, and the AI tutor explains concepts better than my professors!", avatar: "AS", gradient: "from-primary to-accent" },
-  { name: "Priya Patel", role: "MBA, IIM Ahmedabad", level: 18, badge: "⚡ Quiz Champion", content: "The PYQ system is incredible. I went from struggling with case studies to consistently acing them. The leaderboard battles are so fun!", avatar: "PP", gradient: "from-accent to-secondary" },
-  { name: "Rahul Verma", role: "B.Sc Physics, DU", level: 31, badge: "🔥 Streak Master", content: "My 45-day streak speaks for itself. The XP system is addictive in the best way. I've never been this consistent with my studies!", avatar: "RV", gradient: "from-secondary to-primary" },
+  {
+    name: "Sarah Chen",
+    role: "MCAT Student",
+    score: "519",
+    image: "https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=150&h=150&fit=crop&crop=face",
+    quote: "The structured approach and expert instructors helped me exceed my target score. I couldn't have done it without this platform!",
+  },
+  {
+    name: "Michael Rodriguez",
+    role: "LSAT Student",
+    score: "172",
+    image: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150&h=150&fit=crop&crop=face",
+    quote: "The practice questions were incredibly similar to the actual test. The score guarantee gave me confidence throughout my prep.",
+  },
+  {
+    name: "Emily Thompson",
+    role: "DAT Student",
+    score: "24",
+    image: "https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=150&h=150&fit=crop&crop=face",
+    quote: "I improved my score by 5 points in just 8 weeks. The video lessons made complex topics easy to understand.",
+  },
 ];
 
-const Testimonials = () => (
-  <section id="testimonials" className="py-20 md:py-32 relative overflow-hidden">
-    <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[800px] bg-primary/5 rounded-full blur-3xl" />
-    <div className="container mx-auto px-4 relative z-10">
-      <div className="text-center max-w-3xl mx-auto mb-16">
-        <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-secondary/20 border border-secondary/30 mb-6">
-          <span className="text-xl">⭐</span><span className="text-sm font-bold text-foreground">Hall of Fame</span>
+const Testimonials = () => {
+  return (
+    <section id="testimonials" className="py-16 md:py-24 bg-background">
+      <div className="container">
+        <div className="text-center mb-12">
+          <h2 className="text-3xl md:text-4xl font-display font-semibold text-foreground mb-4">
+            Student Success Stories
+          </h2>
+          <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
+            See how our students achieved their dream scores with our comprehensive prep programs.
+          </p>
         </div>
-        <h2 className="font-display text-4xl md:text-6xl text-foreground mb-4">Legendary Scholars</h2>
-        <p className="text-lg text-muted-foreground">Join thousands of students who leveled up their academic game</p>
-      </div>
-      <div className="grid md:grid-cols-3 gap-6 max-w-6xl mx-auto">
-        {testimonials.map((t) => (
-          <div key={t.name} className="game-card p-6 hover-lift">
-            <Quote className="w-8 h-8 text-primary/50 mb-4" />
-            <p className="text-foreground mb-6 leading-relaxed">"{t.content}"</p>
-            <div className="flex gap-1 mb-6">{[1,2,3,4,5].map((s) => <Star key={s} className="w-5 h-5 fill-secondary text-secondary" />)}</div>
-            <div className="flex items-center gap-4 pt-4 border-t border-border/50">
-              <div className={`w-14 h-14 rounded-2xl bg-gradient-to-br ${t.gradient} flex items-center justify-center font-display text-xl text-foreground shadow-lg`}>{t.avatar}</div>
-              <div className="flex-1">
-                <div className="flex items-center gap-2"><p className="font-bold text-foreground">{t.name}</p><div className="level-badge w-7 h-7 text-xs">{t.level}</div></div>
-                <p className="text-sm text-muted-foreground">{t.role}</p>
-                <p className="text-xs font-semibold text-primary mt-1">{t.badge}</p>
+
+        <div className="grid md:grid-cols-3 gap-8">
+          {testimonials.map((testimonial, index) => (
+            <div
+              key={index}
+              className="bg-card rounded-2xl p-8 shadow-sm hover:shadow-md transition-shadow border border-border/50"
+            >
+              <div className="flex items-center gap-1 mb-4">
+                {[...Array(5)].map((_, i) => (
+                  <Star key={i} className="h-4 w-4 fill-yellow-400 text-yellow-400" />
+                ))}
+              </div>
+              
+              <p className="text-foreground mb-6 leading-relaxed">"{testimonial.quote}"</p>
+              
+              <div className="flex items-center gap-4">
+                <img
+                  src={testimonial.image}
+                  alt={testimonial.name}
+                  className="w-12 h-12 rounded-full object-cover"
+                />
+                <div>
+                  <h4 className="font-semibold text-foreground">{testimonial.name}</h4>
+                  <p className="text-sm text-muted-foreground">
+                    {testimonial.role} • Score: <span className="font-semibold text-primary">{testimonial.score}</span>
+                  </p>
+                </div>
               </div>
             </div>
-          </div>
-        ))}
-      </div>
-      <div className="mt-16 max-w-4xl mx-auto">
-        <div className="game-card p-6 md:p-8">
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-6 md:gap-8 text-center">
-            {[{ value: "50K+", label: "Active Scholars", emoji: "👥" }, { value: "100+", label: "Colleges", emoji: "🏛️" }, { value: "1M+", label: "Questions Solved", emoji: "✅" }, { value: "4.9", label: "App Rating", emoji: "⭐" }].map((stat) => (
-              <div key={stat.label}><span className="text-3xl mb-2 block">{stat.emoji}</span><p className="font-display text-3xl md:text-4xl text-foreground">{stat.value}</p><p className="text-sm text-muted-foreground">{stat.label}</p></div>
-            ))}
-          </div>
+          ))}
         </div>
       </div>
-    </div>
-  </section>
-);
+    </section>
+  );
+};
 
 export default Testimonials;
