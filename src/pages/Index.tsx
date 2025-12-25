@@ -3,6 +3,7 @@ import Hero from "@/components/landing/Hero";
 import Features from "@/components/landing/Features";
 import StatsBanner from "@/components/landing/StatsBanner";
 import SubjectCategories from "@/components/landing/SubjectCategories";
+import Advantages from "@/components/landing/Advantages";
 import HowItWorks from "@/components/landing/HowItWorks";
 import Testimonials from "@/components/landing/Testimonials";
 import FAQ from "@/components/landing/FAQ";
@@ -17,6 +18,7 @@ const Index = () => {
         <Features />
         <StatsBanner />
         <SubjectCategories />
+        <Advantages />
         <HowItWorks />
         <Testimonials />
         <FAQ />
