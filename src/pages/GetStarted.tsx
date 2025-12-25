@@ -221,23 +221,37 @@ const GetStarted = () => {
               Most popular universities and schools
             </h2>
             <div className="grid md:grid-cols-2 gap-3">
-              {universities.map((university) => (
-                <button
-                  key={university}
-                  className="flex items-center gap-3 p-3 rounded-lg hover:bg-muted transition-colors text-left"
-                >
-                  <div className="w-8 h-8 rounded bg-red-100 flex items-center justify-center">
-                    <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
-                      <path d="M8 2L2 5V7H14V5L8 2Z" fill="#E53935" />
-                      <rect x="3" y="8" width="2" height="5" fill="#E53935" />
-                      <rect x="7" y="8" width="2" height="5" fill="#E53935" />
-                      <rect x="11" y="8" width="2" height="5" fill="#E53935" />
-                      <rect x="1" y="13" width="14" height="1" fill="#E53935" />
-                    </svg>
-                  </div>
-                  <span className="text-primary hover:underline font-medium">{university}</span>
-                </button>
-              ))}
+              {universities
+                .filter((university) => 
+                  university.toLowerCase().includes(searchQuery.toLowerCase())
+                )
+                .map((university) => {
+                  // Generate URL-friendly slug from university name
+                  const slug = university
+                    .split(",")[0] // Take only the name part before comma
+                    .toLowerCase()
+                    .replace(/[^a-z0-9\s]/g, "")
+                    .replace(/\s+/g, "-");
+                  
+                  return (
+                    <Link
+                      key={university}
+                      to={`/university/${slug}`}
+                      className="flex items-center gap-3 p-3 rounded-lg hover:bg-muted transition-colors text-left"
+                    >
+                      <div className="w-8 h-8 rounded bg-red-100 flex items-center justify-center">
+                        <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+                          <path d="M8 2L2 5V7H14V5L8 2Z" fill="#E53935" />
+                          <rect x="3" y="8" width="2" height="5" fill="#E53935" />
+                          <rect x="7" y="8" width="2" height="5" fill="#E53935" />
+                          <rect x="11" y="8" width="2" height="5" fill="#E53935" />
+                          <rect x="1" y="13" width="14" height="1" fill="#E53935" />
+                        </svg>
+                      </div>
+                      <span className="text-primary hover:underline font-medium">{university}</span>
+                    </Link>
+                  );
+                })}
             </div>
           </div>
         </div>
