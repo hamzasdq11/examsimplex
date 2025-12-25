@@ -4,7 +4,7 @@ import Features from "@/components/landing/Features";
 import StatsBanner from "@/components/landing/StatsBanner";
 import SubjectCategories from "@/components/landing/SubjectCategories";
 import Advantages from "@/components/landing/Advantages";
-import HowItWorks from "@/components/landing/HowItWorks";
+import CourseFeatures from "@/components/landing/CourseFeatures";
 import Testimonials from "@/components/landing/Testimonials";
 import FAQ from "@/components/landing/FAQ";
 import Footer from "@/components/landing/Footer";
@@ -19,7 +19,7 @@ const Index = () => {
         <StatsBanner />
         <SubjectCategories />
         <Advantages />
-        <HowItWorks />
+        <CourseFeatures />
         <Testimonials />
         <FAQ />
       </main>
