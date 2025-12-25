@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { Link } from "react-router-dom";
 import { Menu, X, ChevronDown, Settings } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
@@ -95,8 +96,8 @@ const Header = () => {
           <button className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors">
             Log in
           </button>
-          <Button className="bg-primary hover:bg-primary/90 text-primary-foreground rounded-full px-6">
-            Get Started for Free
+          <Button asChild className="bg-primary hover:bg-primary/90 text-primary-foreground rounded-full px-6">
+            <Link to="/get-started">Get Started for Free</Link>
           </Button>
         </div>
 
@@ -147,8 +148,8 @@ const Header = () => {
               <button className="text-left text-sm font-medium text-muted-foreground hover:text-foreground transition-colors">
                 Log in
               </button>
-              <Button className="bg-primary hover:bg-primary/90 text-primary-foreground rounded-full w-full">
-                Get Started for Free
+              <Button asChild className="bg-primary hover:bg-primary/90 text-primary-foreground rounded-full w-full">
+                <Link to="/get-started">Get Started for Free</Link>
               </Button>
             </div>
           </nav>
