@@ -42,6 +42,7 @@ import {
 } from "@/components/ui/select";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
+import AIToolDialog from "@/components/AIToolDialog";
 
 // Mock data for universities
 const universityData: Record<string, {
@@ -275,36 +276,17 @@ const pastPapers: DegreePapers = {
   }
 };
 
-// AI Tools data
-const aiTools = [
-  {
-    title: "Ask AI",
-    subtitle: "University Context",
-    description: "Ask questions aligned with your university syllabus and exam patterns",
-    icon: MessageSquare,
-    color: "bg-blue-50 text-blue-600"
-  },
-  {
-    title: "AI Notes",
-    subtitle: "Smart Summaries",
-    description: "Generate structured exam-ready notes for your subjects",
-    icon: Sparkles,
-    color: "bg-purple-50 text-purple-600"
-  },
-  {
-    title: "AI Quiz",
-    subtitle: "Practice Mode",
-    description: "Practice exam-style MCQs based on university trends",
-    icon: ClipboardList,
-    color: "bg-green-50 text-green-600"
-  },
-];
 
 const UniversityPage = () => {
   const { universityId } = useParams<{ universityId: string }>();
   const [expandedSemester, setExpandedSemester] = useState<string | null>("B.Com-Semester 1");
   const [selectedDegree, setSelectedDegree] = useState<string>("all");
   const [selectedSemester, setSelectedSemester] = useState<string>("all");
+  
+  // AI Tool dialog states
+  const [askAIOpen, setAskAIOpen] = useState(false);
+  const [notesAIOpen, setNotesAIOpen] = useState(false);
+  const [quizAIOpen, setQuizAIOpen] = useState(false);
 
   // Get university data or use default
   const university = universityData[universityId || ""] || {
@@ -764,23 +746,56 @@ const UniversityPage = () => {
                 </h2>
 
                 <div className="grid md:grid-cols-3 gap-6">
-                  {aiTools.map((tool, idx) => (
-                    <Card key={idx} className="hover:shadow-md transition-shadow">
-                      <CardHeader>
-                        <div className={`w-12 h-12 rounded-lg ${tool.color} flex items-center justify-center mb-3`}>
-                          <tool.icon className="h-6 w-6" />
-                        </div>
-                        <CardTitle className="text-lg">{tool.title}</CardTitle>
-                        <p className="text-xs text-muted-foreground uppercase tracking-wide">{tool.subtitle}</p>
-                      </CardHeader>
-                      <CardContent>
-                        <p className="text-sm text-muted-foreground mb-4">{tool.description}</p>
-                        <Button className="w-full">
-                          Open Tool <ExternalLink className="h-4 w-4 ml-2" />
-                        </Button>
-                      </CardContent>
-                    </Card>
-                  ))}
+                  {/* Ask AI Card */}
+                  <Card className="hover:shadow-md transition-shadow">
+                    <CardHeader>
+                      <div className="w-12 h-12 rounded-lg bg-blue-50 text-blue-600 flex items-center justify-center mb-3">
+                        <MessageSquare className="h-6 w-6" />
+                      </div>
+                      <CardTitle className="text-lg">Ask AI</CardTitle>
+                      <p className="text-xs text-muted-foreground uppercase tracking-wide">University Context</p>
+                    </CardHeader>
+                    <CardContent>
+                      <p className="text-sm text-muted-foreground mb-4">Ask questions aligned with your university syllabus and exam patterns</p>
+                      <Button className="w-full" onClick={() => setAskAIOpen(true)}>
+                        Open Tool <ExternalLink className="h-4 w-4 ml-2" />
+                      </Button>
+                    </CardContent>
+                  </Card>
+
+                  {/* AI Notes Card */}
+                  <Card className="hover:shadow-md transition-shadow">
+                    <CardHeader>
+                      <div className="w-12 h-12 rounded-lg bg-purple-50 text-purple-600 flex items-center justify-center mb-3">
+                        <Sparkles className="h-6 w-6" />
+                      </div>
+                      <CardTitle className="text-lg">AI Notes</CardTitle>
+                      <p className="text-xs text-muted-foreground uppercase tracking-wide">Smart Summaries</p>
+                    </CardHeader>
+                    <CardContent>
+                      <p className="text-sm text-muted-foreground mb-4">Generate structured exam-ready notes for your subjects</p>
+                      <Button className="w-full" onClick={() => setNotesAIOpen(true)}>
+                        Open Tool <ExternalLink className="h-4 w-4 ml-2" />
+                      </Button>
+                    </CardContent>
+                  </Card>
+
+                  {/* AI Quiz Card */}
+                  <Card className="hover:shadow-md transition-shadow">
+                    <CardHeader>
+                      <div className="w-12 h-12 rounded-lg bg-green-50 text-green-600 flex items-center justify-center mb-3">
+                        <ClipboardList className="h-6 w-6" />
+                      </div>
+                      <CardTitle className="text-lg">AI Quiz</CardTitle>
+                      <p className="text-xs text-muted-foreground uppercase tracking-wide">Practice Mode</p>
+                    </CardHeader>
+                    <CardContent>
+                      <p className="text-sm text-muted-foreground mb-4">Practice exam-style MCQs based on university trends</p>
+                      <Button className="w-full" onClick={() => setQuizAIOpen(true)}>
+                        Open Tool <ExternalLink className="h-4 w-4 ml-2" />
+                      </Button>
+                    </CardContent>
+                  </Card>
                 </div>
               </TabsContent>
             </Tabs>
@@ -882,6 +897,35 @@ const UniversityPage = () => {
           </div>
         </aside>
       </main>
+
+      {/* AI Tool Dialogs */}
+      <AIToolDialog
+        open={askAIOpen}
+        onOpenChange={setAskAIOpen}
+        type="ask"
+        title="Ask AI"
+        subtitle="Get answers aligned with your university syllabus"
+        placeholder="Ask any question about your course material, concepts, or exam topics..."
+        universityName={university.name}
+      />
+      <AIToolDialog
+        open={notesAIOpen}
+        onOpenChange={setNotesAIOpen}
+        type="notes"
+        title="AI Notes Generator"
+        subtitle="Generate structured, exam-ready notes"
+        placeholder="Enter a topic to generate comprehensive study notes (e.g., 'Supply and Demand in Microeconomics')..."
+        universityName={university.name}
+      />
+      <AIToolDialog
+        open={quizAIOpen}
+        onOpenChange={setQuizAIOpen}
+        type="quiz"
+        title="AI Quiz Generator"
+        subtitle="Practice with exam-style questions"
+        placeholder="Enter a topic to generate practice MCQs (e.g., 'Financial Accounting: Journal Entries')..."
+        universityName={university.name}
+      />
     </div>
   );
 };
