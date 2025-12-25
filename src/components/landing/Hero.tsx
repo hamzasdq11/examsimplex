@@ -1,3 +1,4 @@
+import { Link } from "react-router-dom";
 import { Star, MessageCircle, BarChart3, TrendingUp } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
@@ -50,10 +51,11 @@ const Hero = () => {
 
             {/* CTA Button */}
             <Button
+              asChild
               size="lg"
               className="bg-primary hover:bg-primary/90 text-primary-foreground rounded-full px-8 py-6 text-base font-medium"
             >
-              Create a Free Account
+              <Link to="/get-started">Get Started for Free</Link>
             </Button>
           </div>
 
