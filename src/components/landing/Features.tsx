@@ -1,75 +1,110 @@
-import { GraduationCap, Stethoscope, Scale, BookOpen, Microscope, Users, ArrowRight } from "lucide-react";
+import { Search } from "lucide-react";
+import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
+import { Link } from "react-router-dom";
+import { useState } from "react";
 
-const features = [
+const featuredUniversities = [
   {
-    title: "University Course Help",
-    description: "Score higher with customized video lessons, expert Q&A, and topic-wise practice.",
-    icon: GraduationCap,
-    bgColor: "bg-card-cyan",
-    link: "#",
+    name: "Aligarh Muslim University",
+    location: "Aligarh, UP, IN",
+    type: "Central University",
+    courses: 45,
+    slug: "aligarh-muslim-university",
   },
   {
-    title: "MCAT Prep",
-    description: "Score 515+ guaranteed with our comprehensive MCAT prep program.",
-    icon: Stethoscope,
-    bgColor: "bg-card-lavender",
-    link: "#",
+    name: "University of Delhi",
+    location: "New Delhi, DL, IN",
+    type: "Central University",
+    courses: 52,
+    slug: "university-of-delhi",
   },
   {
-    title: "LSAT Prep",
-    description: "Score 170+ guaranteed with expert-led lessons and practice tests.",
-    icon: Scale,
-    bgColor: "bg-card-blue",
-    link: "#",
+    name: "Banaras Hindu University",
+    location: "Varanasi, UP, IN",
+    type: "Central University",
+    courses: 48,
+    slug: "banaras-hindu-university",
   },
   {
-    title: "High School & AP Course Help",
-    description: "Better grades with video lessons tailored for high school curriculum.",
-    icon: BookOpen,
-    bgColor: "bg-card-pink",
-    link: "#",
+    name: "Jawaharlal Nehru University",
+    location: "New Delhi, DL, IN",
+    type: "Central University",
+    courses: 38,
+    slug: "jawaharlal-nehru-university",
   },
   {
-    title: "DAT Prep",
-    description: "Score 23+ guaranteed with our dental admission test prep.",
-    icon: Microscope,
-    bgColor: "bg-card-purple",
-    link: "#",
+    name: "University of Hyderabad",
+    location: "Hyderabad, TG, IN",
+    type: "Central University",
+    courses: 35,
+    slug: "university-of-hyderabad",
   },
   {
-    title: "Admissions Counseling",
-    description: "Get into your dream school with personalized guidance from experts.",
-    icon: Users,
-    bgColor: "bg-card-mint",
-    link: "#",
+    name: "Jamia Millia Islamia",
+    location: "New Delhi, DL, IN",
+    type: "Central University",
+    courses: 42,
+    slug: "jamia-millia-islamia",
   },
 ];
 
 const Features = () => {
+  const [searchQuery, setSearchQuery] = useState("");
+
+  const filteredUniversities = featuredUniversities.filter((uni) =>
+    uni.name.toLowerCase().includes(searchQuery.toLowerCase())
+  );
+
   return (
-    <section id="features" className="py-16 md:py-24 bg-background">
+    <section id="features" className="py-16 md:py-24 bg-muted/50">
       <div className="container">
-        <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
-          {features.map((feature, index) => (
-            <div
+        <h2 className="text-3xl md:text-5xl font-display font-bold text-center text-foreground mb-8">
+          Find Your School
+        </h2>
+
+        {/* Search Bar */}
+        <div className="max-w-2xl mx-auto mb-12">
+          <div className="relative">
+            <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
+            <Input
+              type="text"
+              placeholder="Search schools"
+              className="pl-12 h-14 text-lg rounded-xl bg-background border-border"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+            />
+          </div>
+        </div>
+
+        {/* University Cards Grid */}
+        <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4 mb-8">
+          {filteredUniversities.map((uni, index) => (
+            <Link
               key={index}
-              className={`group relative p-6 rounded-2xl ${feature.bgColor} transition-all duration-300 hover:shadow-lg hover:-translate-y-1`}
+              to={`/university/${uni.slug}`}
+              className="group block bg-card rounded-xl border-t-4 border-t-primary border border-border p-5 hover:shadow-lg transition-all duration-300 hover:-translate-y-1"
             >
-              <div className="space-y-4">
-                <div className="w-12 h-12 rounded-xl bg-background/80 flex items-center justify-center">
-                  <feature.icon className="h-6 w-6 text-primary" />
-                </div>
-                <h3 className="text-xl font-semibold text-foreground">{feature.title}</h3>
-                <p className="text-muted-foreground">{feature.description}</p>
-                <a
-                  href={feature.link}
-                  className="inline-flex items-center gap-2 text-sm font-medium text-primary hover:gap-3 transition-all"
-                >
-                  Learn more <ArrowRight className="h-4 w-4" />
-                </a>
-              </div>
-            </div>
+              <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-1">
+                {uni.location}
+              </p>
+              <h3 className="text-lg font-bold text-foreground mb-2 group-hover:text-primary transition-colors">
+                {uni.name}
+              </h3>
+              <p className="text-sm text-muted-foreground">
+                {uni.type} • {uni.courses} Courses
+              </p>
+            </Link>
           ))}
+        </div>
+
+        {/* See More Button */}
+        <div className="text-center">
+          <Link to="/get-started">
+            <Button variant="outline" size="lg" className="rounded-full px-8">
+              See More
+            </Button>
+          </Link>
         </div>
       </div>
     </section>
