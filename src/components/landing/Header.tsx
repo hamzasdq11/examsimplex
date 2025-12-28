@@ -24,11 +24,11 @@ const Header = () => {
     <header className="sticky top-0 z-50 w-full border-b border-border/40 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
       <div className="container flex h-16 items-center justify-between">
         {/* Logo */}
-        <div className="flex items-center gap-8">
-          <span className="text-2xl font-display font-bold text-primary italic">W</span>
+        <div className="flex items-center gap-10">
+          <span className="text-3xl font-display font-bold text-primary italic tracking-tight">W</span>
           
           {/* Desktop Navigation */}
-          <nav className="hidden md:flex items-center gap-6">
+          <nav className="hidden md:flex items-center gap-8">
             <button
               onClick={() => scrollToSection("features")}
               className="text-sm font-medium text-foreground hover:text-foreground/80 transition-colors"
