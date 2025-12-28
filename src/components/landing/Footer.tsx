@@ -2,10 +2,10 @@ import { Facebook, Twitter, Instagram, Linkedin, Youtube } from "lucide-react";
 
 const Footer = () => {
   const footerLinks = {
-    "Test Prep": ["MCAT Prep", "LSAT Prep", "DAT Prep", "GRE Prep", "GMAT Prep"],
-    "Courses": ["University", "High School", "AP Courses", "Tutoring"],
-    "Company": ["About Us", "Careers", "Blog", "Press"],
-    "Support": ["Help Center", "Contact Us", "Terms of Service", "Privacy Policy"],
+    "University": ["B.Tech / B.E", "B.Com", "BBA", "B.Sc", "BA"],
+    "Exams": ["Semester Exams", "Internal Tests", "Practicals", "Viva"],
+    "Practice": ["Previous Year Papers", "Mock Tests", "Topic-wise Practice", "Quick Revision"],
+    "Free Resources": ["Study Notes", "Important Questions", "Answer Templates", "Exam Tips"],
   };
 
   const socialLinks = [
