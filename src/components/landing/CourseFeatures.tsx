@@ -21,9 +21,9 @@ const CourseFeatures = () => {
               </div>
               <div>
                 <p className="italic opacity-90 mb-2">
-                  "The course-specific videos and practice questions helped me to get through University Calculus and I ended up getting an A-."
+                  "The syllabus-wise videos matched exactly what our professor covers. Knew what to focus on for my AKTU Maths-2 exam."
                 </p>
-                <p className="text-sm opacity-70">- Rycon, Undergraduate Student</p>
+                <p className="text-sm opacity-70">- Vikram Tiwari, B.Tech ME, HBTU Kanpur</p>
               </div>
             </div>
           </div>
@@ -81,9 +81,9 @@ const CourseFeatures = () => {
               </div>
               <div>
                 <p className="italic opacity-90 mb-2">
-                  "Explains concepts in a very concise way that is really easy to understand."
+                  "Complex derivations explained in simple steps. Saved hours of confusion before my Anna University physics paper."
                 </p>
-                <p className="text-sm opacity-70">- Bianca, Undergraduate Student</p>
+                <p className="text-sm opacity-70">- Divya Krishnan, B.E ECE, Easwari Engineering College</p>
               </div>
             </div>
           </div>
@@ -135,9 +135,9 @@ const CourseFeatures = () => {
               </div>
               <div>
                 <p className="italic opacity-90 mb-2">
-                  "The extra practice questions truly help me understand the material instead of just memorizing it."
+                  "Practice questions were very similar to what came in our IP University BBA exam. Felt fully prepared."
                 </p>
-                <p className="text-sm opacity-70">- Emily, Undergraduate Student</p>
+                <p className="text-sm opacity-70">- Neha Saxena, BBA, Maharaja Surajmal Institute</p>
               </div>
             </div>
           </div>
