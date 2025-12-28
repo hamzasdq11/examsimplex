@@ -56,15 +56,15 @@ const Features = () => {
   );
 
   return (
-    <section id="features" className="py-12 md:py-16 bg-muted/50">
+    <section id="features" className="py-8 md:py-10 bg-muted/50">
       <div className="container">
         {/* University Cards Grid */}
-        <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4 mb-8">
+        <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-3 mb-6">
           {filteredUniversities.map((uni, index) => (
             <Link
               key={index}
               to={`/university/${uni.slug}`}
-              className="group block bg-card rounded-xl border-t-4 border-t-primary border border-border p-5 hover:shadow-lg transition-all duration-300 hover:-translate-y-1"
+              className="group block bg-card rounded-xl border-t-4 border-t-primary border border-border p-4 hover:shadow-lg transition-all duration-300 hover:-translate-y-1"
             >
               <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-1">
                 {uni.location}
@@ -86,7 +86,7 @@ const Features = () => {
             <Input
               type="text"
               placeholder="Search schools"
-              className="pl-12 h-14 text-lg rounded-xl bg-background border-border"
+              className="pl-12 h-12 text-base rounded-xl bg-background border-border"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
             />

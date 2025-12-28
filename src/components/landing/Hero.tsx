@@ -12,11 +12,11 @@ const Hero = () => {
   ];
 
   return (
-    <section className="relative overflow-hidden bg-background py-10 md:py-16">
+    <section className="relative overflow-hidden bg-background py-8 md:py-12">
       <div className="container max-w-6xl mx-auto px-6 md:px-8">
-        <div className="grid lg:grid-cols-2 gap-8 items-center">
+        <div className="grid lg:grid-cols-2 gap-6 items-center">
           {/* Left Content */}
-          <div className="space-y-8">
+          <div className="space-y-6">
             {/* Social Proof */}
             <div className="flex items-center gap-4 flex-wrap">
               <div className="flex -space-x-3">
@@ -40,7 +40,7 @@ const Hero = () => {
             </div>
 
             {/* Main Headline */}
-            <div className="space-y-4">
+            <div className="space-y-3">
               <h1 className="text-4xl md:text-5xl lg:text-6xl font-display font-bold text-foreground leading-tight">
                 Smarter Prep for Every Step
               </h1>
