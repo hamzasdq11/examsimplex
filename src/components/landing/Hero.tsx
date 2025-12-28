@@ -12,7 +12,7 @@ const Hero = () => {
   ];
 
   return (
-    <section className="relative overflow-hidden bg-background py-8 md:py-12">
+    <section className="relative overflow-hidden bg-background pt-4 pb-8 md:pt-6 md:pb-12">
       <div className="container max-w-6xl mx-auto px-6 md:px-8">
         <div className="grid lg:grid-cols-2 gap-6 items-center">
           {/* Left Content */}
@@ -47,10 +47,10 @@ const Hero = () => {
 
             {/* Main Headline */}
             <div className="space-y-3">
-              <h1 className="text-4xl md:text-5xl lg:text-6xl font-display font-bold text-foreground leading-tight">
+              <h1 className="text-5xl md:text-6xl lg:text-7xl font-display font-bold text-foreground leading-tight">
                 Smarter Prep for Every Step
               </h1>
-              <p className="text-lg md:text-xl text-muted-foreground max-w-lg">
+              <p className="text-base md:text-lg text-muted-foreground max-w-lg">
                 Expert-led lessons, course-specific practice, and guarantees where it counts.
               </p>
             </div>
