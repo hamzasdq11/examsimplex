@@ -58,7 +58,7 @@ const Features = () => {
 
   return (
     <section id="features" className="py-20 md:py-28 bg-muted/30">
-      <div className="container">
+      <div className="container px-[10%]">
         <h2 className="text-3xl md:text-4xl font-serif font-semibold text-center text-foreground mb-10">
           Find Your School
         </h2>
