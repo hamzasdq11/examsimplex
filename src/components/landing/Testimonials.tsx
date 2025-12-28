@@ -75,15 +75,15 @@ const Testimonials = () => {
               <p className="text-foreground mb-6 leading-relaxed">"{testimonial.quote}"</p>
               
               <div className="flex items-center gap-4">
-                <img
-                  src={testimonial.image}
-                  alt={testimonial.name}
-                  className="w-12 h-12 rounded-full object-cover"
-                />
+                <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center">
+                  <span className="text-lg font-semibold text-primary">
+                    {testimonial.name.split(' ').map(n => n[0]).join('')}
+                  </span>
+                </div>
                 <div>
                   <h4 className="font-semibold text-foreground">{testimonial.name}</h4>
                   <p className="text-sm text-muted-foreground">
-                    {testimonial.role} • Score: <span className="font-semibold text-primary">{testimonial.score}</span>
+                    {testimonial.role} • <span className="font-semibold text-primary">{testimonial.score}</span>
                   </p>
                 </div>
               </div>
