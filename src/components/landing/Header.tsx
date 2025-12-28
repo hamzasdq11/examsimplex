@@ -1,13 +1,7 @@
 import { useState } from "react";
 import { Link } from "react-router-dom";
-import { Menu, X, ChevronDown, Settings } from "lucide-react";
+import { Menu, X, Settings } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
 
 const Header = () => {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
@@ -35,52 +29,25 @@ const Header = () => {
               University
             </button>
             
-            <DropdownMenu>
-              <DropdownMenuTrigger className="flex items-center gap-1 text-sm font-medium text-foreground hover:text-foreground/80 transition-colors">
-                MCAT <ChevronDown className="h-4 w-4" />
-              </DropdownMenuTrigger>
-              <DropdownMenuContent>
-                <DropdownMenuItem onClick={() => scrollToSection("features")}>
-                  MCAT Overview
-                </DropdownMenuItem>
-                <DropdownMenuItem onClick={() => scrollToSection("how-it-works")}>
-                  Study Plans
-                </DropdownMenuItem>
-                <DropdownMenuItem onClick={() => scrollToSection("testimonials")}>
-                  Success Stories
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
-
-            <DropdownMenu>
-              <DropdownMenuTrigger className="flex items-center gap-1 text-sm font-medium text-foreground hover:text-foreground/80 transition-colors">
-                LSAT <ChevronDown className="h-4 w-4" />
-              </DropdownMenuTrigger>
-              <DropdownMenuContent>
-                <DropdownMenuItem onClick={() => scrollToSection("features")}>
-                  LSAT Overview
-                </DropdownMenuItem>
-                <DropdownMenuItem onClick={() => scrollToSection("how-it-works")}>
-                  Study Plans
-                </DropdownMenuItem>
-                <DropdownMenuItem onClick={() => scrollToSection("testimonials")}>
-                  Success Stories
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
-
             <button
-              onClick={() => scrollToSection("features")}
+              onClick={() => scrollToSection("how-it-works")}
               className="text-sm font-medium text-foreground hover:text-foreground/80 transition-colors"
             >
-              DAT
+              Exams
             </button>
 
             <button
-              onClick={() => scrollToSection("features")}
+              onClick={() => scrollToSection("testimonials")}
               className="text-sm font-medium text-foreground hover:text-foreground/80 transition-colors"
             >
-              High School
+              Practice
+            </button>
+
+            <button
+              onClick={() => scrollToSection("faq")}
+              className="text-sm font-medium text-foreground hover:text-foreground/80 transition-colors"
+            >
+              Free Resources
             </button>
           </nav>
         </div>
@@ -118,28 +85,22 @@ const Header = () => {
               University
             </button>
             <button
-              onClick={() => scrollToSection("features")}
+              onClick={() => scrollToSection("how-it-works")}
               className="text-left text-sm font-medium text-muted-foreground hover:text-foreground transition-colors"
             >
-              MCAT
+              Exams
             </button>
             <button
-              onClick={() => scrollToSection("features")}
+              onClick={() => scrollToSection("testimonials")}
               className="text-left text-sm font-medium text-muted-foreground hover:text-foreground transition-colors"
             >
-              LSAT
+              Practice
             </button>
             <button
-              onClick={() => scrollToSection("features")}
+              onClick={() => scrollToSection("faq")}
               className="text-left text-sm font-medium text-muted-foreground hover:text-foreground transition-colors"
             >
-              DAT
-            </button>
-            <button
-              onClick={() => scrollToSection("features")}
-              className="text-left text-sm font-medium text-muted-foreground hover:text-foreground transition-colors"
-            >
-              High School
+              Free Resources
             </button>
             <div className="pt-4 border-t border-border flex flex-col gap-3">
               <button className="text-left text-sm font-medium text-muted-foreground hover:text-foreground transition-colors">
