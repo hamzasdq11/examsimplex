@@ -3,6 +3,7 @@
 @tailwind utilities;
 
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@500;600;700&display=swap');
 
 @font-face {
   font-family: 'Agane';
@@ -127,7 +128,11 @@ All colors MUST be HSL.
 
 @layer utilities {
   .font-display {
-    font-family: 'Playfair Display', serif;
+    font-family: 'Agane', 'Poppins', sans-serif;
+  }
+  
+  .font-serif {
+    font-family: 'Playfair Display', Georgia, serif;
   }
   
   .font-sans {
