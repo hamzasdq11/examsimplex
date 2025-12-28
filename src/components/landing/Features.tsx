@@ -78,9 +78,6 @@ const Features = () => {
               to={`/university/${uni.slug}`}
               className={`group block ${uni.bgColor} rounded-xl border-t-4 ${uni.borderColor} border border-border p-4 hover:shadow-lg transition-all duration-300 hover:-translate-y-1`}
             >
-              <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-1">
-                {uni.location}
-              </p>
               <h3 className="text-lg font-bold text-foreground mb-2 group-hover:text-primary transition-colors">
                 {uni.name}
               </h3>
