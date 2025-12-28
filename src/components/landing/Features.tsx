@@ -10,6 +10,8 @@ const featuredUniversities = [
     type: "State University",
     courses: 120,
     slug: "aktu",
+    bgColor: "bg-rose-50",
+    borderColor: "border-t-rose-400",
   },
   {
     name: "University of Delhi",
@@ -17,6 +19,8 @@ const featuredUniversities = [
     type: "Central University",
     courses: 52,
     slug: "university-of-delhi",
+    bgColor: "bg-sky-50",
+    borderColor: "border-t-sky-400",
   },
   {
     name: "Banaras Hindu University",
@@ -24,6 +28,8 @@ const featuredUniversities = [
     type: "Central University",
     courses: 48,
     slug: "banaras-hindu-university",
+    bgColor: "bg-amber-50",
+    borderColor: "border-t-amber-400",
   },
   {
     name: "Jawaharlal Nehru University",
@@ -31,6 +37,8 @@ const featuredUniversities = [
     type: "Central University",
     courses: 38,
     slug: "jawaharlal-nehru-university",
+    bgColor: "bg-emerald-50",
+    borderColor: "border-t-emerald-400",
   },
   {
     name: "University of Hyderabad",
@@ -38,6 +46,8 @@ const featuredUniversities = [
     type: "Central University",
     courses: 35,
     slug: "university-of-hyderabad",
+    bgColor: "bg-violet-50",
+    borderColor: "border-t-violet-400",
   },
   {
     name: "Jamia Millia Islamia",
@@ -45,6 +55,8 @@ const featuredUniversities = [
     type: "Central University",
     courses: 42,
     slug: "jamia-millia-islamia",
+    bgColor: "bg-orange-50",
+    borderColor: "border-t-orange-400",
   },
 ];
 
@@ -64,7 +76,7 @@ const Features = () => {
             <Link
               key={index}
               to={`/university/${uni.slug}`}
-              className="group block bg-card rounded-xl border-t-4 border-t-primary border border-border p-4 hover:shadow-lg transition-all duration-300 hover:-translate-y-1"
+              className={`group block ${uni.bgColor} rounded-xl border-t-4 ${uni.borderColor} border border-border p-4 hover:shadow-lg transition-all duration-300 hover:-translate-y-1`}
             >
               <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-1">
                 {uni.location}
