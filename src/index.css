@@ -127,7 +127,7 @@ All colors MUST be HSL.
 
 @layer utilities {
   .font-display {
-    font-family: 'Playfair Display', serif;
+    font-family: 'Agane', sans-serif;
   }
   
   .font-sans {
