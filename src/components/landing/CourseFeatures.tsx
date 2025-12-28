@@ -4,8 +4,8 @@ import { Play, RotateCcw, RotateCw, List } from "lucide-react";
 
 const CourseFeatures = () => {
   return (
-    <section className="py-16 md:py-24 bg-primary text-primary-foreground">
-      <div className="container">
+    <section className="py-16 md:py-24 bg-section-dark text-white">
+      <div className="container max-w-6xl mx-auto px-6 md:px-8">
         {/* Feature 1: Follow Along With Your Course */}
         <div className="grid md:grid-cols-2 gap-12 items-center mb-24">
           <div>

@@ -56,6 +56,9 @@ All colors MUST be HSL.
     --card-purple: 280 50% 93%;
     --card-mint: 160 50% 92%;
 
+    /* Section backgrounds */
+    --section-dark: 232 100% 11%;
+
     /* Sidebar */
     --sidebar-background: 0 0% 98%;
     --sidebar-foreground: 240 5% 26%;
