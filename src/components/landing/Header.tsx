@@ -25,7 +25,6 @@ const Header = () => {
       <div className="container flex h-16 items-center justify-between">
         {/* Logo */}
         <div className="flex items-center gap-10">
-          <span className="text-3xl font-display font-bold text-primary italic tracking-tight">W</span>
           
           {/* Desktop Navigation */}
           <nav className="hidden md:flex items-center gap-8">
