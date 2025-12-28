@@ -5,11 +5,11 @@ import { useState } from "react";
 
 const featuredUniversities = [
   {
-    name: "Aligarh Muslim University",
-    location: "Aligarh, UP, IN",
-    type: "Central University",
-    courses: 45,
-    slug: "aligarh-muslim-university",
+    name: "Dr. A.P.J. Abdul Kalam Technical University",
+    location: "Lucknow, UP, IN",
+    type: "State University",
+    courses: 120,
+    slug: "aktu",
   },
   {
     name: "University of Delhi",
