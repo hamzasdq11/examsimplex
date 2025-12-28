@@ -24,76 +24,74 @@ const Header = () => {
     <header className="sticky top-0 z-50 w-full border-b border-border/40 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
       <div className="container flex h-16 items-center justify-between">
         {/* Logo */}
-        <div className="flex items-center gap-2">
-          <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary">
-            <span className="text-lg font-bold text-primary-foreground">W</span>
-          </div>
-        </div>
-
-        {/* Desktop Navigation */}
-        <nav className="hidden md:flex items-center gap-6">
-          <button
-            onClick={() => scrollToSection("features")}
-            className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors"
-          >
-            University
-          </button>
+        <div className="flex items-center gap-8">
+          <span className="text-2xl font-display font-bold text-primary italic">W</span>
           
-          <DropdownMenu>
-            <DropdownMenuTrigger className="flex items-center gap-1 text-sm font-medium text-muted-foreground hover:text-foreground transition-colors">
-              MCAT <ChevronDown className="h-4 w-4" />
-            </DropdownMenuTrigger>
-            <DropdownMenuContent>
-              <DropdownMenuItem onClick={() => scrollToSection("features")}>
-                MCAT Overview
-              </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => scrollToSection("how-it-works")}>
-                Study Plans
-              </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => scrollToSection("testimonials")}>
-                Success Stories
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
+          {/* Desktop Navigation */}
+          <nav className="hidden md:flex items-center gap-6">
+            <button
+              onClick={() => scrollToSection("features")}
+              className="text-sm font-medium text-foreground hover:text-foreground/80 transition-colors"
+            >
+              University
+            </button>
+            
+            <DropdownMenu>
+              <DropdownMenuTrigger className="flex items-center gap-1 text-sm font-medium text-foreground hover:text-foreground/80 transition-colors">
+                MCAT <ChevronDown className="h-4 w-4" />
+              </DropdownMenuTrigger>
+              <DropdownMenuContent>
+                <DropdownMenuItem onClick={() => scrollToSection("features")}>
+                  MCAT Overview
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => scrollToSection("how-it-works")}>
+                  Study Plans
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => scrollToSection("testimonials")}>
+                  Success Stories
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
 
-          <DropdownMenu>
-            <DropdownMenuTrigger className="flex items-center gap-1 text-sm font-medium text-muted-foreground hover:text-foreground transition-colors">
-              LSAT <ChevronDown className="h-4 w-4" />
-            </DropdownMenuTrigger>
-            <DropdownMenuContent>
-              <DropdownMenuItem onClick={() => scrollToSection("features")}>
-                LSAT Overview
-              </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => scrollToSection("how-it-works")}>
-                Study Plans
-              </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => scrollToSection("testimonials")}>
-                Success Stories
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
+            <DropdownMenu>
+              <DropdownMenuTrigger className="flex items-center gap-1 text-sm font-medium text-foreground hover:text-foreground/80 transition-colors">
+                LSAT <ChevronDown className="h-4 w-4" />
+              </DropdownMenuTrigger>
+              <DropdownMenuContent>
+                <DropdownMenuItem onClick={() => scrollToSection("features")}>
+                  LSAT Overview
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => scrollToSection("how-it-works")}>
+                  Study Plans
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => scrollToSection("testimonials")}>
+                  Success Stories
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
 
-          <button
-            onClick={() => scrollToSection("features")}
-            className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors"
-          >
-            DAT
-          </button>
+            <button
+              onClick={() => scrollToSection("features")}
+              className="text-sm font-medium text-foreground hover:text-foreground/80 transition-colors"
+            >
+              DAT
+            </button>
 
-          <button
-            onClick={() => scrollToSection("features")}
-            className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors"
-          >
-            High School
-          </button>
-        </nav>
+            <button
+              onClick={() => scrollToSection("features")}
+              className="text-sm font-medium text-foreground hover:text-foreground/80 transition-colors"
+            >
+              High School
+            </button>
+          </nav>
+        </div>
 
         {/* Desktop Right Side */}
         <div className="hidden md:flex items-center gap-4">
           <button className="text-muted-foreground hover:text-foreground transition-colors">
             <Settings className="h-5 w-5" />
           </button>
-          <button className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors">
+          <button className="text-sm font-medium text-primary hover:text-primary/80 transition-colors">
             Log in
           </button>
           <Button asChild className="bg-primary hover:bg-primary/90 text-primary-foreground rounded-full px-6">
