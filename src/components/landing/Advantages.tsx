@@ -8,8 +8,8 @@ const advantages = [
     iconBg: "bg-card-cyan",
     testimonial: {
       quote: "After discovering this platform at the beginning of my second semester, my grades have gone up significantly. I feel so much more confident when taking my exams.",
-      name: "Emily",
-      role: "Undergraduate Student",
+      name: "Priya Sharma",
+      role: "B.Tech CSE, KIET Group of Institutions",
       bgColor: "bg-card-blue",
     },
     layout: "left",
@@ -21,8 +21,8 @@ const advantages = [
     iconBg: "bg-card-pink",
     testimonial: {
       quote: "I was really struggling with my class in macroeconomics. I had tried every study method possible, but I still wasn't able to get a decent grade. To my surprise, the tutor really explained my Econ class in such a way that I finally understood!",
-      name: "Maria",
-      role: "Undergraduate Student",
+      name: "Rahul Verma",
+      role: "B.Com Honours, Shri Ram College of Commerce",
       bgColor: "bg-card-lavender",
     },
     layout: "right",
@@ -34,8 +34,8 @@ const advantages = [
     iconBg: "bg-card-mint",
     testimonial: {
       quote: "This platform helped me save time and stress by preparing me for the exam and I highly recommend it.",
-      name: "Bilal",
-      role: "University Student",
+      name: "Ananya Gupta",
+      role: "B.Sc Physics, St. Stephens College",
       bgColor: "bg-card-mint",
     },
     layout: "left",
