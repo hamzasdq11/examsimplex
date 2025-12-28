@@ -1,4 +1,4 @@
-import { Search, ArrowRight } from "lucide-react";
+import { Search } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
@@ -57,20 +57,20 @@ const Features = () => {
   );
 
   return (
-    <section id="features" className="py-20 md:py-28 bg-muted/30">
-      <div className="container px-[10%]">
-        <h2 className="text-3xl md:text-4xl font-serif font-semibold text-center text-foreground mb-10">
+    <section id="features" className="py-16 md:py-24 bg-muted/50">
+      <div className="container">
+        <h2 className="text-3xl md:text-5xl font-display font-bold text-center text-foreground mb-8">
           Find Your School
         </h2>
 
         {/* Search Bar */}
-        <div className="max-w-xl mx-auto mb-14">
+        <div className="max-w-2xl mx-auto mb-12">
           <div className="relative">
             <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
             <Input
               type="text"
               placeholder="Search schools"
-              className="pl-12 h-14 text-base rounded-xl bg-background border-border"
+              className="pl-12 h-14 text-lg rounded-xl bg-background border-border"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
             />
@@ -78,21 +78,20 @@ const Features = () => {
         </div>
 
         {/* University Cards Grid */}
-        <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-5 mb-10">
+        <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4 mb-8">
           {filteredUniversities.map((uni, index) => (
             <Link
               key={index}
               to={`/university/${uni.slug}`}
-              className="group block bg-card rounded-xl border-t-4 border-t-primary border border-border p-6 hover:shadow-md transition-all duration-200"
+              className="group block bg-card rounded-xl border-t-4 border-t-primary border border-border p-5 hover:shadow-lg transition-all duration-300 hover:-translate-y-1"
             >
-              <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide mb-2">
+              <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-1">
                 {uni.location}
               </p>
-              <h3 className="text-lg font-bold text-foreground mb-3 group-hover:text-primary transition-colors flex items-center justify-between">
+              <h3 className="text-lg font-bold text-foreground mb-2 group-hover:text-primary transition-colors">
                 {uni.name}
-                <ArrowRight className="h-4 w-4 opacity-0 -translate-x-2 group-hover:opacity-100 group-hover:translate-x-0 transition-all text-primary" />
               </h3>
-              <p className="text-sm text-muted-foreground leading-relaxed">
+              <p className="text-sm text-muted-foreground">
                 {uni.type} • {uni.courses} Courses
               </p>
             </Link>
