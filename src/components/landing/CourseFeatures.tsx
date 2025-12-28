@@ -173,15 +173,11 @@ const CourseFeatures = () => {
 
         {/* CTA Section */}
         <div className="text-center pt-12">
-          <h3 className="text-2xl md:text-3xl font-bold mb-8">
-            Unlimited Courses, One Subscription
-          </h3>
           <Link to="/get-started">
             <Button size="lg" variant="secondary" className="text-lg px-8 py-6">
               Start Studying for Free
             </Button>
           </Link>
-          <p className="text-sm opacity-70 mt-4">No credit card required</p>
         </div>
       </div>
     </section>
