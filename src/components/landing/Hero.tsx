@@ -41,8 +41,8 @@ const Hero = () => {
 
             {/* Main Headline */}
             <div className="space-y-4">
-              <h1 className="text-4xl md:text-5xl lg:text-6xl font-display italic font-medium text-foreground leading-tight">
-                Smarter Prep for Every Step
+              <h1 className="text-4xl md:text-5xl lg:text-6xl font-display italic font-bold text-foreground leading-tight tracking-tight">
+                Smarter Prep for<br />Every Step
               </h1>
               <p className="text-lg md:text-xl text-muted-foreground max-w-lg">
                 Expert-led lessons, course-specific practice, and guarantees where it counts.
