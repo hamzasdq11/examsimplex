@@ -50,28 +50,28 @@ const universityData: Record<string, {
   location: string;
   type: string;
   description: string;
-  stats: { courses: number; subjects: number; examPacks: number; pastPapers: number };
+  stats: { courses: number; subjects: number; pastPapers: number };
 }> = {
   "aligarh-muslim-university": {
     name: "Aligarh Muslim University",
     location: "Aligarh, Uttar Pradesh",
     type: "Central University",
     description: "Browse courses, notes, past papers, and exam resources for Aligarh Muslim University.",
-    stats: { courses: 156, subjects: 892, examPacks: 234, pastPapers: 1456 }
+    stats: { courses: 156, subjects: 892, pastPapers: 1456 }
   },
   "university-of-delhi": {
     name: "University of Delhi",
     location: "New Delhi, Delhi",
     type: "Central University",
     description: "Browse courses, notes, past papers, and exam resources for University of Delhi.",
-    stats: { courses: 245, subjects: 1234, examPacks: 456, pastPapers: 2345 }
+    stats: { courses: 245, subjects: 1234, pastPapers: 2345 }
   },
   "banaras-hindu-university": {
     name: "Banaras Hindu University",
     location: "Varanasi, Uttar Pradesh",
     type: "Central University",
     description: "Browse courses, notes, past papers, and exam resources for Banaras Hindu University.",
-    stats: { courses: 198, subjects: 1045, examPacks: 312, pastPapers: 1890 }
+    stats: { courses: 198, subjects: 1045, pastPapers: 1890 }
   }
 };
 
@@ -85,24 +85,24 @@ const courseData = {
           name: "Semester 1", 
           subjects: 6,
           subjectList: [
-            { name: "Financial Accounting", type: "Theory", notes: 24, pyqs: 8, examPack: true },
-            { name: "Business Economics", type: "Theory", notes: 18, pyqs: 6, examPack: true },
-            { name: "Business Communication", type: "Theory", notes: 12, pyqs: 5, examPack: false },
-            { name: "Business Mathematics", type: "Theory", notes: 15, pyqs: 7, examPack: true },
-            { name: "Computer Applications", type: "Practical", notes: 8, pyqs: 4, examPack: false },
-            { name: "Environmental Studies", type: "Theory", notes: 10, pyqs: 3, examPack: false },
+            { name: "Financial Accounting", type: "Theory", notes: 24, pyqs: 8 },
+            { name: "Business Economics", type: "Theory", notes: 18, pyqs: 6 },
+            { name: "Business Communication", type: "Theory", notes: 12, pyqs: 5 },
+            { name: "Business Mathematics", type: "Theory", notes: 15, pyqs: 7 },
+            { name: "Computer Applications", type: "Practical", notes: 8, pyqs: 4 },
+            { name: "Environmental Studies", type: "Theory", notes: 10, pyqs: 3 },
           ]
         },
         { 
           name: "Semester 2", 
           subjects: 6,
           subjectList: [
-            { name: "Corporate Accounting", type: "Theory", notes: 22, pyqs: 9, examPack: true },
-            { name: "Business Law", type: "Theory", notes: 16, pyqs: 6, examPack: true },
-            { name: "Cost Accounting", type: "Theory", notes: 20, pyqs: 8, examPack: true },
-            { name: "Micro Economics", type: "Theory", notes: 14, pyqs: 5, examPack: false },
-            { name: "Statistics for Business", type: "Theory", notes: 12, pyqs: 6, examPack: true },
-            { name: "Principles of Management", type: "Theory", notes: 11, pyqs: 4, examPack: false },
+            { name: "Corporate Accounting", type: "Theory", notes: 22, pyqs: 9 },
+            { name: "Business Law", type: "Theory", notes: 16, pyqs: 6 },
+            { name: "Cost Accounting", type: "Theory", notes: 20, pyqs: 8 },
+            { name: "Micro Economics", type: "Theory", notes: 14, pyqs: 5 },
+            { name: "Statistics for Business", type: "Theory", notes: 12, pyqs: 6 },
+            { name: "Principles of Management", type: "Theory", notes: 11, pyqs: 4 },
           ]
         },
         { name: "Semester 3", subjects: 6, subjectList: [] },
@@ -294,7 +294,7 @@ const UniversityPage = () => {
     location: "India",
     type: "Central University",
     description: "Browse courses, notes, past papers, and exam resources.",
-    stats: { courses: 120, subjects: 650, examPacks: 180, pastPapers: 1200 }
+    stats: { courses: 120, subjects: 650, pastPapers: 1200 }
   };
 
   const sidebarItems = [
@@ -413,9 +413,6 @@ const UniversityPage = () => {
                 <TabsTrigger value="courses" className="px-4 py-2 data-[state=active]:bg-background">
                   Courses
                 </TabsTrigger>
-                <TabsTrigger value="exam-packs" className="px-4 py-2 data-[state=active]:bg-background">
-                  Exam Packs
-                </TabsTrigger>
                 <TabsTrigger value="notes" className="px-4 py-2 data-[state=active]:bg-background">
                   Notes
                 </TabsTrigger>
@@ -485,7 +482,6 @@ const UniversityPage = () => {
                                           <th className="px-4 py-3 font-medium text-muted-foreground">Type</th>
                                           <th className="px-4 py-3 font-medium text-muted-foreground text-center">Notes</th>
                                           <th className="px-4 py-3 font-medium text-muted-foreground text-center">PYQs</th>
-                                          <th className="px-4 py-3 font-medium text-muted-foreground text-center">Exam Pack</th>
                                           <th className="px-4 py-3 font-medium text-muted-foreground">Action</th>
                                         </tr>
                                       </thead>
@@ -500,13 +496,6 @@ const UniversityPage = () => {
                                             </td>
                                             <td className="px-4 py-3 text-center text-muted-foreground">{subject.notes}</td>
                                             <td className="px-4 py-3 text-center text-muted-foreground">{subject.pyqs}</td>
-                                            <td className="px-4 py-3 text-center">
-                                              {subject.examPack ? (
-                                                <Badge className="bg-green-100 text-green-700 hover:bg-green-100">Available</Badge>
-                                              ) : (
-                                                <span className="text-muted-foreground text-sm">—</span>
-                                              )}
-                                            </td>
                                             <td className="px-4 py-3">
                                               <Button size="sm" variant="ghost" className="text-primary">
                                                 Open Subject <ExternalLink className="h-3 w-3 ml-1" />
@@ -566,52 +555,6 @@ const UniversityPage = () => {
                       </AccordionItem>
                     ))}
                   </Accordion>
-                </div>
-              </TabsContent>
-
-              {/* TAB 2: EXAM PACKS */}
-              <TabsContent value="exam-packs" className="mt-6">
-                <h2 className="text-xl font-semibold text-foreground mb-2">
-                  Exam Packs for {university.name}
-                </h2>
-                <p className="text-sm text-muted-foreground mb-6">
-                  Exam packs are curated based on past {university.name.split(" ")[0]} exam trends.
-                </p>
-
-                <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
-                  {examPacks.map((pack, idx) => (
-                    <Card key={idx} className="hover:shadow-md transition-shadow">
-                      <CardHeader className="pb-3">
-                        <div className="flex items-start justify-between">
-                          <div>
-                            <Badge variant="outline" className="mb-2">{pack.degree}</Badge>
-                            <CardTitle className="text-base">{pack.subject}</CardTitle>
-                          </div>
-                          <Badge className="bg-primary/10 text-primary hover:bg-primary/10">
-                            {pack.exam}
-                          </Badge>
-                        </div>
-                        <p className="text-sm text-muted-foreground">{pack.semester}</p>
-                      </CardHeader>
-                      <CardContent>
-                        <div className="space-y-2 mb-4">
-                          <p className="text-sm font-medium text-foreground">What's included:</p>
-                          <ul className="text-sm text-muted-foreground space-y-1">
-                            {pack.includes.map((item, i) => (
-                              <li key={i} className="flex items-center gap-2">
-                                <div className="h-1.5 w-1.5 rounded-full bg-primary" />
-                                {item}
-                              </li>
-                            ))}
-                          </ul>
-                        </div>
-                        <div className="flex items-center justify-between">
-                          <span className="text-lg font-semibold text-foreground">₹{pack.price}</span>
-                          <Button size="sm">View Pack</Button>
-                        </div>
-                      </CardContent>
-                    </Card>
-                  ))}
                 </div>
               </TabsContent>
 
@@ -818,10 +761,6 @@ const UniversityPage = () => {
               <div className="flex justify-between items-center">
                 <span className="text-sm text-muted-foreground">Subjects</span>
                 <span className="font-medium text-foreground">{university.stats.subjects}</span>
-              </div>
-              <div className="flex justify-between items-center">
-                <span className="text-sm text-muted-foreground">Exam Packs</span>
-                <span className="font-medium text-foreground">{university.stats.examPacks}</span>
               </div>
               <div className="flex justify-between items-center">
                 <span className="text-sm text-muted-foreground">Past Papers</span>
