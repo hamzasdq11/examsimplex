@@ -1,6 +1,5 @@
 import { Search } from "lucide-react";
 import { Input } from "@/components/ui/input";
-import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
 import { useState } from "react";
 
@@ -57,26 +56,8 @@ const Features = () => {
   );
 
   return (
-    <section id="features" className="py-16 md:py-24 bg-muted/50">
+    <section id="features" className="py-12 md:py-16 bg-muted/50">
       <div className="container">
-        <h2 className="text-3xl md:text-5xl font-display font-bold text-center text-foreground mb-8">
-          Find Your School
-        </h2>
-
-        {/* Search Bar */}
-        <div className="max-w-2xl mx-auto mb-12">
-          <div className="relative">
-            <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
-            <Input
-              type="text"
-              placeholder="Search schools"
-              className="pl-12 h-14 text-lg rounded-xl bg-background border-border"
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-            />
-          </div>
-        </div>
-
         {/* University Cards Grid */}
         <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4 mb-8">
           {filteredUniversities.map((uni, index) => (
@@ -98,13 +79,18 @@ const Features = () => {
           ))}
         </div>
 
-        {/* See More Button */}
-        <div className="text-center">
-          <Link to="/get-started">
-            <Button variant="outline" size="lg" className="rounded-full px-8">
-              See More
-            </Button>
-          </Link>
+        {/* Search Bar */}
+        <div className="max-w-2xl mx-auto">
+          <div className="relative">
+            <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
+            <Input
+              type="text"
+              placeholder="Search schools"
+              className="pl-12 h-14 text-lg rounded-xl bg-background border-border"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+            />
+          </div>
         </div>
       </div>
     </section>
