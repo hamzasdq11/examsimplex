@@ -15,7 +15,7 @@ export default {
     extend: {
       fontFamily: {
         sans: ['Inter', 'sans-serif'],
-        display: ['Nuno Extended', 'Poppins', 'sans-serif'],
+        display: ['Agane', 'Poppins', 'sans-serif'],
       },
       colors: {
         border: "hsl(var(--border))",
