@@ -56,8 +56,8 @@ const Features = () => {
   );
 
   return (
-    <section id="features" className="py-8 md:py-10 bg-muted/50">
-      <div className="container">
+    <section id="features" className="py-8 md:py-10 bg-background">
+      <div className="container max-w-6xl mx-auto px-6 md:px-8">
         {/* University Cards Grid */}
         <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-3 mb-6">
           {filteredUniversities.map((uni, index) => (
