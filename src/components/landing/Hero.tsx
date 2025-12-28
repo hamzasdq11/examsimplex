@@ -13,7 +13,7 @@ const Hero = () => {
 
   return (
     <section className="relative overflow-hidden bg-background py-20 md:py-32">
-      <div className="container">
+      <div className="container px-[10%]">
         <div className="grid lg:grid-cols-2 gap-16 items-center">
           {/* Left Content */}
           <div className="space-y-10">
