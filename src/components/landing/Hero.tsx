@@ -63,14 +63,6 @@ const Hero = () => {
               >
                 Create a Free Account
               </Button>
-              <Button
-                asChild
-                size="lg"
-                variant="outline"
-                className="rounded-full px-8 py-6 text-base font-medium"
-              >
-                <Link to="/get-started">Get Started for Free</Link>
-              </Button>
             </div>
           </div>
 
