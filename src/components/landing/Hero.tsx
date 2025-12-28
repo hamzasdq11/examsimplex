@@ -13,8 +13,8 @@ const Hero = () => {
 
   return (
     <section className="relative overflow-hidden bg-background py-16 md:py-24">
-      <div className="container">
-        <div className="grid lg:grid-cols-2 gap-12 items-center">
+      <div className="container max-w-5xl mx-auto px-8 md:px-12">
+        <div className="grid lg:grid-cols-2 gap-6 items-center">
           {/* Left Content */}
           <div className="space-y-8">
             {/* Social Proof */}
