@@ -140,8 +140,37 @@ const courseData = {
         { name: "Semester 2", subjects: 7, subjectList: [] },
         { name: "Semester 3", subjects: 6, subjectList: [] },
         { name: "Semester 4", subjects: 6, subjectList: [] },
-        { name: "Semester 5", subjects: 6, subjectList: [] },
-        { name: "Semester 6", subjects: 6, subjectList: [] },
+        { 
+          name: "Semester 5", 
+          subjects: 10,
+          subjectList: [
+            { name: "Database Management System (BCS501)", type: "Theory", notes: 32, pyqs: 12 },
+            { name: "Web Technology (BCS502)", type: "Theory", notes: 28, pyqs: 10 },
+            { name: "Design and Analysis of Algorithm (BCS503)", type: "Theory", notes: 35, pyqs: 14 },
+            { name: "Departmental Elective-I", type: "Elective", notes: 20, pyqs: 8 },
+            { name: "Departmental Elective-II", type: "Elective", notes: 18, pyqs: 6 },
+            { name: "Database Management System Lab (BCS551)", type: "Practical", notes: 12, pyqs: 5 },
+            { name: "Web Technology Lab (BCS552)", type: "Practical", notes: 10, pyqs: 4 },
+            { name: "Design and Analysis of Algorithm Lab (BCS553)", type: "Practical", notes: 8, pyqs: 3 },
+            { name: "Mini Project / Internship Assessment (BCS554)", type: "Practical", notes: 5, pyqs: 2 },
+            { name: "Constitution of India / Essence of Indian Traditional Knowledge (BNC501/BNC502)", type: "Theory", notes: 15, pyqs: 6 },
+          ]
+        },
+        { 
+          name: "Semester 6", 
+          subjects: 9,
+          subjectList: [
+            { name: "Software Engineering (BCS601)", type: "Theory", notes: 30, pyqs: 11 },
+            { name: "Compiler Design (BCS602)", type: "Theory", notes: 28, pyqs: 10 },
+            { name: "Computer Networks (BCS603)", type: "Theory", notes: 34, pyqs: 13 },
+            { name: "Departmental Elective-III", type: "Elective", notes: 18, pyqs: 7 },
+            { name: "Open Elective-I", type: "Elective", notes: 15, pyqs: 5 },
+            { name: "Software Engineering Lab (BCS651)", type: "Practical", notes: 10, pyqs: 4 },
+            { name: "Compiler Design Lab (BCS652)", type: "Practical", notes: 8, pyqs: 3 },
+            { name: "Computer Networks Lab (BCS653)", type: "Practical", notes: 9, pyqs: 4 },
+            { name: "Constitution of India / Essence of Indian Traditional Knowledge (BNC601/BNC602)", type: "Theory", notes: 15, pyqs: 6 },
+          ]
+        },
         { name: "Semester 7", subjects: 5, subjectList: [] },
         { name: "Semester 8", subjects: 4, subjectList: [] },
       ]
