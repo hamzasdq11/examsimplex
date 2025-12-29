@@ -210,30 +210,69 @@ const subjectData = {
   ],
   pyqs: [
     {
-      year: "2023-24",
+      year: "January 2025",
+      code: "BCS501",
+      pdfUrl: "/pyqs/aktu/btech-cse/sem5/dbms/dbms-2025.pdf",
       questions: [
-        { question: "Explain three-level architecture of DBMS.", marks: 10, unit: "Unit 1" },
-        { question: "Write SQL queries using JOIN and GROUP BY.", marks: 10, unit: "Unit 2" },
-        { question: "Normalize the given table to BCNF.", marks: 10, unit: "Unit 3" },
-        { question: "Explain deadlock handling techniques.", marks: 7, unit: "Unit 4" },
+        { question: "Explain the three-level architecture of DBMS with diagram.", marks: 10, unit: "Unit 1" },
+        { question: "Write SQL queries for JOIN, GROUP BY, and aggregate functions.", marks: 10, unit: "Unit 2" },
+        { question: "Explain normalization with examples up to BCNF.", marks: 10, unit: "Unit 3" },
+        { question: "Describe ACID properties of transactions.", marks: 7, unit: "Unit 4" },
       ],
     },
     {
-      year: "2022-23",
+      year: "2023",
+      code: "KCS501",
+      pdfUrl: "/pyqs/aktu/btech-cse/sem5/dbms/dbms-2023.pdf",
+      questions: [
+        { question: "Explain ER model and draw ER diagram for university database.", marks: 10, unit: "Unit 1" },
+        { question: "Write SQL queries using subqueries and nested queries.", marks: 10, unit: "Unit 2" },
+        { question: "Differentiate between 3NF and BCNF with examples.", marks: 7, unit: "Unit 3" },
+        { question: "Explain deadlock detection and prevention techniques.", marks: 10, unit: "Unit 4" },
+      ],
+    },
+    {
+      year: "2022",
+      code: "RCS501",
+      pdfUrl: "/pyqs/aktu/btech-cse/sem5/dbms/dbms-2022.pdf",
       questions: [
         { question: "Draw ER diagram for hospital management system.", marks: 10, unit: "Unit 1" },
         { question: "Explain ACID properties with examples.", marks: 7, unit: "Unit 4" },
-        { question: "Differentiate between B-tree and B+ tree.", marks: 7, unit: "Unit 5" },
+        { question: "Differentiate between B-tree and B+ tree with diagrams.", marks: 7, unit: "Unit 5" },
         { question: "What is normalization? Explain up to 3NF.", marks: 10, unit: "Unit 3" },
       ],
     },
     {
-      year: "2021-22",
+      year: "2020",
+      code: "NCS502",
+      pdfUrl: "/pyqs/aktu/btech-cse/sem5/dbms/dbms-2020.pdf",
       questions: [
-        { question: "Explain relational algebra operations.", marks: 10, unit: "Unit 2" },
+        { question: "Explain relational algebra operations with examples.", marks: 10, unit: "Unit 2" },
         { question: "What are different types of keys in DBMS?", marks: 7, unit: "Unit 2" },
         { question: "Explain concurrency control techniques.", marks: 10, unit: "Unit 4" },
-        { question: "Write about file organization methods.", marks: 7, unit: "Unit 5" },
+        { question: "Describe file organization methods.", marks: 7, unit: "Unit 5" },
+      ],
+    },
+    {
+      year: "2019",
+      code: "NCS502",
+      pdfUrl: "/pyqs/aktu/btech-cse/sem5/dbms/dbms-2019.pdf",
+      questions: [
+        { question: "Explain data models used in DBMS.", marks: 10, unit: "Unit 1" },
+        { question: "Write SQL queries for various operations.", marks: 10, unit: "Unit 2" },
+        { question: "Explain functional dependencies and normalization.", marks: 10, unit: "Unit 3" },
+        { question: "What is transaction? Explain transaction states.", marks: 7, unit: "Unit 4" },
+      ],
+    },
+    {
+      year: "2018",
+      code: "NCS502",
+      pdfUrl: "/pyqs/aktu/btech-cse/sem5/dbms/dbms-2018.pdf",
+      questions: [
+        { question: "Explain three-level architecture of DBMS.", marks: 10, unit: "Unit 1" },
+        { question: "What is relational model? Explain relational algebra.", marks: 10, unit: "Unit 2" },
+        { question: "Explain normalization process with examples.", marks: 10, unit: "Unit 3" },
+        { question: "Describe indexing techniques in DBMS.", marks: 7, unit: "Unit 5" },
       ],
     },
   ],
@@ -541,7 +580,7 @@ const SubjectPage = () => {
                   <CardHeader className="pb-4">
                     <CardTitle className="text-lg">Previous Year Questions</CardTitle>
                     <p className="text-sm text-muted-foreground">
-                      Actual questions from AKTU end semester examinations.
+                      Actual questions from AKTU end semester examinations. Click to download the original question paper.
                     </p>
                   </CardHeader>
                   <CardContent className="space-y-3">
@@ -553,11 +592,23 @@ const SubjectPage = () => {
                       >
                         <CollapsibleTrigger className="w-full">
                           <div className="flex items-center justify-between p-4 border rounded-lg bg-muted/30 hover:bg-muted/50">
-                            <span className="font-medium text-foreground">{yearData.year}</span>
+                            <div className="flex items-center gap-3">
+                              <span className="font-medium text-foreground">{yearData.year}</span>
+                              <Badge variant="outline" className="text-xs">{yearData.code}</Badge>
+                            </div>
                             <div className="flex items-center gap-3">
                               <span className="text-sm text-muted-foreground">
                                 {yearData.questions.length} questions
                               </span>
+                              <a
+                                href={yearData.pdfUrl}
+                                download
+                                onClick={(e) => e.stopPropagation()}
+                                className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium bg-primary text-primary-foreground rounded-md hover:bg-primary/90 transition-colors"
+                              >
+                                <Download className="h-3.5 w-3.5" />
+                                Download PDF
+                              </a>
                               {openPyqYears.includes(yearData.year) ? (
                                 <ChevronDown className="h-4 w-4 text-muted-foreground" />
                               ) : (
