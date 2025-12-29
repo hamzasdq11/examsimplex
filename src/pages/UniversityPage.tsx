@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useParams, Link } from "react-router-dom";
 import { 
   Home, 
@@ -22,7 +22,8 @@ import {
   ClipboardList,
   GraduationCap,
   BarChart3,
-  Filter
+  Filter,
+  Loader2
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -43,9 +44,11 @@ import {
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import AIToolDialog from "@/components/AIToolDialog";
+import { supabase } from "@/integrations/supabase/client";
+import type { University, Course, Semester, Subject } from "@/types/database";
 
-// Mock data for universities
-const universityData: Record<string, {
+// Fallback mock data
+const fallbackUniversityData: Record<string, {
   name: string;
   location: string;
   type: string;
@@ -75,256 +78,89 @@ const universityData: Record<string, {
   }
 };
 
-// Mock course data
-const courseData = {
-  undergraduate: [
-    {
-      degree: "B.Com",
-      semesters: [
-        { 
-          name: "Semester 1", 
-          subjects: 6,
-          subjectList: [
-            { name: "Financial Accounting", type: "Theory", notes: 24, pyqs: 8 },
-            { name: "Business Economics", type: "Theory", notes: 18, pyqs: 6 },
-            { name: "Business Communication", type: "Theory", notes: 12, pyqs: 5 },
-            { name: "Business Mathematics", type: "Theory", notes: 15, pyqs: 7 },
-            { name: "Computer Applications", type: "Practical", notes: 8, pyqs: 4 },
-            { name: "Environmental Studies", type: "Theory", notes: 10, pyqs: 3 },
-          ]
-        },
-        { 
-          name: "Semester 2", 
-          subjects: 6,
-          subjectList: [
-            { name: "Corporate Accounting", type: "Theory", notes: 22, pyqs: 9 },
-            { name: "Business Law", type: "Theory", notes: 16, pyqs: 6 },
-            { name: "Cost Accounting", type: "Theory", notes: 20, pyqs: 8 },
-            { name: "Micro Economics", type: "Theory", notes: 14, pyqs: 5 },
-            { name: "Statistics for Business", type: "Theory", notes: 12, pyqs: 6 },
-            { name: "Principles of Management", type: "Theory", notes: 11, pyqs: 4 },
-          ]
-        },
-        { name: "Semester 3", subjects: 6, subjectList: [] },
-        { name: "Semester 4", subjects: 6, subjectList: [] },
-        { name: "Semester 5", subjects: 5, subjectList: [] },
-        { name: "Semester 6", subjects: 5, subjectList: [] },
-      ]
-    },
-    {
-      degree: "BA",
-      semesters: [
-        { name: "Semester 1", subjects: 5, subjectList: [] },
-        { name: "Semester 2", subjects: 5, subjectList: [] },
-        { name: "Semester 3", subjects: 5, subjectList: [] },
-        { name: "Semester 4", subjects: 5, subjectList: [] },
-        { name: "Semester 5", subjects: 4, subjectList: [] },
-        { name: "Semester 6", subjects: 4, subjectList: [] },
-      ]
-    },
-    {
-      degree: "B.Sc",
-      semesters: [
-        { name: "Semester 1", subjects: 6, subjectList: [] },
-        { name: "Semester 2", subjects: 6, subjectList: [] },
-        { name: "Semester 3", subjects: 6, subjectList: [] },
-        { name: "Semester 4", subjects: 6, subjectList: [] },
-        { name: "Semester 5", subjects: 5, subjectList: [] },
-        { name: "Semester 6", subjects: 5, subjectList: [] },
-      ]
-    },
-    {
-      degree: "B.Tech",
-      semesters: [
-        { name: "Semester 1", subjects: 7, subjectList: [] },
-        { name: "Semester 2", subjects: 7, subjectList: [] },
-        { name: "Semester 3", subjects: 6, subjectList: [] },
-        { name: "Semester 4", subjects: 6, subjectList: [] },
-        { 
-          name: "Semester 5", 
-          subjects: 10,
-          subjectList: [
-            { name: "Database Management System (BCS501)", type: "Theory", notes: 32, pyqs: 12 },
-            { name: "Web Technology (BCS502)", type: "Theory", notes: 28, pyqs: 10 },
-            { name: "Design and Analysis of Algorithm (BCS503)", type: "Theory", notes: 35, pyqs: 14 },
-            { name: "Departmental Elective-I", type: "Elective", notes: 20, pyqs: 8 },
-            { name: "Departmental Elective-II", type: "Elective", notes: 18, pyqs: 6 },
-            { name: "Database Management System Lab (BCS551)", type: "Practical", notes: 12, pyqs: 5 },
-            { name: "Web Technology Lab (BCS552)", type: "Practical", notes: 10, pyqs: 4 },
-            { name: "Design and Analysis of Algorithm Lab (BCS553)", type: "Practical", notes: 8, pyqs: 3 },
-            { name: "Mini Project / Internship Assessment (BCS554)", type: "Practical", notes: 5, pyqs: 2 },
-            { name: "Constitution of India / Essence of Indian Traditional Knowledge (BNC501/BNC502)", type: "Theory", notes: 15, pyqs: 6 },
-          ]
-        },
-        { 
-          name: "Semester 6", 
-          subjects: 9,
-          subjectList: [
-            { name: "Software Engineering (BCS601)", type: "Theory", notes: 30, pyqs: 11 },
-            { name: "Compiler Design (BCS602)", type: "Theory", notes: 28, pyqs: 10 },
-            { name: "Computer Networks (BCS603)", type: "Theory", notes: 34, pyqs: 13 },
-            { name: "Departmental Elective-III", type: "Elective", notes: 18, pyqs: 7 },
-            { name: "Open Elective-I", type: "Elective", notes: 15, pyqs: 5 },
-            { name: "Software Engineering Lab (BCS651)", type: "Practical", notes: 10, pyqs: 4 },
-            { name: "Compiler Design Lab (BCS652)", type: "Practical", notes: 8, pyqs: 3 },
-            { name: "Computer Networks Lab (BCS653)", type: "Practical", notes: 9, pyqs: 4 },
-            { name: "Constitution of India / Essence of Indian Traditional Knowledge (BNC601/BNC602)", type: "Theory", notes: 15, pyqs: 6 },
-          ]
-        },
-        { name: "Semester 7", subjects: 5, subjectList: [] },
-        { name: "Semester 8", subjects: 4, subjectList: [] },
-      ]
-    },
-    {
-      degree: "BBA",
-      semesters: [
-        { name: "Semester 1", subjects: 5, subjectList: [] },
-        { name: "Semester 2", subjects: 5, subjectList: [] },
-        { name: "Semester 3", subjects: 5, subjectList: [] },
-        { name: "Semester 4", subjects: 5, subjectList: [] },
-        { name: "Semester 5", subjects: 5, subjectList: [] },
-        { name: "Semester 6", subjects: 5, subjectList: [] },
-      ]
-    },
-    {
-      degree: "BCA",
-      semesters: [
-        { name: "Semester 1", subjects: 6, subjectList: [] },
-        { name: "Semester 2", subjects: 6, subjectList: [] },
-        { name: "Semester 3", subjects: 6, subjectList: [] },
-        { name: "Semester 4", subjects: 6, subjectList: [] },
-        { name: "Semester 5", subjects: 5, subjectList: [] },
-        { name: "Semester 6", subjects: 5, subjectList: [] },
-      ]
-    },
-  ],
-  postgraduate: [
-    {
-      degree: "M.Com",
-      semesters: [
-        { name: "Semester 1", subjects: 5, subjectList: [] },
-        { name: "Semester 2", subjects: 5, subjectList: [] },
-        { name: "Semester 3", subjects: 4, subjectList: [] },
-        { name: "Semester 4", subjects: 4, subjectList: [] },
-      ]
-    },
-    {
-      degree: "MA",
-      semesters: [
-        { name: "Semester 1", subjects: 4, subjectList: [] },
-        { name: "Semester 2", subjects: 4, subjectList: [] },
-        { name: "Semester 3", subjects: 4, subjectList: [] },
-        { name: "Semester 4", subjects: 4, subjectList: [] },
-      ]
-    },
-    {
-      degree: "MBA",
-      semesters: [
-        { name: "Semester 1", subjects: 6, subjectList: [] },
-        { name: "Semester 2", subjects: 6, subjectList: [] },
-        { name: "Semester 3", subjects: 5, subjectList: [] },
-        { name: "Semester 4", subjects: 5, subjectList: [] },
-      ]
-    },
-    {
-      degree: "M.Tech",
-      semesters: [
-        { name: "Semester 1", subjects: 5, subjectList: [] },
-        { name: "Semester 2", subjects: 5, subjectList: [] },
-        { name: "Semester 3", subjects: 4, subjectList: [] },
-        { name: "Semester 4", subjects: 3, subjectList: [] },
-      ]
-    },
-  ]
-};
-
-// Mock exam packs
-const examPacks = [
-  { degree: "B.Com", semester: "Semester 2", subject: "Financial Accounting", exam: "End Sem", includes: ["Important Questions", "Answer Templates", "PYQs (5 years)"], price: 149 },
-  { degree: "B.Com", semester: "Semester 2", subject: "Corporate Accounting", exam: "End Sem", includes: ["Important Questions", "Answer Templates", "PYQs (5 years)"], price: 149 },
-  { degree: "B.Com", semester: "Semester 2", subject: "Cost Accounting", exam: "Mid Sem", includes: ["Important Questions", "Answer Templates", "PYQs (3 years)"], price: 99 },
-  { degree: "BA", semester: "Semester 1", subject: "Political Science", exam: "End Sem", includes: ["Important Questions", "Answer Templates", "PYQs (5 years)"], price: 129 },
-  { degree: "B.Sc", semester: "Semester 3", subject: "Organic Chemistry", exam: "End Sem", includes: ["Important Questions", "Answer Templates", "PYQs (5 years)", "Lab Viva Questions"], price: 179 },
-  { degree: "B.Tech", semester: "Semester 4", subject: "Data Structures", exam: "End Sem", includes: ["Important Questions", "Answer Templates", "PYQs (5 years)", "Code Solutions"], price: 199 },
-];
-
-// Mock notes
-const studyNotes = [
-  { title: "Complete Financial Accounting Notes", subject: "Financial Accounting", degree: "B.Com", semester: "Semester 1", uploadedBy: "Platform", format: "PDF", pages: 156 },
-  { title: "Business Economics - All Chapters", subject: "Business Economics", degree: "B.Com", semester: "Semester 1", uploadedBy: "Student", format: "PDF", pages: 89 },
-  { title: "Cost Accounting Formulas & Examples", subject: "Cost Accounting", degree: "B.Com", semester: "Semester 2", uploadedBy: "Faculty", format: "PDF", pages: 45 },
-  { title: "AI Generated - Corporate Law Summary", subject: "Business Law", degree: "B.Com", semester: "Semester 2", uploadedBy: "Platform", format: "AI Notes", pages: 32 },
-  { title: "Physics Mechanics Complete Notes", subject: "Physics", degree: "B.Sc", semester: "Semester 1", uploadedBy: "Student", format: "PDF", pages: 124 },
-  { title: "Data Structures with C++ Examples", subject: "Data Structures", degree: "B.Tech", semester: "Semester 3", uploadedBy: "Faculty", format: "PDF", pages: 210 },
-];
-
-// Types for past papers
-type PaperEntry = { year: number; type: string };
-type SubjectPapers = Record<string, PaperEntry[]>;
-type SemesterPapers = Record<string, SubjectPapers>;
-type DegreePapers = Record<string, SemesterPapers>;
-
-// Mock past papers
-const pastPapers: DegreePapers = {
-  "B.Com": {
-    "Semester 2": {
-      "Financial Accounting": [
-        { year: 2024, type: "End Sem" },
-        { year: 2024, type: "Mid Sem" },
-        { year: 2023, type: "End Sem" },
-        { year: 2023, type: "Mid Sem" },
-        { year: 2022, type: "End Sem" },
-        { year: 2022, type: "Mid Sem" },
-        { year: 2021, type: "End Sem" },
-      ],
-      "Corporate Accounting": [
-        { year: 2024, type: "End Sem" },
-        { year: 2023, type: "End Sem" },
-        { year: 2023, type: "Mid Sem" },
-        { year: 2022, type: "End Sem" },
-      ],
-      "Cost Accounting": [
-        { year: 2024, type: "End Sem" },
-        { year: 2023, type: "End Sem" },
-        { year: 2022, type: "End Sem" },
-      ],
-    }
-  },
-  "B.Sc": {
-    "Semester 1": {
-      "Physics": [
-        { year: 2024, type: "End Sem" },
-        { year: 2023, type: "End Sem" },
-        { year: 2022, type: "End Sem" },
-      ],
-      "Chemistry": [
-        { year: 2024, type: "End Sem" },
-        { year: 2023, type: "End Sem" },
-      ],
-    }
-  }
-};
-
+interface CourseWithSemesters extends Course {
+  semesters: (Semester & { subjects: Subject[] })[];
+}
 
 const UniversityPage = () => {
   const { universityId } = useParams<{ universityId: string }>();
-  const [expandedSemester, setExpandedSemester] = useState<string | null>("B.Com-Semester 1");
+  const [expandedSemester, setExpandedSemester] = useState<string | null>(null);
   const [selectedDegree, setSelectedDegree] = useState<string>("all");
   const [selectedSemester, setSelectedSemester] = useState<string>("all");
+  
+  // Data states
+  const [university, setUniversity] = useState<University | null>(null);
+  const [courses, setCourses] = useState<CourseWithSemesters[]>([]);
+  const [loading, setLoading] = useState(true);
   
   // AI Tool dialog states
   const [askAIOpen, setAskAIOpen] = useState(false);
   const [notesAIOpen, setNotesAIOpen] = useState(false);
   const [quizAIOpen, setQuizAIOpen] = useState(false);
 
-  // Get university data or use default
-  const university = universityData[universityId || ""] || {
+  useEffect(() => {
+    async function fetchUniversityData() {
+      if (!universityId) return;
+
+      try {
+        // First try to find university by slug
+        const { data: uniData, error: uniError } = await supabase
+          .from('universities')
+          .select('*')
+          .eq('slug', universityId)
+          .maybeSingle();
+
+        if (uniError) throw uniError;
+
+        if (uniData) {
+          setUniversity(uniData);
+
+          // Fetch courses with semesters and subjects
+          const { data: coursesData, error: coursesError } = await supabase
+            .from('courses')
+            .select(`
+              *,
+              semesters (
+                *,
+                subjects (*)
+              )
+            `)
+            .eq('university_id', uniData.id)
+            .order('name');
+
+          if (coursesError) throw coursesError;
+          setCourses(coursesData as CourseWithSemesters[] || []);
+        }
+      } catch (error) {
+        console.error('Error fetching university data:', error);
+      } finally {
+        setLoading(false);
+      }
+    }
+
+    fetchUniversityData();
+  }, [universityId]);
+
+  // Get fallback university data if not from database
+  const fallbackUni = fallbackUniversityData[universityId || ""] || {
     name: universityId?.split("-").map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(" ") || "University",
     location: "India",
     type: "Central University",
     description: "Browse courses, notes, past papers, and exam resources.",
     stats: { courses: 120, subjects: 650, pastPapers: 1200 }
   };
+
+  const displayUniversity = university ? {
+    name: university.full_name,
+    location: university.location,
+    type: university.type,
+    description: `Browse courses, notes, past papers, and exam resources for ${university.full_name}.`,
+    stats: { 
+      courses: courses.length, 
+      subjects: courses.reduce((acc, c) => acc + (c.semesters?.reduce((a, s) => a + (s.subjects?.length || 0), 0) || 0), 0),
+      pastPapers: 0 
+    }
+  } : fallbackUni;
 
   const sidebarItems = [
     { icon: Home, label: "Home", href: "/" },
@@ -337,6 +173,14 @@ const UniversityPage = () => {
   const toggleSemester = (key: string) => {
     setExpandedSemester(expandedSemester === key ? null : key);
   };
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-background flex">
@@ -414,19 +258,19 @@ const UniversityPage = () => {
               <div className="flex items-start justify-between">
                 <div>
                   <h1 className="text-2xl md:text-3xl font-display font-bold text-foreground mb-2">
-                    {university.name}
+                    {displayUniversity.name}
                   </h1>
                   <div className="flex items-center gap-4 text-muted-foreground mb-3">
                     <span className="flex items-center gap-1">
                       <MapPin className="h-4 w-4" />
-                      {university.location}
+                      {displayUniversity.location}
                     </span>
                     <Badge variant="secondary" className="font-medium">
-                      {university.type}
+                      {displayUniversity.type}
                     </Badge>
                   </div>
                   <p className="text-muted-foreground max-w-2xl">
-                    {university.description}
+                    {displayUniversity.description}
                   </p>
                 </div>
               </div>
@@ -456,43 +300,41 @@ const UniversityPage = () => {
               {/* TAB 1: COURSES */}
               <TabsContent value="courses" className="mt-6">
                 <h2 className="text-xl font-semibold text-foreground mb-6">
-                  Courses at {university.name}
+                  Courses at {displayUniversity.name}
                 </h2>
 
-                {/* Undergraduate */}
-                <div className="mb-8">
-                  <h3 className="text-lg font-medium text-foreground mb-4 flex items-center gap-2">
-                    <GraduationCap className="h-5 w-5" />
-                    Undergraduate
-                  </h3>
-                  
+                {courses.length > 0 ? (
                   <Accordion type="multiple" className="space-y-3">
-                    {courseData.undergraduate.map((program) => (
+                    {courses.map((course) => (
                       <AccordionItem 
-                        key={program.degree} 
-                        value={program.degree}
+                        key={course.id} 
+                        value={course.id}
                         className="border border-border rounded-lg px-4 bg-card"
                       >
                         <AccordionTrigger className="hover:no-underline py-4">
-                          <span className="font-medium text-foreground">{program.degree}</span>
+                          <div className="flex items-center gap-3">
+                            <GraduationCap className="h-5 w-5 text-muted-foreground" />
+                            <span className="font-medium text-foreground">{course.name}</span>
+                            <Badge variant="outline" className="text-xs">{course.code}</Badge>
+                          </div>
                         </AccordionTrigger>
                         <AccordionContent className="pb-4">
                           <div className="grid gap-3">
-                            {program.semesters.map((semester) => (
-                              <div key={`${program.degree}-${semester.name}`}>
+                            {course.semesters?.sort((a, b) => a.number - b.number).map((semester) => (
+                              <div key={semester.id}>
                                 <div 
                                   className="flex items-center justify-between p-3 bg-muted/50 rounded-lg cursor-pointer hover:bg-muted transition-colors"
-                                  onClick={() => toggleSemester(`${program.degree}-${semester.name}`)}
+                                  onClick={() => toggleSemester(`${course.id}-${semester.id}`)}
                                 >
                                   <div className="flex items-center gap-3">
-                                    {expandedSemester === `${program.degree}-${semester.name}` ? (
+                                    {expandedSemester === `${course.id}-${semester.id}` ? (
                                       <ChevronDown className="h-4 w-4 text-muted-foreground" />
                                     ) : (
                                       <ChevronRight className="h-4 w-4 text-muted-foreground" />
                                     )}
                                     <div>
                                       <p className="font-medium text-foreground">{semester.name}</p>
-                                      <p className="text-sm text-muted-foreground">{semester.subjects} subjects</p>
+                                      <p className="text-sm text-muted-foreground">{semester.subjects?.length || 0} subjects</p>
                                     </div>
                                   </div>
                                   <div className="flex items-center gap-3">
@@ -502,32 +344,30 @@ const UniversityPage = () => {
                                 </div>
 
                                 {/* Subject List */}
-                                {expandedSemester === `${program.degree}-${semester.name}` && semester.subjectList.length > 0 && (
+                                {expandedSemester === `${course.id}-${semester.id}` && semester.subjects && semester.subjects.length > 0 && (
                                   <div className="mt-3 border border-border rounded-lg overflow-hidden">
                                     <table className="w-full">
                                       <thead className="bg-muted/30">
                                         <tr className="text-left text-sm">
                                           <th className="px-4 py-3 font-medium text-muted-foreground">Subject Name</th>
+                                          <th className="px-4 py-3 font-medium text-muted-foreground">Code</th>
                                           <th className="px-4 py-3 font-medium text-muted-foreground">Type</th>
-                                          <th className="px-4 py-3 font-medium text-muted-foreground text-center">Notes</th>
-                                          <th className="px-4 py-3 font-medium text-muted-foreground text-center">PYQs</th>
                                           <th className="px-4 py-3 font-medium text-muted-foreground">Action</th>
                                         </tr>
                                       </thead>
                                       <tbody className="divide-y divide-border">
-                                        {semester.subjectList.map((subject, idx) => (
-                                          <tr key={idx} className="hover:bg-muted/20">
+                                        {semester.subjects.map((subject) => (
+                                          <tr key={subject.id} className="hover:bg-muted/20">
                                             <td className="px-4 py-3 font-medium text-foreground">{subject.name}</td>
+                                            <td className="px-4 py-3 text-muted-foreground">{subject.code}</td>
                                             <td className="px-4 py-3">
-                                              <Badge variant={subject.type === "Theory" ? "secondary" : "outline"} className="text-xs">
-                                                {subject.type}
+                                              <Badge variant="secondary" className="text-xs">
+                                                {subject.pattern}
                                               </Badge>
                                             </td>
-                                            <td className="px-4 py-3 text-center text-muted-foreground">{subject.notes}</td>
-                                            <td className="px-4 py-3 text-center text-muted-foreground">{subject.pyqs}</td>
                                             <td className="px-4 py-3">
                                               <Button size="sm" variant="ghost" className="text-primary" asChild>
-                                                <Link to={`/university/${universityId}/${program.degree.toLowerCase().replace(/\s+/g, '-')}/${semester.name.toLowerCase().replace(/\s+/g, '-')}/${subject.name.toLowerCase().replace(/[^a-z0-9]+/g, '-')}`}>
+                                                <Link to={`/university/${universityId}/${course.code}/${semester.number}/${subject.slug}`}>
                                                   Open Subject <ExternalLink className="h-3 w-3 ml-1" />
                                                 </Link>
                                               </Button>
@@ -545,178 +385,52 @@ const UniversityPage = () => {
                       </AccordionItem>
                     ))}
                   </Accordion>
-                </div>
-
-                {/* Postgraduate */}
-                <div className="mb-8">
-                  <h3 className="text-lg font-medium text-foreground mb-4 flex items-center gap-2">
-                    <GraduationCap className="h-5 w-5" />
-                    Postgraduate
-                  </h3>
-                  
-                  <Accordion type="multiple" className="space-y-3">
-                    {courseData.postgraduate.map((program) => (
-                      <AccordionItem 
-                        key={program.degree} 
-                        value={program.degree}
-                        className="border border-border rounded-lg px-4 bg-card"
-                      >
-                        <AccordionTrigger className="hover:no-underline py-4">
-                          <span className="font-medium text-foreground">{program.degree}</span>
-                        </AccordionTrigger>
-                        <AccordionContent className="pb-4">
-                          <div className="grid gap-3">
-                            {program.semesters.map((semester) => (
-                              <div 
-                                key={`${program.degree}-${semester.name}`}
-                                className="flex items-center justify-between p-3 bg-muted/50 rounded-lg"
-                              >
-                                <div>
-                                  <p className="font-medium text-foreground">{semester.name}</p>
-                                  <p className="text-sm text-muted-foreground">{semester.subjects} subjects</p>
-                                </div>
-                                <div className="flex items-center gap-3">
-                                  <Badge variant="outline" className="text-xs">Exam-focused</Badge>
-                                  <Button size="sm" variant="outline">View Subjects</Button>
-                                </div>
-                              </div>
-                            ))}
-                          </div>
-                        </AccordionContent>
-                      </AccordionItem>
-                    ))}
-                  </Accordion>
-                </div>
+                ) : (
+                  <div className="text-center py-12 bg-muted/30 rounded-lg">
+                    <GraduationCap className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+                    <h3 className="text-lg font-medium text-foreground mb-2">No courses added yet</h3>
+                    <p className="text-muted-foreground mb-4">
+                      Courses and subjects will appear here once added by administrators.
+                    </p>
+                    <Button variant="outline" asChild>
+                      <Link to="/admin">Go to Admin Panel</Link>
+                    </Button>
+                  </div>
+                )}
               </TabsContent>
 
-              {/* TAB 3: NOTES */}
+              {/* TAB 2: NOTES */}
               <TabsContent value="notes" className="mt-6">
                 <h2 className="text-xl font-semibold text-foreground mb-6">
-                  Study Notes – {university.name.split(" ").slice(-1)[0]}
+                  Study Notes
                 </h2>
-
-                <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
-                  {studyNotes.map((note, idx) => (
-                    <Card key={idx} className="hover:shadow-md transition-shadow">
-                      <CardHeader className="pb-3">
-                        <div className="flex items-start gap-3">
-                          <div className="p-2 bg-muted rounded-lg">
-                            <FileText className="h-5 w-5 text-muted-foreground" />
-                          </div>
-                          <div className="flex-1">
-                            <CardTitle className="text-sm font-medium line-clamp-2">{note.title}</CardTitle>
-                            <p className="text-sm text-muted-foreground mt-1">{note.subject}</p>
-                          </div>
-                        </div>
-                      </CardHeader>
-                      <CardContent>
-                        <div className="flex flex-wrap gap-2 mb-3">
-                          <Badge variant="outline" className="text-xs">{note.degree}</Badge>
-                          <Badge variant="outline" className="text-xs">{note.semester}</Badge>
-                          <Badge 
-                            variant="secondary" 
-                            className={`text-xs ${note.format === "AI Notes" ? "bg-purple-100 text-purple-700" : ""}`}
-                          >
-                            {note.format}
-                          </Badge>
-                        </div>
-                        <div className="flex items-center justify-between text-sm text-muted-foreground">
-                          <span>by {note.uploadedBy}</span>
-                          <span>{note.pages} pages</span>
-                        </div>
-                        <div className="flex gap-2 mt-4">
-                          <Button size="sm" variant="outline" className="flex-1">
-                            <BookOpen className="h-4 w-4 mr-1" /> View
-                          </Button>
-                          <Button size="sm" variant="ghost">
-                            Save
-                          </Button>
-                        </div>
-                      </CardContent>
-                    </Card>
-                  ))}
+                <div className="text-center py-12 bg-muted/30 rounded-lg">
+                  <FileText className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+                  <h3 className="text-lg font-medium text-foreground mb-2">Notes coming soon</h3>
+                  <p className="text-muted-foreground">
+                    Study notes will be available once content is added.
+                  </p>
                 </div>
               </TabsContent>
 
-              {/* TAB 4: PAST PAPERS */}
+              {/* TAB 3: PAST PAPERS */}
               <TabsContent value="past-papers" className="mt-6">
                 <h2 className="text-xl font-semibold text-foreground mb-6">
                   Past Year Question Papers
                 </h2>
-
-                <Accordion type="multiple" className="space-y-3">
-                  {Object.entries(pastPapers).map(([degree, semesters]) => (
-                    <AccordionItem 
-                      key={degree} 
-                      value={degree}
-                      className="border border-border rounded-lg px-4 bg-card"
-                    >
-                      <AccordionTrigger className="hover:no-underline py-4">
-                        <span className="font-medium text-foreground">{degree}</span>
-                      </AccordionTrigger>
-                      <AccordionContent className="pb-4">
-                        <Accordion type="multiple" className="space-y-2">
-                          {Object.entries(semesters).map(([semester, subjects]) => (
-                            <AccordionItem 
-                              key={semester} 
-                              value={semester}
-                              className="border border-border rounded-lg px-3 bg-muted/30"
-                            >
-                              <AccordionTrigger className="hover:no-underline py-3 text-sm">
-                                <span className="font-medium text-foreground">{semester}</span>
-                              </AccordionTrigger>
-                              <AccordionContent className="pb-3">
-                                <Accordion type="multiple" className="space-y-2">
-                                  {Object.entries(subjects).map(([subject, papers]) => (
-                                    <AccordionItem 
-                                      key={subject} 
-                                      value={subject}
-                                      className="border-0 bg-background rounded-lg px-3"
-                                    >
-                                      <AccordionTrigger className="hover:no-underline py-2 text-sm">
-                                        <span className="text-foreground">{subject}</span>
-                                      </AccordionTrigger>
-                                      <AccordionContent className="pb-2">
-                                        <div className="space-y-2">
-                                          {papers.map((paper, idx) => (
-                                            <div 
-                                              key={idx}
-                                              className="flex items-center justify-between p-2 bg-muted/50 rounded"
-                                            >
-                                              <div className="flex items-center gap-3">
-                                                <FileText className="h-4 w-4 text-muted-foreground" />
-                                                <span className="text-sm text-foreground">{paper.year}</span>
-                                                <Badge variant="outline" className="text-xs">{paper.type}</Badge>
-                                              </div>
-                                              <div className="flex gap-2">
-                                                <Button size="sm" variant="ghost" className="h-7 px-2">
-                                                  <ExternalLink className="h-3 w-3" />
-                                                </Button>
-                                                <Button size="sm" variant="ghost" className="h-7 px-2">
-                                                  <Download className="h-3 w-3" />
-                                                </Button>
-                                              </div>
-                                            </div>
-                                          ))}
-                                        </div>
-                                      </AccordionContent>
-                                    </AccordionItem>
-                                  ))}
-                                </Accordion>
-                              </AccordionContent>
-                            </AccordionItem>
-                          ))}
-                        </Accordion>
-                      </AccordionContent>
-                    </AccordionItem>
-                  ))}
-                </Accordion>
+                <div className="text-center py-12 bg-muted/30 rounded-lg">
+                  <Download className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+                  <h3 className="text-lg font-medium text-foreground mb-2">PYQs coming soon</h3>
+                  <p className="text-muted-foreground">
+                    Previous year question papers will be available once uploaded.
+                  </p>
+                </div>
               </TabsContent>
 
-              {/* TAB 5: AI TOOLS */}
+              {/* TAB 4: AI TOOLS */}
               <TabsContent value="ai-tools" className="mt-6">
                 <h2 className="text-xl font-semibold text-foreground mb-6">
-                  AI Tools for {university.name.split(" ").slice(-1)[0]} Students
+                  AI Tools for Students
                 </h2>
 
                 <div className="grid md:grid-cols-3 gap-6">
@@ -787,15 +501,15 @@ const UniversityPage = () => {
             <div className="space-y-3">
               <div className="flex justify-between items-center">
                 <span className="text-sm text-muted-foreground">Courses</span>
-                <span className="font-medium text-foreground">{university.stats.courses}</span>
+                <span className="font-medium text-foreground">{displayUniversity.stats.courses}</span>
               </div>
               <div className="flex justify-between items-center">
                 <span className="text-sm text-muted-foreground">Subjects</span>
-                <span className="font-medium text-foreground">{university.stats.subjects}</span>
+                <span className="font-medium text-foreground">{displayUniversity.stats.subjects}</span>
               </div>
               <div className="flex justify-between items-center">
                 <span className="text-sm text-muted-foreground">Past Papers</span>
-                <span className="font-medium text-foreground">{university.stats.pastPapers}</span>
+                <span className="font-medium text-foreground">{displayUniversity.stats.pastPapers}</span>
               </div>
             </div>
           </div>
@@ -817,11 +531,9 @@ const UniversityPage = () => {
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="all">All Degrees</SelectItem>
-                    <SelectItem value="bcom">B.Com</SelectItem>
-                    <SelectItem value="ba">BA</SelectItem>
-                    <SelectItem value="bsc">B.Sc</SelectItem>
-                    <SelectItem value="btech">B.Tech</SelectItem>
-                    <SelectItem value="mba">MBA</SelectItem>
+                    {courses.map(c => (
+                      <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>
+                    ))}
                   </SelectContent>
                 </Select>
               </div>
@@ -876,7 +588,7 @@ const UniversityPage = () => {
         title="Ask AI"
         subtitle="Get answers aligned with your university syllabus"
         placeholder="Ask any question about your course material, concepts, or exam topics..."
-        universityName={university.name}
+        universityName={displayUniversity.name}
       />
       <AIToolDialog
         open={notesAIOpen}
@@ -885,7 +597,7 @@ const UniversityPage = () => {
         title="AI Notes Generator"
         subtitle="Generate structured, exam-ready notes"
         placeholder="Enter a topic to generate comprehensive study notes (e.g., 'Supply and Demand in Microeconomics')..."
-        universityName={university.name}
+        universityName={displayUniversity.name}
       />
       <AIToolDialog
         open={quizAIOpen}
@@ -894,7 +606,7 @@ const UniversityPage = () => {
         title="AI Quiz Generator"
         subtitle="Practice with exam-style questions"
         placeholder="Enter a topic to generate practice MCQs (e.g., 'Financial Accounting: Journal Entries')..."
-        universityName={university.name}
+        universityName={displayUniversity.name}
       />
     </div>
   );

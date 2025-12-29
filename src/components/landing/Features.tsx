@@ -1,9 +1,11 @@
-import { Search } from "lucide-react";
+import { Search, Loader2 } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Link } from "react-router-dom";
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { supabase } from "@/integrations/supabase/client";
+import type { University } from "@/types/database";
 
-const featuredUniversities = [
+const fallbackUniversities = [
   {
     name: "Dr. A.P.J. Abdul Kalam Technical University",
     location: "Lucknow, UP, IN",
@@ -60,10 +62,48 @@ const featuredUniversities = [
   },
 ];
 
+const bgColors = ["bg-rose-50", "bg-sky-50", "bg-amber-50", "bg-emerald-50", "bg-violet-50", "bg-orange-50"];
+const borderColors = ["border-t-rose-400", "border-t-sky-400", "border-t-amber-400", "border-t-emerald-400", "border-t-violet-400", "border-t-orange-400"];
+
 const Features = () => {
   const [searchQuery, setSearchQuery] = useState("");
+  const [universities, setUniversities] = useState<University[]>([]);
+  const [loading, setLoading] = useState(true);
 
-  const filteredUniversities = featuredUniversities.filter((uni) =>
+  useEffect(() => {
+    async function fetchUniversities() {
+      try {
+        const { data, error } = await supabase
+          .from('universities')
+          .select('*')
+          .order('name')
+          .limit(6);
+        
+        if (error) throw error;
+        setUniversities(data || []);
+      } catch (error) {
+        console.error('Error fetching universities:', error);
+      } finally {
+        setLoading(false);
+      }
+    }
+
+    fetchUniversities();
+  }, []);
+
+  const displayUniversities = universities.length > 0
+    ? universities.map((uni, i) => ({
+        name: uni.full_name,
+        location: uni.location,
+        type: uni.type,
+        courses: 0,
+        slug: uni.slug,
+        bgColor: bgColors[i % bgColors.length],
+        borderColor: borderColors[i % borderColors.length],
+      }))
+    : fallbackUniversities;
+
+  const filteredUniversities = displayUniversities.filter((uni) =>
     uni.name.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
@@ -71,22 +111,28 @@ const Features = () => {
     <section id="features" className="py-8 md:py-10 bg-background">
       <div className="container max-w-6xl mx-auto px-6 md:px-8">
         {/* University Cards Grid */}
-        <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-3 mb-6">
-          {filteredUniversities.map((uni, index) => (
-            <Link
-              key={index}
-              to={`/university/${uni.slug}`}
-              className={`group block ${uni.bgColor} rounded-xl border-t-4 ${uni.borderColor} border border-border p-4 hover:shadow-lg transition-all duration-300 hover:-translate-y-1`}
-            >
-              <h3 className="text-lg font-bold text-foreground mb-2 group-hover:text-primary transition-colors">
-                {uni.name}
-              </h3>
-              <p className="text-sm text-muted-foreground">
-                {uni.type} • {uni.courses} Courses
-              </p>
-            </Link>
-          ))}
-        </div>
+        {loading ? (
+          <div className="flex items-center justify-center py-12">
+            <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+          </div>
+        ) : (
+          <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-3 mb-6">
+            {filteredUniversities.map((uni, index) => (
+              <Link
+                key={index}
+                to={`/university/${uni.slug}`}
+                className={`group block ${uni.bgColor} rounded-xl border-t-4 ${uni.borderColor} border border-border p-4 hover:shadow-lg transition-all duration-300 hover:-translate-y-1`}
+              >
+                <h3 className="text-lg font-bold text-foreground mb-2 group-hover:text-primary transition-colors">
+                  {uni.name}
+                </h3>
+                <p className="text-sm text-muted-foreground">
+                  {uni.type} • {uni.location}
+                </p>
+              </Link>
+            ))}
+          </div>
+        )}
 
         {/* Search Bar */}
         <div className="max-w-2xl mx-auto">
