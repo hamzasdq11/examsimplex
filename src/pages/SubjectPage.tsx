@@ -214,10 +214,42 @@ const subjectData = {
       code: "BCS501",
       pdfUrl: "/pyqs/aktu/btech-cse/sem5/dbms/dbms-2025.pdf",
       questions: [
-        { question: "Explain the three-level architecture of DBMS with diagram.", marks: 10, unit: "Unit 1" },
-        { question: "Write SQL queries for JOIN, GROUP BY, and aggregate functions.", marks: 10, unit: "Unit 2" },
-        { question: "Explain normalization with examples up to BCNF.", marks: 10, unit: "Unit 3" },
-        { question: "Describe ACID properties of transactions.", marks: 7, unit: "Unit 4" },
+        { 
+          question: "Explain the three-level architecture of DBMS with a neat diagram.", 
+          marks: 10, 
+          unit: "Unit 1",
+          answer: "**Three-Level Architecture (ANSI-SPARC):**\n\n1. **External Level (View Level):** User-specific views of the database. Different users see different portions based on their needs.\n\n2. **Conceptual Level (Logical Level):** Describes the logical structure of the entire database including entities, relationships, constraints, and security.\n\n3. **Internal Level (Physical Level):** Describes physical storage of data including file structures, indexing, and access paths.\n\n**Key Benefits:** Data abstraction, data independence (logical & physical), and security through multiple levels."
+        },
+        { 
+          question: "Write SQL queries for JOIN, GROUP BY, HAVING and aggregate functions.", 
+          marks: 10, 
+          unit: "Unit 2",
+          answer: "**SQL Examples:**\n\n```sql\n-- INNER JOIN\nSELECT e.name, d.dept_name \nFROM employees e \nINNER JOIN departments d ON e.dept_id = d.id;\n\n-- GROUP BY with COUNT\nSELECT dept_id, COUNT(*) as emp_count \nFROM employees \nGROUP BY dept_id;\n\n-- HAVING clause\nSELECT dept_id, AVG(salary) as avg_sal \nFROM employees \nGROUP BY dept_id \nHAVING AVG(salary) > 50000;\n\n-- Aggregate Functions\nSELECT MAX(salary), MIN(salary), SUM(salary), AVG(salary) FROM employees;\n```"
+        },
+        { 
+          question: "Explain normalization with examples up to BCNF.", 
+          marks: 10, 
+          unit: "Unit 3",
+          answer: "**Normalization Forms:**\n\n**1NF:** Eliminate repeating groups, ensure atomic values.\n- Before: Student(Roll, Name, Courses[C1,C2])\n- After: Student(Roll, Name, Course)\n\n**2NF:** 1NF + No partial dependency.\n- Remove attributes dependent on part of composite key.\n\n**3NF:** 2NF + No transitive dependency.\n- A→B and B→C means remove C from main table.\n\n**BCNF:** For every FD X→Y, X must be a superkey.\n- Stricter than 3NF, eliminates all redundancy."
+        },
+        { 
+          question: "Describe ACID properties of transactions with examples.", 
+          marks: 7, 
+          unit: "Unit 4",
+          answer: "**ACID Properties:**\n\n**Atomicity:** All-or-nothing execution. Bank transfer: both debit & credit must succeed or neither.\n\n**Consistency:** Database moves from one valid state to another. Total balance remains same after transfer.\n\n**Isolation:** Concurrent transactions don't interfere. Each sees consistent snapshot of data.\n\n**Durability:** Once committed, changes are permanent and survive system failures."
+        },
+        { 
+          question: "Draw ER diagram for a library management system.", 
+          marks: 10, 
+          unit: "Unit 1",
+          answer: "**Entities:** Book, Member, Author, Publisher, Loan\n\n**Relationships:**\n- Book --- Written_By --- Author (M:N)\n- Book --- Published_By --- Publisher (M:1)\n- Member --- Borrows --- Book (M:N with Loan as associative entity)\n\n**Attributes:**\n- Book: ISBN(PK), Title, Category, Copies\n- Member: MemberID(PK), Name, Address, Phone\n- Loan: LoanID(PK), IssueDate, DueDate, ReturnDate"
+        },
+        { 
+          question: "Explain different types of file organization methods.", 
+          marks: 7, 
+          unit: "Unit 5",
+          answer: "**File Organization Methods:**\n\n**1. Heap/Unordered:** Records stored in insertion order. Simple but slow search O(n).\n\n**2. Sequential/Ordered:** Records sorted by key. Binary search possible O(log n).\n\n**3. Hashed:** Hash function determines location. O(1) for exact match queries.\n\n**4. Clustered:** Related records stored together. Good for range queries."
+        },
       ],
     },
     {
@@ -225,10 +257,42 @@ const subjectData = {
       code: "KCS501",
       pdfUrl: "/pyqs/aktu/btech-cse/sem5/dbms/dbms-2023.pdf",
       questions: [
-        { question: "Explain ER model and draw ER diagram for university database.", marks: 10, unit: "Unit 1" },
-        { question: "Write SQL queries using subqueries and nested queries.", marks: 10, unit: "Unit 2" },
-        { question: "Differentiate between 3NF and BCNF with examples.", marks: 7, unit: "Unit 3" },
-        { question: "Explain deadlock detection and prevention techniques.", marks: 10, unit: "Unit 4" },
+        { 
+          question: "Explain ER model and draw ER diagram for university database.", 
+          marks: 10, 
+          unit: "Unit 1",
+          answer: "**ER Model Components:**\n- **Entity:** Real-world object (Student, Course, Faculty)\n- **Attribute:** Property of entity (Name, Roll_No)\n- **Relationship:** Association between entities\n\n**University Database ER:**\n- Student(Roll_No, Name, DOB) --- Enrolls --- Course(Code, Title, Credits)\n- Faculty(ID, Name, Dept) --- Teaches --- Course\n- Department(Dept_ID, Name) --- Offers --- Course"
+        },
+        { 
+          question: "Write SQL queries using subqueries and nested queries.", 
+          marks: 10, 
+          unit: "Unit 2",
+          answer: "**Subquery Examples:**\n\n```sql\n-- Find employees with salary > average\nSELECT name FROM employees \nWHERE salary > (SELECT AVG(salary) FROM employees);\n\n-- Find departments with no employees\nSELECT name FROM departments \nWHERE id NOT IN (SELECT dept_id FROM employees);\n\n-- Correlated subquery\nSELECT e.name FROM employees e \nWHERE salary > (SELECT AVG(salary) FROM employees WHERE dept_id = e.dept_id);\n\n-- EXISTS clause\nSELECT name FROM departments d \nWHERE EXISTS (SELECT 1 FROM employees WHERE dept_id = d.id);\n```"
+        },
+        { 
+          question: "Differentiate between 3NF and BCNF with examples.", 
+          marks: 7, 
+          unit: "Unit 3",
+          answer: "**3NF vs BCNF:**\n\n| Aspect | 3NF | BCNF |\n|--------|-----|------|\n| Definition | No transitive dependency | Every determinant is superkey |\n| Strictness | Less strict | More strict |\n| Redundancy | May have some | Completely eliminated |\n\n**Example:** R(A,B,C) with FDs: AB→C, C→B\n- In 3NF: Allowed (C→B doesn't violate)\n- Not in BCNF: C is not a superkey"
+        },
+        { 
+          question: "Explain deadlock detection and prevention techniques.", 
+          marks: 10, 
+          unit: "Unit 4",
+          answer: "**Deadlock Handling:**\n\n**Detection:**\n- Wait-for graph: Detect cycles\n- Timeout-based: Rollback long-waiting transactions\n\n**Prevention:**\n- **Wait-Die:** Older waits, younger dies (rolls back)\n- **Wound-Wait:** Older wounds (preempts) younger\n- **Lock ordering:** Acquire locks in fixed order\n- **Timestamp ordering:** Use timestamps to avoid conflicts"
+        },
+        { 
+          question: "Explain serializability and its types.", 
+          marks: 7, 
+          unit: "Unit 4",
+          answer: "**Serializability:**\nA schedule is serializable if it's equivalent to some serial schedule.\n\n**Types:**\n\n**1. Conflict Serializability:**\n- Two operations conflict if they access same data and at least one is write\n- Use precedence graph: No cycle = conflict serializable\n\n**2. View Serializability:**\n- Same initial reads, final writes, and read-from relationships\n- Includes blind writes\n- Superset of conflict serializability"
+        },
+        { 
+          question: "What are triggers? Explain with syntax and example.", 
+          marks: 7, 
+          unit: "Unit 2",
+          answer: "**Triggers:**\nAutomatic procedures executed in response to database events.\n\n```sql\nCREATE TRIGGER salary_audit\nAFTER UPDATE ON employees\nFOR EACH ROW\nBEGIN\n  INSERT INTO audit_log(emp_id, old_sal, new_sal, change_date)\n  VALUES(OLD.id, OLD.salary, NEW.salary, NOW());\nEND;\n```\n\n**Types:** BEFORE/AFTER triggers, INSERT/UPDATE/DELETE triggers"
+        },
       ],
     },
     {
@@ -236,10 +300,42 @@ const subjectData = {
       code: "RCS501",
       pdfUrl: "/pyqs/aktu/btech-cse/sem5/dbms/dbms-2022.pdf",
       questions: [
-        { question: "Draw ER diagram for hospital management system.", marks: 10, unit: "Unit 1" },
-        { question: "Explain ACID properties with examples.", marks: 7, unit: "Unit 4" },
-        { question: "Differentiate between B-tree and B+ tree with diagrams.", marks: 7, unit: "Unit 5" },
-        { question: "What is normalization? Explain up to 3NF.", marks: 10, unit: "Unit 3" },
+        { 
+          question: "Draw ER diagram for hospital management system.", 
+          marks: 10, 
+          unit: "Unit 1",
+          answer: "**Hospital ER Diagram:**\n\n**Entities:**\n- Patient(PID, Name, Age, Address)\n- Doctor(DID, Name, Specialization)\n- Department(Dept_ID, Name, Location)\n- Appointment(App_ID, Date, Time)\n\n**Relationships:**\n- Patient --- Consults --- Doctor (M:N)\n- Doctor --- Works_In --- Department (M:1)\n- Patient --- Books --- Appointment (1:M)"
+        },
+        { 
+          question: "Explain ACID properties with examples.", 
+          marks: 7, 
+          unit: "Unit 4",
+          answer: "**ACID Properties:**\n\n**Atomicity:** Transaction is indivisible. Example: Money transfer - debit and credit both must complete.\n\n**Consistency:** Database constraints maintained. Example: Account balance can't be negative.\n\n**Isolation:** Concurrent transactions isolated. Example: Two users booking same seat see consistent data.\n\n**Durability:** Committed changes permanent. Example: After commit, data survives power failure."
+        },
+        { 
+          question: "Differentiate between B-tree and B+ tree with diagrams.", 
+          marks: 7, 
+          unit: "Unit 5",
+          answer: "**B-Tree vs B+ Tree:**\n\n| Feature | B-Tree | B+ Tree |\n|---------|--------|--------|\n| Data storage | All nodes | Leaf nodes only |\n| Leaf linking | No | Yes (linked list) |\n| Search efficiency | Variable | Consistent |\n| Range queries | Slower | Faster |\n| Space utilization | Less | More efficient |\n\n**B+ Tree Advantage:** All leaf nodes linked, excellent for range queries."
+        },
+        { 
+          question: "What is normalization? Explain up to 3NF with example.", 
+          marks: 10, 
+          unit: "Unit 3",
+          answer: "**Normalization Process:**\n\n**1NF (First Normal Form):**\n- Atomic values only, no repeating groups\n- Example: Split multi-valued phone into separate rows\n\n**2NF (Second Normal Form):**\n- 1NF + No partial dependencies\n- All non-key attributes fully depend on entire primary key\n\n**3NF (Third Normal Form):**\n- 2NF + No transitive dependencies\n- Non-key attributes depend only on primary key\n\n**Example:** Student_Course(Roll, Course, Instructor, Dept)\n- FD: Course → Instructor → Dept (transitive)\n- Decompose into: Student_Course(Roll, Course), Course_Info(Course, Instructor, Dept)"
+        },
+        { 
+          question: "Explain relational algebra operations with examples.", 
+          marks: 10, 
+          unit: "Unit 2",
+          answer: "**Relational Algebra Operations:**\n\n**Unary:**\n- **Selection (σ):** σ_salary>50000(Employee) - Filter rows\n- **Projection (π):** π_name,salary(Employee) - Select columns\n\n**Binary:**\n- **Union (∪):** R ∪ S - All tuples from both\n- **Intersection (∩):** R ∩ S - Common tuples\n- **Difference (−):** R − S - Tuples in R not in S\n- **Cartesian Product (×):** R × S - All combinations\n- **Join (⋈):** R ⋈ S - Combine on common attributes"
+        },
+        { 
+          question: "What is data dictionary? Explain its components.", 
+          marks: 7, 
+          unit: "Unit 1",
+          answer: "**Data Dictionary:**\nRepository of metadata (data about data) in DBMS.\n\n**Components:**\n- **Table definitions:** Names, column details\n- **Constraints:** Primary keys, foreign keys, check constraints\n- **User information:** Access privileges, roles\n- **Storage information:** File locations, indexes\n- **Statistics:** Table sizes, column distributions\n\n**Purpose:** Used by DBMS for query optimization and integrity enforcement."
+        },
       ],
     },
     {
@@ -247,10 +343,42 @@ const subjectData = {
       code: "NCS502",
       pdfUrl: "/pyqs/aktu/btech-cse/sem5/dbms/dbms-2020.pdf",
       questions: [
-        { question: "Explain relational algebra operations with examples.", marks: 10, unit: "Unit 2" },
-        { question: "What are different types of keys in DBMS?", marks: 7, unit: "Unit 2" },
-        { question: "Explain concurrency control techniques.", marks: 10, unit: "Unit 4" },
-        { question: "Describe file organization methods.", marks: 7, unit: "Unit 5" },
+        { 
+          question: "Explain relational algebra operations with examples.", 
+          marks: 10, 
+          unit: "Unit 2",
+          answer: "**Relational Algebra:**\n\n**Selection (σ):** Filters rows based on condition.\nσ_age>25(Student) - Students older than 25\n\n**Projection (π):** Selects specific columns.\nπ_name,dept(Employee) - Only name and dept columns\n\n**Join (⋈):** Combines related tables.\nEmployee ⋈ Department - Match on common attribute\n\n**Set Operations:**\n- Union: Combines all tuples\n- Intersection: Common tuples\n- Difference: Tuples in first not in second"
+        },
+        { 
+          question: "What are different types of keys in DBMS? Explain each.", 
+          marks: 7, 
+          unit: "Unit 2",
+          answer: "**Types of Keys:**\n\n**Super Key:** Any set of attributes that uniquely identifies a tuple.\n\n**Candidate Key:** Minimal super key (no proper subset is a super key).\n\n**Primary Key:** Chosen candidate key to identify tuples.\n\n**Alternate Key:** Candidate keys not chosen as primary key.\n\n**Foreign Key:** Attribute referencing primary key of another table.\n\n**Composite Key:** Key consisting of multiple attributes."
+        },
+        { 
+          question: "Explain concurrency control techniques in DBMS.", 
+          marks: 10, 
+          unit: "Unit 4",
+          answer: "**Concurrency Control Techniques:**\n\n**1. Lock-Based Protocols:**\n- Shared lock (S): Read-only access\n- Exclusive lock (X): Read-write access\n- 2-Phase Locking (2PL): Growing and shrinking phases\n\n**2. Timestamp-Based:**\n- Each transaction gets unique timestamp\n- Older transactions have priority\n\n**3. Optimistic Concurrency Control:**\n- Read, validate, write phases\n- No locks during read phase\n\n**4. Multi-Version Concurrency Control (MVCC):**\n- Maintain multiple versions of data\n- Readers don't block writers"
+        },
+        { 
+          question: "Describe file organization methods in DBMS.", 
+          marks: 7, 
+          unit: "Unit 5",
+          answer: "**File Organization Methods:**\n\n**1. Heap File:** Records in no particular order. Fast insert, slow search.\n\n**2. Sequential File:** Sorted by key. Good for range queries, costly inserts.\n\n**3. Hash File:** Hash function maps key to bucket. O(1) for exact match.\n\n**4. Indexed Sequential (ISAM):** Sequential file with index. Balanced performance.\n\n**5. Clustered:** Related records stored together for faster joins."
+        },
+        { 
+          question: "What is transaction? Explain transaction states with diagram.", 
+          marks: 7, 
+          unit: "Unit 4",
+          answer: "**Transaction:**\nLogical unit of work consisting of one or more database operations.\n\n**Transaction States:**\n1. **Active:** Transaction executing\n2. **Partially Committed:** After final statement\n3. **Committed:** After successful completion\n4. **Failed:** After error discovery\n5. **Aborted:** After rollback and recovery\n\n**State Diagram:** Active → Partially Committed → Committed\n                      ↓                              ↓\n                   Failed → Aborted"
+        },
+        { 
+          question: "Explain view in SQL. How is it different from table?", 
+          marks: 7, 
+          unit: "Unit 2",
+          answer: "**View in SQL:**\nVirtual table based on result of SELECT query.\n\n```sql\nCREATE VIEW emp_dept AS\nSELECT e.name, d.dept_name\nFROM employees e JOIN departments d\nON e.dept_id = d.id;\n```\n\n**View vs Table:**\n| View | Table |\n|------|-------|\n| Virtual, no storage | Physical storage |\n| Derived from query | Contains actual data |\n| Always up-to-date | Static until modified |\n| Security layer | Direct access |"
+        },
       ],
     },
     {
@@ -258,10 +386,42 @@ const subjectData = {
       code: "NCS502",
       pdfUrl: "/pyqs/aktu/btech-cse/sem5/dbms/dbms-2019.pdf",
       questions: [
-        { question: "Explain data models used in DBMS.", marks: 10, unit: "Unit 1" },
-        { question: "Write SQL queries for various operations.", marks: 10, unit: "Unit 2" },
-        { question: "Explain functional dependencies and normalization.", marks: 10, unit: "Unit 3" },
-        { question: "What is transaction? Explain transaction states.", marks: 7, unit: "Unit 4" },
+        { 
+          question: "Explain data models used in DBMS with examples.", 
+          marks: 10, 
+          unit: "Unit 1",
+          answer: "**Data Models:**\n\n**1. Hierarchical Model:**\n- Tree structure, parent-child relationships\n- Example: Organization hierarchy\n\n**2. Network Model:**\n- Graph structure, many-to-many relationships\n- Uses pointers to link records\n\n**3. Relational Model:**\n- Tables (relations) with rows and columns\n- Most widely used, SQL-based\n\n**4. Object-Oriented Model:**\n- Objects with attributes and methods\n- Supports inheritance and encapsulation\n\n**5. Entity-Relationship Model:**\n- Conceptual design using entities and relationships"
+        },
+        { 
+          question: "Write SQL queries for various DML and DDL operations.", 
+          marks: 10, 
+          unit: "Unit 2",
+          answer: "**DDL (Data Definition Language):**\n```sql\n-- Create table\nCREATE TABLE students (id INT PRIMARY KEY, name VARCHAR(50));\n\n-- Alter table\nALTER TABLE students ADD email VARCHAR(100);\n\n-- Drop table\nDROP TABLE students;\n```\n\n**DML (Data Manipulation Language):**\n```sql\n-- Insert\nINSERT INTO students VALUES (1, 'John', 'john@email.com');\n\n-- Update\nUPDATE students SET name = 'Jane' WHERE id = 1;\n\n-- Delete\nDELETE FROM students WHERE id = 1;\n\n-- Select\nSELECT * FROM students WHERE name LIKE 'J%';\n```"
+        },
+        { 
+          question: "Explain functional dependencies and normalization.", 
+          marks: 10, 
+          unit: "Unit 3",
+          answer: "**Functional Dependency (FD):**\nX → Y means value of X uniquely determines value of Y.\n\n**Types:**\n- **Trivial FD:** Y ⊆ X (e.g., AB → A)\n- **Non-trivial FD:** Y ⊄ X\n- **Fully Functional:** X → Y where no proper subset of X determines Y\n\n**Armstrong's Axioms:**\n- Reflexivity: If Y ⊆ X, then X → Y\n- Augmentation: If X → Y, then XZ → YZ\n- Transitivity: If X → Y and Y → Z, then X → Z\n\n**Normalization uses FDs to eliminate redundancy.**"
+        },
+        { 
+          question: "What is transaction? Explain transaction states and properties.", 
+          marks: 7, 
+          unit: "Unit 4",
+          answer: "**Transaction:**\nSequence of operations performed as a single logical unit.\n\n**Properties (ACID):**\n- Atomicity: All or nothing\n- Consistency: Valid state to valid state\n- Isolation: Concurrent transactions independent\n- Durability: Permanent after commit\n\n**States:**\nActive → Partially Committed → Committed\n       ↘ Failed → Aborted ↗"
+        },
+        { 
+          question: "Explain different types of joins in SQL with examples.", 
+          marks: 10, 
+          unit: "Unit 2",
+          answer: "**Types of Joins:**\n\n**1. INNER JOIN:** Returns matching rows only.\n```sql\nSELECT * FROM A INNER JOIN B ON A.id = B.a_id;\n```\n\n**2. LEFT JOIN:** All rows from left + matching from right.\n```sql\nSELECT * FROM A LEFT JOIN B ON A.id = B.a_id;\n```\n\n**3. RIGHT JOIN:** All rows from right + matching from left.\n\n**4. FULL OUTER JOIN:** All rows from both tables.\n\n**5. CROSS JOIN:** Cartesian product of both tables.\n\n**6. SELF JOIN:** Table joined with itself."
+        },
+        { 
+          question: "What is indexing? Explain types of indexes.", 
+          marks: 7, 
+          unit: "Unit 5",
+          answer: "**Indexing:**\nData structure to speed up data retrieval operations.\n\n**Types:**\n\n**1. Primary Index:** On ordering key field of sorted file.\n\n**2. Clustering Index:** On non-key ordering field.\n\n**3. Secondary Index:** On non-ordering field (can be on any attribute).\n\n**4. Dense Index:** Entry for every record.\n\n**5. Sparse Index:** Entry for some records only.\n\n**6. Multi-level Index:** Index on index for large files."
+        },
       ],
     },
     {
@@ -269,10 +429,42 @@ const subjectData = {
       code: "NCS502",
       pdfUrl: "/pyqs/aktu/btech-cse/sem5/dbms/dbms-2018.pdf",
       questions: [
-        { question: "Explain three-level architecture of DBMS.", marks: 10, unit: "Unit 1" },
-        { question: "What is relational model? Explain relational algebra.", marks: 10, unit: "Unit 2" },
-        { question: "Explain normalization process with examples.", marks: 10, unit: "Unit 3" },
-        { question: "Describe indexing techniques in DBMS.", marks: 7, unit: "Unit 5" },
+        { 
+          question: "Explain three-level architecture of DBMS with diagram.", 
+          marks: 10, 
+          unit: "Unit 1",
+          answer: "**ANSI-SPARC Three-Level Architecture:**\n\n**1. External Level:**\n- Individual user views\n- Different subsets for different users\n- Provides security and simplification\n\n**2. Conceptual Level:**\n- Logical structure of entire database\n- Entities, relationships, constraints\n- Independent of physical storage\n\n**3. Internal Level:**\n- Physical storage details\n- File structures, indexing, compression\n- Access paths and storage allocation\n\n**Mappings:** External-Conceptual and Conceptual-Internal mappings provide data independence."
+        },
+        { 
+          question: "What is relational model? Explain relational algebra operations.", 
+          marks: 10, 
+          unit: "Unit 2",
+          answer: "**Relational Model:**\nData represented as relations (tables) with tuples (rows) and attributes (columns).\n\n**Relational Algebra Operations:**\n\n**Unary:**\n- σ (Selection): Filter rows by condition\n- π (Projection): Select specific columns\n- ρ (Rename): Rename relation/attributes\n\n**Binary:**\n- ∪ (Union): Combine tuples from two relations\n- ∩ (Intersection): Common tuples\n- − (Difference): Tuples in first not in second\n- × (Cartesian Product): All combinations\n- ⋈ (Join): Combine on matching attributes"
+        },
+        { 
+          question: "Explain normalization process with examples up to BCNF.", 
+          marks: 10, 
+          unit: "Unit 3",
+          answer: "**Normalization:**\nProcess of organizing data to minimize redundancy.\n\n**1NF:** Atomic values, no repeating groups.\n\n**2NF:** 1NF + No partial dependency.\nExample: Order_Item(OrderID, ItemID, ItemName, Qty)\n- ItemID → ItemName (partial dependency)\n- Decompose: Order_Item(OrderID, ItemID, Qty), Item(ItemID, ItemName)\n\n**3NF:** 2NF + No transitive dependency.\nExample: Employee(EmpID, DeptID, DeptName)\n- EmpID → DeptID → DeptName (transitive)\n- Decompose: Employee(EmpID, DeptID), Dept(DeptID, DeptName)\n\n**BCNF:** Every determinant is a superkey."
+        },
+        { 
+          question: "Describe indexing techniques in DBMS.", 
+          marks: 7, 
+          unit: "Unit 5",
+          answer: "**Indexing Techniques:**\n\n**1. Ordered Indices:**\n- Primary Index: On sorted key field\n- Clustering Index: On sorted non-key field\n- Secondary Index: On unsorted field\n\n**2. Hash Indices:**\n- Static Hashing: Fixed buckets\n- Dynamic Hashing: Buckets grow/shrink\n\n**3. Tree Indices:**\n- B-Tree: Keys in all nodes\n- B+ Tree: Keys only in leaves, leaves linked\n\n**4. Bitmap Index:** Bit vectors for low-cardinality columns."
+        },
+        { 
+          question: "Explain 2-Phase Locking Protocol.", 
+          marks: 7, 
+          unit: "Unit 4",
+          answer: "**2-Phase Locking (2PL):**\nConcurrency control protocol ensuring serializability.\n\n**Phases:**\n\n**1. Growing Phase:**\n- Transaction acquires locks\n- Cannot release any lock\n\n**2. Shrinking Phase:**\n- Transaction releases locks\n- Cannot acquire new locks\n\n**Variants:**\n- **Strict 2PL:** Hold all exclusive locks until commit\n- **Rigorous 2PL:** Hold all locks until commit\n\n**Ensures conflict serializability but may cause deadlocks.**"
+        },
+        { 
+          question: "What is data independence? Explain its types.", 
+          marks: 7, 
+          unit: "Unit 1",
+          answer: "**Data Independence:**\nAbility to modify schema at one level without affecting higher levels.\n\n**Types:**\n\n**1. Logical Data Independence:**\n- Change conceptual schema without changing external schema\n- Add/modify entities, attributes\n- Example: Add new table without affecting views\n\n**2. Physical Data Independence:**\n- Change internal schema without changing conceptual schema\n- Modify storage, indexing, file organization\n- Example: Change from B-tree to hash index\n\n**Achieved through mappings between levels in three-schema architecture.**"
+        },
       ],
     },
   ],
@@ -617,16 +809,47 @@ const SubjectPage = () => {
                             </div>
                           </div>
                         </CollapsibleTrigger>
-                        <CollapsibleContent className="mt-2 space-y-2">
+                        <CollapsibleContent className="mt-2 space-y-4">
                           {yearData.questions.map((q, idx) => (
-                            <div key={idx} className="ml-4 p-4 border rounded-lg bg-background">
-                              <div className="flex items-start justify-between gap-4">
-                                <p className="text-foreground">{q.question}</p>
-                                <div className="flex gap-2 shrink-0">
-                                  <Badge variant="outline">{q.marks} marks</Badge>
-                                  <Badge variant="secondary" className="text-xs">{q.unit}</Badge>
+                            <div key={idx} className="ml-4 border rounded-lg bg-background overflow-hidden">
+                              {/* Question Header */}
+                              <div className="p-4 bg-muted/40 border-b">
+                                <div className="flex items-start justify-between gap-4">
+                                  <div className="flex items-start gap-3">
+                                    <span className="flex items-center justify-center w-7 h-7 rounded-full bg-primary/10 text-primary text-sm font-semibold shrink-0">
+                                      {idx + 1}
+                                    </span>
+                                    <p className="text-foreground font-medium pt-0.5">{q.question}</p>
+                                  </div>
+                                  <div className="flex gap-2 shrink-0">
+                                    <Badge variant="outline" className="bg-background">{q.marks} marks</Badge>
+                                    <Badge variant="secondary" className="text-xs">{q.unit}</Badge>
+                                  </div>
                                 </div>
                               </div>
+                              
+                              {/* Model Answer */}
+                              {q.answer && (
+                                <div className="p-4">
+                                  <div className="flex items-center gap-2 mb-3">
+                                    <div className="w-1 h-4 bg-primary rounded-full" />
+                                    <span className="text-sm font-semibold text-primary">Model Answer</span>
+                                  </div>
+                                  <div 
+                                    className="text-sm text-muted-foreground leading-relaxed prose prose-sm max-w-none dark:prose-invert"
+                                    dangerouslySetInnerHTML={{
+                                      __html: q.answer
+                                        .replace(/\*\*(.*?)\*\*/g, '<strong class="text-foreground font-semibold">$1</strong>')
+                                        .replace(/```sql([\s\S]*?)```/g, '<pre class="bg-muted p-3 rounded-md text-xs overflow-x-auto my-2"><code class="text-foreground">$1</code></pre>')
+                                        .replace(/```([\s\S]*?)```/g, '<pre class="bg-muted p-3 rounded-md text-xs overflow-x-auto my-2"><code class="text-foreground">$1</code></pre>')
+                                        .replace(/\n\n/g, '</p><p class="mt-2">')
+                                        .replace(/\n- /g, '</p><p class="mt-1 pl-4">• ')
+                                        .replace(/\n\d\. /g, (match) => `</p><p class="mt-1 pl-4">${match.trim()} `)
+                                        .replace(/\|([^|]+)\|/g, '<span class="inline-block px-2 py-0.5 bg-muted rounded text-xs mr-1">$1</span>')
+                                    }}
+                                  />
+                                </div>
+                              )}
                             </div>
                           ))}
                         </CollapsibleContent>
