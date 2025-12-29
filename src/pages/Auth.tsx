@@ -26,7 +26,7 @@ export default function Auth() {
   const location = useLocation();
   const { toast } = useToast();
 
-  const from = (location.state as any)?.from?.pathname || '/admin';
+  const from = (location.state as any)?.from?.pathname || '/';
 
   useEffect(() => {
     if (!authLoading && user) {
@@ -118,9 +118,9 @@ export default function Auth() {
               <BookOpen className="h-8 w-8 text-primary" />
             </div>
           </div>
-          <CardTitle className="text-2xl">ExamPrep Admin</CardTitle>
+          <CardTitle className="text-2xl">ExamPrep</CardTitle>
           <CardDescription>
-            Sign in to access the admin dashboard
+            Sign in to your account or create a new one
           </CardDescription>
         </CardHeader>
         <CardContent>
