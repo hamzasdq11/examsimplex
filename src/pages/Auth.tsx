@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
+import { useProfile } from '@/hooks/useProfile';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -22,17 +23,23 @@ export default function Auth() {
   const [activeTab, setActiveTab] = useState('login');
   
   const { signIn, signUp, user, loading: authLoading } = useAuth();
+  const { isProfileComplete, loading: profileLoading } = useProfile();
   const navigate = useNavigate();
   const location = useLocation();
   const { toast } = useToast();
 
-  const from = (location.state as any)?.from?.pathname || '/';
+  const from = (location.state as any)?.from?.pathname || '/dashboard';
 
   useEffect(() => {
-    if (!authLoading && user) {
-      navigate(from, { replace: true });
+    if (!authLoading && !profileLoading && user) {
+      // Redirect based on profile completion
+      if (isProfileComplete) {
+        navigate(from, { replace: true });
+      } else {
+        navigate('/onboarding', { replace: true });
+      }
     }
-  }, [user, authLoading, navigate, from]);
+  }, [user, authLoading, profileLoading, isProfileComplete, navigate, from]);
 
   const handleSubmit = async (e: React.FormEvent, mode: 'login' | 'signup') => {
     e.preventDefault();
@@ -101,7 +108,7 @@ export default function Auth() {
     }
   };
 
-  if (authLoading) {
+  if (authLoading || profileLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-background">
         <Loader2 className="h-8 w-8 animate-spin text-primary" />

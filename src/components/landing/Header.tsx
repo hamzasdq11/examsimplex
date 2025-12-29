@@ -98,6 +98,10 @@ const Header = () => {
                   </div>
                 </div>
                 <DropdownMenuSeparator />
+                <DropdownMenuItem onClick={() => navigate("/dashboard")}>
+                  <User className="mr-2 h-4 w-4" />
+                  My Dashboard
+                </DropdownMenuItem>
                 {isAdmin && (
                   <DropdownMenuItem onClick={() => navigate("/admin")}>
                     <LayoutDashboard className="mr-2 h-4 w-4" />
@@ -173,6 +177,10 @@ const Header = () => {
                       <p className="text-xs text-muted-foreground">{isAdmin ? "Admin" : "User"}</p>
                     </div>
                   </div>
+                  <Button variant="outline" onClick={() => { navigate("/dashboard"); setMobileMenuOpen(false); }} className="w-full justify-start">
+                    <User className="mr-2 h-4 w-4" />
+                    My Dashboard
+                  </Button>
                   {isAdmin && (
                     <Button variant="outline" onClick={() => { navigate("/admin"); setMobileMenuOpen(false); }} className="w-full justify-start">
                       <LayoutDashboard className="mr-2 h-4 w-4" />

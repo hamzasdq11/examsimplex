@@ -10,7 +10,9 @@ import GetStarted from "./pages/GetStarted";
 import UniversityPage from "./pages/UniversityPage";
 import SubjectPage from "./pages/SubjectPage";
 import Auth from "./pages/Auth";
-import Dashboard from "./pages/admin/Dashboard";
+import Onboarding from "./pages/Onboarding";
+import UserDashboard from "./pages/Dashboard";
+import AdminDashboard from "./pages/admin/Dashboard";
 import Universities from "./pages/admin/Universities";
 import Courses from "./pages/admin/Courses";
 import Semesters from "./pages/admin/Semesters";
@@ -35,11 +37,13 @@ const App = () => (
             <Route path="/" element={<Index />} />
             <Route path="/get-started" element={<GetStarted />} />
             <Route path="/auth" element={<Auth />} />
+            <Route path="/onboarding" element={<Onboarding />} />
+            <Route path="/dashboard" element={<UserDashboard />} />
             <Route path="/university/:universityId" element={<UniversityPage />} />
             <Route path="/university/:universityId/:courseId/:semesterId/:subjectId" element={<SubjectPage />} />
             
             {/* Admin Routes */}
-            <Route path="/admin" element={<ProtectedRoute requireAdmin><Dashboard /></ProtectedRoute>} />
+            <Route path="/admin" element={<ProtectedRoute requireAdmin><AdminDashboard /></ProtectedRoute>} />
             <Route path="/admin/universities" element={<ProtectedRoute requireAdmin><Universities /></ProtectedRoute>} />
             <Route path="/admin/courses" element={<ProtectedRoute requireAdmin><Courses /></ProtectedRoute>} />
             <Route path="/admin/semesters" element={<ProtectedRoute requireAdmin><Semesters /></ProtectedRoute>} />
