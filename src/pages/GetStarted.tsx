@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { 
   Home, 
@@ -12,13 +12,38 @@ import {
   ChevronDown,
   Search,
   Plus,
-  User
+  User,
+  Loader2
 } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
+import { supabase } from "@/integrations/supabase/client";
+import type { University } from "@/types/database";
 
 const GetStarted = () => {
   const [searchQuery, setSearchQuery] = useState("");
+  const [universities, setUniversities] = useState<University[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    async function fetchUniversities() {
+      try {
+        const { data, error } = await supabase
+          .from('universities')
+          .select('*')
+          .order('name');
+        
+        if (error) throw error;
+        setUniversities(data || []);
+      } catch (error) {
+        console.error('Error fetching universities:', error);
+      } finally {
+        setLoading(false);
+      }
+    }
+
+    fetchUniversities();
+  }, []);
 
   const sidebarItems = [
     { icon: Home, label: "Home", active: false },
@@ -28,63 +53,40 @@ const GetStarted = () => {
     { icon: HelpCircle, label: "AI Quiz", active: false },
   ];
 
-  const universities = [
+  // Fallback universities if database is empty
+  const fallbackUniversities = [
     "Aligarh Muslim University, Aligarh",
     "Assam University, Silchar",
     "Babasaheb Bhimrao Ambedkar University, Lucknow",
     "Banaras Hindu University, Banaras",
     "Central Agricultural University, Imphal",
-    "Central Sanskrit University",
-    "Central Tribal University",
     "Central University of Kerala, Kasaragod",
-    "Central University of Andhra Pradesh",
     "Central University of Gujarat",
-    "Central University of Haryana, Mahendergarh",
-    "Central University of Himachal Pradesh, Dharmshala, Kangra",
-    "Central University of Jammu",
-    "Central University of Jharkhand, Ranchi",
-    "Central University of Karnataka, Gulbarga",
-    "Central University of Kashmir, Srinagar",
-    "Central University of Orissa, Koraput",
-    "Central University of Punjab, Bathhinda",
     "Central University of Rajasthan, Jaipur",
-    "Central University of South Bihar",
-    "Central University of Tamil Nadu, Tiruvarur",
-    "Dr. Harisingh Gaur Vishwavidyalaya, Sagar",
-    "Dr Rajendra Prasad Central Agricultural University, Samastipur",
-    "Gati Shakti Vishwavidyalaya",
-    "Guru Ghasidas Vishwavidyalaya, Bilaspur",
-    "Hemwati Nandan Bahuguna Garhwal University, Srinagar, Garhwal",
-    "Indian Maritime University",
-    "Indira Gandhi National Tribal University, Amarkantak",
-    "Jamia Millia Islamia University",
     "Jawaharlal Nehru University",
-    "Mahatama Gandhi Antarrashtriya Hindi Vishwavidyalaya, Wardha",
-    "Mahatma Gandhi Central University, Motihari",
-    "Manipur University, Imphal",
-    "Maulana Azad National Urdu University, Hyderabad",
-    "Mizoram University, Aizwal",
-    "Nagaland University",
-    "Nalanda University",
-    "National Sanskrit University, Tirupati",
-    "National Sports University",
-    "North Eastern Hill University, Shillong",
-    "Pondicherry University, Puducherry",
-    "Rajiv Gandhi National Aviation University",
-    "Rajiv Gandhi University, Itanagar",
-    "Rani Lakshmi Bai Central Agricultural University",
-    "Sammakka Sarakka Central Tribal University",
-    "Shri Lal Bahadur Shastri National Sanskrit University",
-    "Sikkim University, Gangtok",
-    "South Asian University, New Delhi",
     "Tezpur University, Tezpur",
-    "The English and Foreign Languages University, Hyderabad",
-    "Tripura University, Agartala",
-    "University of Allahabad, Allahabad",
     "University of Delhi",
     "University of Hyderabad, Hyderabad",
-    "Visva Bharati, Shantiniketan",
   ];
+
+  const displayUniversities = universities.length > 0 
+    ? universities 
+    : fallbackUniversities.map((name, i) => ({
+        id: `fallback-${i}`,
+        name: name.split(",")[0],
+        full_name: name,
+        slug: name.split(",")[0].toLowerCase().replace(/[^a-z0-9\s]/g, "").replace(/\s+/g, "-"),
+        location: name.includes(",") ? name.split(",")[1]?.trim() || "India" : "India",
+        logo_url: null,
+        type: "Central",
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+      }));
+
+  const filteredUniversities = displayUniversities.filter((university) => 
+    university.full_name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    university.name.toLowerCase().includes(searchQuery.toLowerCase())
+  );
 
   return (
     <div className="min-h-screen bg-background flex">
@@ -176,16 +178,12 @@ const GetStarted = () => {
           <div className="flex justify-center mb-8">
             <div className="relative">
               <svg width="120" height="100" viewBox="0 0 120 100" fill="none" xmlns="http://www.w3.org/2000/svg">
-                {/* Building base */}
                 <rect x="30" y="40" width="60" height="50" fill="#E8F4FC" rx="2" />
-                {/* Columns */}
                 <rect x="38" y="45" width="8" height="45" fill="#D1E9F6" rx="1" />
                 <rect x="52" y="45" width="8" height="45" fill="#D1E9F6" rx="1" />
                 <rect x="66" y="45" width="8" height="45" fill="#D1E9F6" rx="1" />
                 <rect x="80" y="45" width="8" height="45" fill="#D1E9F6" rx="1" />
-                {/* Roof */}
                 <path d="M25 45 L60 20 L95 45" stroke="#D1E9F6" strokeWidth="4" fill="none" />
-                {/* Decorative elements */}
                 <circle cx="85" cy="25" r="8" fill="#FFC857" />
                 <rect x="90" y="15" width="12" height="12" fill="#4A90D9" rx="2" />
                 <circle cx="35" cy="70" r="6" fill="#7BC47F" />
@@ -220,39 +218,36 @@ const GetStarted = () => {
             <h2 className="text-lg font-semibold text-foreground mb-4">
               Most popular universities and schools
             </h2>
-            <div className="grid md:grid-cols-2 gap-3">
-              {universities
-                .filter((university) => 
-                  university.toLowerCase().includes(searchQuery.toLowerCase())
-                )
-                .map((university) => {
-                  // Generate URL-friendly slug from university name
-                  const slug = university
-                    .split(",")[0] // Take only the name part before comma
-                    .toLowerCase()
-                    .replace(/[^a-z0-9\s]/g, "")
-                    .replace(/\s+/g, "-");
-                  
-                  return (
-                    <Link
-                      key={university}
-                      to={`/university/${slug}`}
-                      className="flex items-center gap-3 p-3 rounded-lg hover:bg-muted transition-colors text-left"
-                    >
-                      <div className="w-8 h-8 rounded bg-red-100 flex items-center justify-center">
-                        <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
-                          <path d="M8 2L2 5V7H14V5L8 2Z" fill="#E53935" />
-                          <rect x="3" y="8" width="2" height="5" fill="#E53935" />
-                          <rect x="7" y="8" width="2" height="5" fill="#E53935" />
-                          <rect x="11" y="8" width="2" height="5" fill="#E53935" />
-                          <rect x="1" y="13" width="14" height="1" fill="#E53935" />
-                        </svg>
-                      </div>
-                      <span className="text-primary hover:underline font-medium">{university}</span>
-                    </Link>
-                  );
-                })}
-            </div>
+            
+            {loading ? (
+              <div className="flex items-center justify-center py-8">
+                <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+              </div>
+            ) : (
+              <div className="grid md:grid-cols-2 gap-3">
+                {filteredUniversities.map((university) => (
+                  <Link
+                    key={university.id}
+                    to={`/university/${university.slug}`}
+                    className="flex items-center gap-3 p-3 rounded-lg hover:bg-muted transition-colors text-left"
+                  >
+                    <div className="w-8 h-8 rounded bg-red-100 flex items-center justify-center">
+                      <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M8 2L2 5V7H14V5L8 2Z" fill="#E53935" />
+                        <rect x="3" y="8" width="2" height="5" fill="#E53935" />
+                        <rect x="7" y="8" width="2" height="5" fill="#E53935" />
+                        <rect x="11" y="8" width="2" height="5" fill="#E53935" />
+                        <rect x="1" y="13" width="14" height="1" fill="#E53935" />
+                      </svg>
+                    </div>
+                    <div>
+                      <span className="text-primary hover:underline font-medium block">{university.full_name}</span>
+                      <span className="text-xs text-muted-foreground">{university.type} • {university.location}</span>
+                    </div>
+                  </Link>
+                ))}
+              </div>
+            )}
           </div>
         </div>
       </main>
