@@ -18,7 +18,6 @@ import {
   BookOpen,
   FileQuestion,
   FileText,
-  ClipboardList,
   MessageSquare,
   Clock,
   Award,
@@ -27,7 +26,6 @@ import {
   Download,
   Printer,
   Send,
-  AlertCircle,
   Target,
   TrendingUp,
 } from "lucide-react";
@@ -289,7 +287,7 @@ const subjectData = {
 
 const SubjectPage = () => {
   const { universityId, courseId, semesterId, subjectId } = useParams();
-  const [activeTab, setActiveTab] = useState("questions");
+  const [activeTab, setActiveTab] = useState("questions"); // Important Questions as default
   const [openUnits, setOpenUnits] = useState<string[]>([subjectData.notes[0]?.unit || ""]);
   const [openPyqYears, setOpenPyqYears] = useState<string[]>([subjectData.pyqs[0]?.year || ""]);
   const [aiMessage, setAiMessage] = useState("");
@@ -429,15 +427,6 @@ const SubjectPage = () => {
                   PYQs
                 </Button>
                 <Button
-                  variant={activeTab === "templates" ? "default" : "outline"}
-                  size="sm"
-                  onClick={() => setActiveTab("templates")}
-                  className="gap-2"
-                >
-                  <ClipboardList className="h-4 w-4" />
-                  Answer Templates
-                </Button>
-                <Button
                   variant={activeTab === "ai" ? "default" : "outline"}
                   size="sm"
                   onClick={() => setActiveTab("ai")}
@@ -479,16 +468,6 @@ const SubjectPage = () => {
                           <Badge variant="outline" className="text-xs">
                             {q.unit}
                           </Badge>
-                          {q.hasTemplate && (
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              className="h-7 text-xs text-primary"
-                              onClick={() => setActiveTab("templates")}
-                            >
-                              View Answer Template →
-                            </Button>
-                          )}
                         </div>
                       </div>
                     ))}
@@ -606,70 +585,6 @@ const SubjectPage = () => {
                 </Card>
               </TabsContent>
 
-              {/* Answer Templates Tab */}
-              <TabsContent value="templates" className="mt-0">
-                <Card>
-                  <CardHeader className="pb-4">
-                    <CardTitle className="text-lg">Answer Templates</CardTitle>
-                    <p className="text-sm text-muted-foreground">
-                      Structured answer formats for high-weightage questions. Follow these templates to maximize marks.
-                    </p>
-                  </CardHeader>
-                  <CardContent className="space-y-6">
-                    {subjectData.answerTemplates.map((template) => (
-                      <div key={template.id} className="border rounded-lg overflow-hidden">
-                        <div className="bg-muted/50 p-4 border-b">
-                          <p className="font-medium text-foreground">{template.question}</p>
-                        </div>
-                        <div className="p-4 space-y-4">
-                          <div>
-                            <h5 className="text-sm font-medium text-foreground mb-2">Introduction</h5>
-                            <p className="text-sm text-muted-foreground bg-muted/30 p-3 rounded">
-                              {template.template.intro}
-                            </p>
-                          </div>
-                          <div>
-                            <h5 className="text-sm font-medium text-foreground mb-2">Key Points to Cover</h5>
-                            <ul className="space-y-2">
-                              {template.template.keyPoints.map((point, idx) => (
-                                <li key={idx} className="text-sm text-muted-foreground bg-muted/30 p-3 rounded">
-                                  {point}
-                                </li>
-                              ))}
-                            </ul>
-                          </div>
-                          <div>
-                            <h5 className="text-sm font-medium text-foreground mb-2">Keywords (Mark-carriers)</h5>
-                            <div className="flex flex-wrap gap-2">
-                              {template.template.keywords.map((keyword, idx) => (
-                                <Badge key={idx} variant="outline" className="bg-primary/5">
-                                  {keyword}
-                                </Badge>
-                              ))}
-                            </div>
-                          </div>
-                          <div>
-                            <h5 className="text-sm font-medium text-foreground mb-2">Diagram Suggestion</h5>
-                            <p className="text-sm text-muted-foreground bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800 p-3 rounded">
-                              {template.template.diagramSuggestion}
-                            </p>
-                          </div>
-                          <div>
-                            <h5 className="text-sm font-medium text-foreground mb-2">Conclusion</h5>
-                            <p className="text-sm text-muted-foreground bg-muted/30 p-3 rounded">
-                              {template.template.conclusion}
-                            </p>
-                          </div>
-                          <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                            <AlertCircle className="h-4 w-4" />
-                            <span>Recommended: {template.template.wordLimit}</span>
-                          </div>
-                        </div>
-                      </div>
-                    ))}
-                  </CardContent>
-                </Card>
-              </TabsContent>
 
               {/* Ask AI Tab */}
               <TabsContent value="ai" className="mt-0">
