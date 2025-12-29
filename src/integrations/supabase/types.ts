@@ -14,16 +14,432 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      courses: {
+        Row: {
+          code: string
+          created_at: string
+          duration_years: number
+          id: string
+          name: string
+          university_id: string
+          updated_at: string
+        }
+        Insert: {
+          code: string
+          created_at?: string
+          duration_years?: number
+          id?: string
+          name: string
+          university_id: string
+          updated_at?: string
+        }
+        Update: {
+          code?: string
+          created_at?: string
+          duration_years?: number
+          id?: string
+          name?: string
+          university_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "courses_university_id_fkey"
+            columns: ["university_id"]
+            isOneToOne: false
+            referencedRelation: "universities"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      important_questions: {
+        Row: {
+          answer_template: Json | null
+          created_at: string
+          frequency: string
+          id: string
+          marks: number
+          question: string
+          subject_id: string
+          unit_id: string | null
+          updated_at: string
+        }
+        Insert: {
+          answer_template?: Json | null
+          created_at?: string
+          frequency?: string
+          id?: string
+          marks?: number
+          question: string
+          subject_id: string
+          unit_id?: string | null
+          updated_at?: string
+        }
+        Update: {
+          answer_template?: Json | null
+          created_at?: string
+          frequency?: string
+          id?: string
+          marks?: number
+          question?: string
+          subject_id?: string
+          unit_id?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "important_questions_subject_id_fkey"
+            columns: ["subject_id"]
+            isOneToOne: false
+            referencedRelation: "subjects"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "important_questions_unit_id_fkey"
+            columns: ["unit_id"]
+            isOneToOne: false
+            referencedRelation: "units"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      notes: {
+        Row: {
+          chapter_title: string
+          created_at: string
+          id: string
+          order_index: number
+          points: Json
+          unit_id: string
+          updated_at: string
+        }
+        Insert: {
+          chapter_title: string
+          created_at?: string
+          id?: string
+          order_index?: number
+          points?: Json
+          unit_id: string
+          updated_at?: string
+        }
+        Update: {
+          chapter_title?: string
+          created_at?: string
+          id?: string
+          order_index?: number
+          points?: Json
+          unit_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "notes_unit_id_fkey"
+            columns: ["unit_id"]
+            isOneToOne: false
+            referencedRelation: "units"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      pyq_papers: {
+        Row: {
+          created_at: string
+          id: string
+          paper_code: string | null
+          pdf_url: string | null
+          subject_id: string
+          updated_at: string
+          year: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          paper_code?: string | null
+          pdf_url?: string | null
+          subject_id: string
+          updated_at?: string
+          year: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          paper_code?: string | null
+          pdf_url?: string | null
+          subject_id?: string
+          updated_at?: string
+          year?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "pyq_papers_subject_id_fkey"
+            columns: ["subject_id"]
+            isOneToOne: false
+            referencedRelation: "subjects"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      pyq_questions: {
+        Row: {
+          answer: string | null
+          created_at: string
+          id: string
+          marks: number
+          order_index: number
+          pyq_paper_id: string
+          question: string
+          unit_id: string | null
+          updated_at: string
+        }
+        Insert: {
+          answer?: string | null
+          created_at?: string
+          id?: string
+          marks?: number
+          order_index?: number
+          pyq_paper_id: string
+          question: string
+          unit_id?: string | null
+          updated_at?: string
+        }
+        Update: {
+          answer?: string | null
+          created_at?: string
+          id?: string
+          marks?: number
+          order_index?: number
+          pyq_paper_id?: string
+          question?: string
+          unit_id?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "pyq_questions_pyq_paper_id_fkey"
+            columns: ["pyq_paper_id"]
+            isOneToOne: false
+            referencedRelation: "pyq_papers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "pyq_questions_unit_id_fkey"
+            columns: ["unit_id"]
+            isOneToOne: false
+            referencedRelation: "units"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      semesters: {
+        Row: {
+          course_id: string
+          created_at: string
+          id: string
+          name: string
+          number: number
+          updated_at: string
+        }
+        Insert: {
+          course_id: string
+          created_at?: string
+          id?: string
+          name: string
+          number: number
+          updated_at?: string
+        }
+        Update: {
+          course_id?: string
+          created_at?: string
+          id?: string
+          name?: string
+          number?: number
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "semesters_course_id_fkey"
+            columns: ["course_id"]
+            isOneToOne: false
+            referencedRelation: "courses"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      subjects: {
+        Row: {
+          code: string
+          created_at: string
+          duration: string
+          exam_type: string
+          gradient_from: string | null
+          gradient_to: string | null
+          icon: string | null
+          id: string
+          internal_marks: number
+          name: string
+          pattern: string
+          semester_id: string
+          slug: string
+          theory_marks: number
+          total_marks: number
+          updated_at: string
+        }
+        Insert: {
+          code: string
+          created_at?: string
+          duration?: string
+          exam_type?: string
+          gradient_from?: string | null
+          gradient_to?: string | null
+          icon?: string | null
+          id?: string
+          internal_marks?: number
+          name: string
+          pattern?: string
+          semester_id: string
+          slug: string
+          theory_marks?: number
+          total_marks?: number
+          updated_at?: string
+        }
+        Update: {
+          code?: string
+          created_at?: string
+          duration?: string
+          exam_type?: string
+          gradient_from?: string | null
+          gradient_to?: string | null
+          icon?: string | null
+          id?: string
+          internal_marks?: number
+          name?: string
+          pattern?: string
+          semester_id?: string
+          slug?: string
+          theory_marks?: number
+          total_marks?: number
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "subjects_semester_id_fkey"
+            columns: ["semester_id"]
+            isOneToOne: false
+            referencedRelation: "semesters"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      units: {
+        Row: {
+          created_at: string
+          id: string
+          name: string
+          number: number
+          subject_id: string
+          updated_at: string
+          weight: number
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          name: string
+          number: number
+          subject_id: string
+          updated_at?: string
+          weight?: number
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          name?: string
+          number?: number
+          subject_id?: string
+          updated_at?: string
+          weight?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "units_subject_id_fkey"
+            columns: ["subject_id"]
+            isOneToOne: false
+            referencedRelation: "subjects"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      universities: {
+        Row: {
+          created_at: string
+          full_name: string
+          id: string
+          location: string
+          logo_url: string | null
+          name: string
+          slug: string
+          type: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          full_name: string
+          id?: string
+          location: string
+          logo_url?: string | null
+          name: string
+          slug: string
+          type?: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          full_name?: string
+          id?: string
+          location?: string
+          logo_url?: string | null
+          name?: string
+          slug?: string
+          type?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      user_roles: {
+        Row: {
+          created_at: string
+          id: string
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          role?: Database["public"]["Enums"]["app_role"]
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      has_role: {
+        Args: {
+          _role: Database["public"]["Enums"]["app_role"]
+          _user_id: string
+        }
+        Returns: boolean
+      }
     }
     Enums: {
-      [_ in never]: never
+      app_role: "admin" | "moderator" | "user"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -150,6 +566,8 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {},
+    Enums: {
+      app_role: ["admin", "moderator", "user"],
+    },
   },
 } as const
