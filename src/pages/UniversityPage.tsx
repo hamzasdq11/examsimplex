@@ -526,8 +526,10 @@ const UniversityPage = () => {
                                             <td className="px-4 py-3 text-center text-muted-foreground">{subject.notes}</td>
                                             <td className="px-4 py-3 text-center text-muted-foreground">{subject.pyqs}</td>
                                             <td className="px-4 py-3">
-                                              <Button size="sm" variant="ghost" className="text-primary">
-                                                Open Subject <ExternalLink className="h-3 w-3 ml-1" />
+                                              <Button size="sm" variant="ghost" className="text-primary" asChild>
+                                                <Link to={`/university/${universityId}/${program.degree.toLowerCase().replace(/\s+/g, '-')}/${semester.name.toLowerCase().replace(/\s+/g, '-')}/${subject.name.toLowerCase().replace(/[^a-z0-9]+/g, '-')}`}>
+                                                  Open Subject <ExternalLink className="h-3 w-3 ml-1" />
+                                                </Link>
                                               </Button>
                                             </td>
                                           </tr>
