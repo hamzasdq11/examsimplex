@@ -260,12 +260,12 @@ export default function Courses() {
                 </div>
                 <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-2">
-                    <Label htmlFor="duration">Duration (years)</Label>
+                    <Label htmlFor="duration">Duration (semesters)</Label>
                     <Input
                       id="duration"
                       type="number"
                       min={1}
-                      max={6}
+                      max={12}
                       value={formData.duration_years}
                       onChange={(e) => setFormData({ ...formData, duration_years: parseInt(e.target.value) })}
                       required
