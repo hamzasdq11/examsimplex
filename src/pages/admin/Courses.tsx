@@ -47,6 +47,7 @@ export default function Courses() {
     name: '',
     code: '',
     duration_years: 4,
+    total_semesters: 8,
   });
   const [saving, setSaving] = useState(false);
   const { toast } = useToast();
@@ -93,12 +94,38 @@ export default function Courses() {
         if (error) throw error;
         toast({ title: 'Success', description: 'Course updated successfully' });
       } else {
-        const { error } = await supabase
+        const { total_semesters, ...courseData } = formData;
+        const { data: newCourse, error } = await supabase
           .from('courses')
-          .insert([formData]);
+          .insert([courseData])
+          .select()
+          .single();
 
         if (error) throw error;
-        toast({ title: 'Success', description: 'Course created successfully' });
+
+        // Auto-create semesters for the new course
+        if (newCourse && total_semesters > 0) {
+          const semesters = Array.from({ length: total_semesters }, (_, i) => ({
+            course_id: newCourse.id,
+            number: i + 1,
+            name: `Semester ${i + 1}`,
+          }));
+
+          const { error: semError } = await supabase
+            .from('semesters')
+            .insert(semesters);
+
+          if (semError) {
+            console.error('Error creating semesters:', semError);
+            toast({
+              title: 'Warning',
+              description: 'Course created but failed to create semesters',
+              variant: 'destructive',
+            });
+          }
+        }
+
+        toast({ title: 'Success', description: `Course created with ${total_semesters} semesters` });
       }
 
       setIsDialogOpen(false);
@@ -123,6 +150,7 @@ export default function Courses() {
       name: course.name,
       code: course.code,
       duration_years: course.duration_years,
+      total_semesters: 0, // Not used when editing
     });
     setIsDialogOpen(true);
   };
@@ -145,7 +173,7 @@ export default function Courses() {
   };
 
   const resetForm = () => {
-    setFormData({ university_id: '', name: '', code: '', duration_years: 4 });
+    setFormData({ university_id: '', name: '', code: '', duration_years: 4, total_semesters: 8 });
   };
 
   const openNewDialog = () => {
@@ -220,17 +248,33 @@ export default function Courses() {
                     />
                   </div>
                 </div>
-                <div className="space-y-2">
-                  <Label htmlFor="duration">Duration (years)</Label>
-                  <Input
-                    id="duration"
-                    type="number"
-                    min={1}
-                    max={6}
-                    value={formData.duration_years}
-                    onChange={(e) => setFormData({ ...formData, duration_years: parseInt(e.target.value) })}
-                    required
-                  />
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="duration">Duration (years)</Label>
+                    <Input
+                      id="duration"
+                      type="number"
+                      min={1}
+                      max={6}
+                      value={formData.duration_years}
+                      onChange={(e) => setFormData({ ...formData, duration_years: parseInt(e.target.value) })}
+                      required
+                    />
+                  </div>
+                  {!editingCourse && (
+                    <div className="space-y-2">
+                      <Label htmlFor="semesters">Total Semesters</Label>
+                      <Input
+                        id="semesters"
+                        type="number"
+                        min={1}
+                        max={12}
+                        value={formData.total_semesters}
+                        onChange={(e) => setFormData({ ...formData, total_semesters: parseInt(e.target.value) })}
+                        required
+                      />
+                    </div>
+                  )}
                 </div>
                 <div className="flex justify-end gap-2">
                   <Button type="button" variant="outline" onClick={() => setIsDialogOpen(false)}>
