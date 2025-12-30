@@ -42,6 +42,7 @@ export default function Courses() {
   const [searchQuery, setSearchQuery] = useState('');
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingCourse, setEditingCourse] = useState<Course | null>(null);
+  const [existingSemesterCount, setExistingSemesterCount] = useState<number>(0);
   const [formData, setFormData] = useState({
     university_id: '',
     name: '',
@@ -143,15 +144,23 @@ export default function Courses() {
     }
   };
 
-  const handleEdit = (course: CourseWithUniversity) => {
+  const handleEdit = async (course: CourseWithUniversity) => {
     setEditingCourse(course);
     setFormData({
       university_id: course.university_id,
       name: course.name,
       code: course.code,
       duration_years: course.duration_years,
-      total_semesters: 0, // Not used when editing
+      total_semesters: 0,
     });
+    
+    // Fetch existing semester count
+    const { count } = await supabase
+      .from('semesters')
+      .select('*', { count: 'exact', head: true })
+      .eq('course_id', course.id);
+    
+    setExistingSemesterCount(count || 0);
     setIsDialogOpen(true);
   };
 
@@ -178,6 +187,7 @@ export default function Courses() {
 
   const openNewDialog = () => {
     setEditingCourse(null);
+    setExistingSemesterCount(0);
     resetForm();
     setIsDialogOpen(true);
   };
@@ -261,7 +271,21 @@ export default function Courses() {
                       required
                     />
                   </div>
-                  {!editingCourse && (
+                  {editingCourse ? (
+                    <div className="space-y-2">
+                      <Label>Current Semesters</Label>
+                      <div className="flex items-center gap-2">
+                        <Input
+                          value={existingSemesterCount}
+                          disabled
+                          className="bg-muted"
+                        />
+                        <span className="text-sm text-muted-foreground whitespace-nowrap">
+                          (manage in Semesters page)
+                        </span>
+                      </div>
+                    </div>
+                  ) : (
                     <div className="space-y-2">
                       <Label htmlFor="semesters">Total Semesters</Label>
                       <Input
