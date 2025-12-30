@@ -146,13 +146,6 @@ export default function Courses() {
 
   const handleEdit = async (course: CourseWithUniversity) => {
     setEditingCourse(course);
-    setFormData({
-      university_id: course.university_id,
-      name: course.name,
-      code: course.code,
-      duration_years: course.duration_years,
-      total_semesters: 0,
-    });
     
     // Fetch existing semester count
     const { count } = await supabase
@@ -160,7 +153,16 @@ export default function Courses() {
       .select('*', { count: 'exact', head: true })
       .eq('course_id', course.id);
     
-    setExistingSemesterCount(count || 0);
+    const semCount = count || 0;
+    setExistingSemesterCount(semCount);
+    
+    setFormData({
+      university_id: course.university_id,
+      name: course.name,
+      code: course.code,
+      duration_years: course.duration_years,
+      total_semesters: semCount,
+    });
     setIsDialogOpen(true);
   };
 
@@ -273,16 +275,55 @@ export default function Courses() {
                   </div>
                   {editingCourse ? (
                     <div className="space-y-2">
-                      <Label>Current Semesters</Label>
+                      <Label>Total Semesters</Label>
                       <div className="flex items-center gap-2">
                         <Input
-                          value={existingSemesterCount}
-                          disabled
-                          className="bg-muted"
+                          type="number"
+                          min={1}
+                          max={12}
+                          value={formData.total_semesters || existingSemesterCount}
+                          onChange={(e) => setFormData({ ...formData, total_semesters: parseInt(e.target.value) })}
                         />
-                        <span className="text-sm text-muted-foreground whitespace-nowrap">
-                          (manage in Semesters page)
-                        </span>
+                        <Button
+                          type="button"
+                          variant="outline"
+                          size="sm"
+                          onClick={async () => {
+                            const newCount = formData.total_semesters || existingSemesterCount;
+                            if (newCount === existingSemesterCount) return;
+                            
+                            setSaving(true);
+                            try {
+                              if (newCount > existingSemesterCount) {
+                                // Add more semesters
+                                const newSemesters = Array.from(
+                                  { length: newCount - existingSemesterCount },
+                                  (_, i) => ({
+                                    course_id: editingCourse.id,
+                                    number: existingSemesterCount + i + 1,
+                                    name: `Semester ${existingSemesterCount + i + 1}`,
+                                  })
+                                );
+                                await supabase.from('semesters').insert(newSemesters);
+                              } else {
+                                // Remove extra semesters
+                                await supabase
+                                  .from('semesters')
+                                  .delete()
+                                  .eq('course_id', editingCourse.id)
+                                  .gt('number', newCount);
+                              }
+                              setExistingSemesterCount(newCount);
+                              toast({ title: 'Success', description: 'Semesters updated' });
+                            } catch (err: any) {
+                              toast({ title: 'Error', description: err.message, variant: 'destructive' });
+                            } finally {
+                              setSaving(false);
+                            }
+                          }}
+                        >
+                          Update
+                        </Button>
                       </div>
                     </div>
                   ) : (
