@@ -69,17 +69,18 @@ export function useProfile() {
     if (!user) return { error: new Error('Not authenticated') };
 
     try {
+      // Use upsert to create profile if it doesn't exist
       const { error: updateError } = await supabase
         .from('profiles')
-        .update({
+        .upsert({
+          id: user.id,
           full_name: updates.full_name,
           avatar_url: updates.avatar_url,
           university_id: updates.university_id,
           course_id: updates.course_id,
           semester_id: updates.semester_id,
           bio: updates.bio,
-        })
-        .eq('id', user.id);
+        }, { onConflict: 'id' });
 
       if (updateError) throw updateError;
       
