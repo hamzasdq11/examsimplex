@@ -278,6 +278,13 @@ export default function Questions() {
               </form>
             </DialogContent>
           </Dialog>
+          </div>
+          <BulkImportDialog
+            open={isImportOpen}
+            onOpenChange={setIsImportOpen}
+            tableName="important_questions"
+            onImportComplete={fetchData}
+          />
         </div>
 
         <Card>
