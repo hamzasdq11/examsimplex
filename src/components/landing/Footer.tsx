@@ -1,6 +1,7 @@
+import { forwardRef } from "react";
 import { Facebook, Twitter, Instagram, Linkedin, Youtube } from "lucide-react";
 
-const Footer = () => {
+const Footer = forwardRef<HTMLElement>((_, ref) => {
   const footerLinks = {
     "University": ["B.Tech / B.E", "B.Com", "BBA", "B.Sc", "BA"],
     "Exams": ["Semester Exams", "Internal Tests", "Practicals", "Viva"],
@@ -17,7 +18,7 @@ const Footer = () => {
   ];
 
   return (
-    <footer className="bg-primary text-primary-foreground">
+    <footer ref={ref} className="bg-primary text-primary-foreground">
       <div className="container py-12 md:py-16">
         <div className="grid grid-cols-2 md:grid-cols-5 gap-8">
           {/* Logo & Description */}
@@ -85,6 +86,8 @@ const Footer = () => {
       </div>
     </footer>
   );
-};
+});
+
+Footer.displayName = "Footer";
 
 export default Footer;
