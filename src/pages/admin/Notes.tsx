@@ -29,7 +29,8 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { useToast } from '@/hooks/use-toast';
-import { Plus, Pencil, Trash2, Loader2, Search } from 'lucide-react';
+import { Plus, Pencil, Trash2, Loader2, Search, Upload } from 'lucide-react';
+import { BulkImportDialog } from '@/components/admin/BulkImportDialog';
 
 export default function Notes() {
   const [notes, setNotes] = useState<any[]>([]);
@@ -38,6 +39,7 @@ export default function Notes() {
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
   const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [isImportOpen, setIsImportOpen] = useState(false);
   const [editingNote, setEditingNote] = useState<any>(null);
   
   const [selectedSubject, setSelectedSubject] = useState('');
@@ -164,13 +166,18 @@ export default function Notes() {
             <h2 className="text-3xl font-bold tracking-tight text-foreground">Notes</h2>
             <p className="text-muted-foreground">Manage chapter notes for units</p>
           </div>
-          <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-            <DialogTrigger asChild>
-              <Button onClick={() => { setEditingNote(null); resetForm(); setIsDialogOpen(true); }}>
-                <Plus className="mr-2 h-4 w-4" />
-                Add Note
-              </Button>
-            </DialogTrigger>
+          <div className="flex gap-2">
+            <Button variant="outline" onClick={() => setIsImportOpen(true)}>
+              <Upload className="mr-2 h-4 w-4" />
+              Import
+            </Button>
+            <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+              <DialogTrigger asChild>
+                <Button onClick={() => { setEditingNote(null); resetForm(); setIsDialogOpen(true); }}>
+                  <Plus className="mr-2 h-4 w-4" />
+                  Add Note
+                </Button>
+              </DialogTrigger>
             <DialogContent className="sm:max-w-[600px] max-h-[90vh] overflow-y-auto">
               <DialogHeader>
                 <DialogTitle>{editingNote ? 'Edit Note' : 'Add New Note'}</DialogTitle>

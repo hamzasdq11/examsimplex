@@ -28,7 +28,8 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { useToast } from '@/hooks/use-toast';
-import { Plus, Pencil, Trash2, Loader2, Search } from 'lucide-react';
+import { Plus, Pencil, Trash2, Loader2, Search, Upload } from 'lucide-react';
+import { BulkImportDialog } from '@/components/admin/BulkImportDialog';
 
 export default function Units() {
   const [units, setUnits] = useState<any[]>([]);
@@ -36,6 +37,7 @@ export default function Units() {
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
   const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [isImportOpen, setIsImportOpen] = useState(false);
   const [editingUnit, setEditingUnit] = useState<any>(null);
   
   const [formData, setFormData] = useState({
@@ -135,12 +137,17 @@ export default function Units() {
             <h2 className="text-3xl font-bold tracking-tight text-foreground">Units</h2>
             <p className="text-muted-foreground">Manage syllabus units for subjects</p>
           </div>
-          <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-            <DialogTrigger asChild>
-              <Button onClick={() => { setEditingUnit(null); resetForm(); setIsDialogOpen(true); }}>
-                <Plus className="mr-2 h-4 w-4" />
-                Add Unit
-              </Button>
+          <div className="flex gap-2">
+            <Button variant="outline" onClick={() => setIsImportOpen(true)}>
+              <Upload className="mr-2 h-4 w-4" />
+              Import
+            </Button>
+            <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+              <DialogTrigger asChild>
+                <Button onClick={() => { setEditingUnit(null); resetForm(); setIsDialogOpen(true); }}>
+                  <Plus className="mr-2 h-4 w-4" />
+                  Add Unit
+                </Button>
             </DialogTrigger>
             <DialogContent className="sm:max-w-[500px]">
               <DialogHeader>

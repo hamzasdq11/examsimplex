@@ -28,7 +28,8 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { useToast } from '@/hooks/use-toast';
-import { Plus, Pencil, Trash2, Loader2, Search } from 'lucide-react';
+import { Plus, Pencil, Trash2, Loader2, Search, Upload } from 'lucide-react';
+import { BulkImportDialog } from '@/components/admin/BulkImportDialog';
 import type { Subject, Semester, Course, University } from '@/types/database';
 
 export default function Subjects() {
@@ -39,6 +40,7 @@ export default function Subjects() {
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
   const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [isImportOpen, setIsImportOpen] = useState(false);
   const [editingSubject, setEditingSubject] = useState<Subject | null>(null);
   
   const [selectedUniversity, setSelectedUniversity] = useState('');
@@ -216,13 +218,18 @@ export default function Subjects() {
             <h2 className="text-3xl font-bold tracking-tight text-foreground">Subjects</h2>
             <p className="text-muted-foreground">Manage subjects for courses</p>
           </div>
-          <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-            <DialogTrigger asChild>
-              <Button onClick={openNewDialog}>
-                <Plus className="mr-2 h-4 w-4" />
-                Add Subject
-              </Button>
-            </DialogTrigger>
+          <div className="flex gap-2">
+            <Button variant="outline" onClick={() => setIsImportOpen(true)}>
+              <Upload className="mr-2 h-4 w-4" />
+              Import
+            </Button>
+            <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+              <DialogTrigger asChild>
+                <Button onClick={openNewDialog}>
+                  <Plus className="mr-2 h-4 w-4" />
+                  Add Subject
+                </Button>
+              </DialogTrigger>
             <DialogContent className="sm:max-w-[600px] max-h-[90vh] overflow-y-auto">
               <DialogHeader>
                 <DialogTitle>{editingSubject ? 'Edit Subject' : 'Add New Subject'}</DialogTitle>
@@ -355,6 +362,13 @@ export default function Subjects() {
               </form>
             </DialogContent>
           </Dialog>
+          </div>
+          <BulkImportDialog
+            open={isImportOpen}
+            onOpenChange={setIsImportOpen}
+            tableName="subjects"
+            onImportComplete={fetchData}
+          />
         </div>
 
         <Card>

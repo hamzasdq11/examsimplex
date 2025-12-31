@@ -29,8 +29,9 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { useToast } from '@/hooks/use-toast';
-import { Plus, Pencil, Trash2, Loader2, Search } from 'lucide-react';
+import { Plus, Pencil, Trash2, Loader2, Search, Upload } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
+import { BulkImportDialog } from '@/components/admin/BulkImportDialog';
 
 export default function Questions() {
   const [questions, setQuestions] = useState<any[]>([]);
@@ -39,6 +40,7 @@ export default function Questions() {
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
   const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [isImportOpen, setIsImportOpen] = useState(false);
   const [editingQuestion, setEditingQuestion] = useState<any>(null);
   const [filteredUnits, setFilteredUnits] = useState<any[]>([]);
   
@@ -173,13 +175,18 @@ export default function Questions() {
             <h2 className="text-3xl font-bold tracking-tight text-foreground">Important Questions</h2>
             <p className="text-muted-foreground">Manage important questions for subjects</p>
           </div>
-          <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-            <DialogTrigger asChild>
-              <Button onClick={() => { setEditingQuestion(null); resetForm(); setIsDialogOpen(true); }}>
-                <Plus className="mr-2 h-4 w-4" />
-                Add Question
-              </Button>
-            </DialogTrigger>
+          <div className="flex gap-2">
+            <Button variant="outline" onClick={() => setIsImportOpen(true)}>
+              <Upload className="mr-2 h-4 w-4" />
+              Import
+            </Button>
+            <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+              <DialogTrigger asChild>
+                <Button onClick={() => { setEditingQuestion(null); resetForm(); setIsDialogOpen(true); }}>
+                  <Plus className="mr-2 h-4 w-4" />
+                  Add Question
+                </Button>
+              </DialogTrigger>
             <DialogContent className="sm:max-w-[600px] max-h-[90vh] overflow-y-auto">
               <DialogHeader>
                 <DialogTitle>{editingQuestion ? 'Edit Question' : 'Add New Question'}</DialogTitle>
