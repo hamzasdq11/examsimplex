@@ -28,7 +28,8 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { useToast } from '@/hooks/use-toast';
-import { Plus, Pencil, Trash2, Loader2, Search } from 'lucide-react';
+import { Plus, Pencil, Trash2, Loader2, Search, Upload } from 'lucide-react';
+import { BulkImportDialog } from '@/components/admin/BulkImportDialog';
 import type { Course, University } from '@/types/database';
 
 interface CourseWithUniversity extends Course {
@@ -41,6 +42,7 @@ export default function Courses() {
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
   const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [isImportOpen, setIsImportOpen] = useState(false);
   const [editingCourse, setEditingCourse] = useState<Course | null>(null);
   const [existingSemesterCount, setExistingSemesterCount] = useState<number>(0);
   const [formData, setFormData] = useState({
@@ -207,13 +209,18 @@ export default function Courses() {
             <h2 className="text-3xl font-bold tracking-tight text-foreground">Courses</h2>
             <p className="text-muted-foreground">Manage courses for universities</p>
           </div>
-          <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-            <DialogTrigger asChild>
-              <Button onClick={openNewDialog}>
-                <Plus className="mr-2 h-4 w-4" />
-                Add Course
-              </Button>
-            </DialogTrigger>
+          <div className="flex gap-2">
+            <Button variant="outline" onClick={() => setIsImportOpen(true)}>
+              <Upload className="mr-2 h-4 w-4" />
+              Import
+            </Button>
+            <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+              <DialogTrigger asChild>
+                <Button onClick={openNewDialog}>
+                  <Plus className="mr-2 h-4 w-4" />
+                  Add Course
+                </Button>
+              </DialogTrigger>
             <DialogContent className="sm:max-w-[500px]">
               <DialogHeader>
                 <DialogTitle>{editingCourse ? 'Edit Course' : 'Add New Course'}</DialogTitle>
@@ -353,6 +360,13 @@ export default function Courses() {
               </form>
             </DialogContent>
           </Dialog>
+          </div>
+          <BulkImportDialog
+            open={isImportOpen}
+            onOpenChange={setIsImportOpen}
+            tableName="courses"
+            onImportComplete={fetchData}
+          />
         </div>
 
         <Card>

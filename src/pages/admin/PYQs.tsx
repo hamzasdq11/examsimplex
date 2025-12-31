@@ -28,7 +28,8 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { useToast } from '@/hooks/use-toast';
-import { Plus, Pencil, Trash2, Loader2, Search, FileText } from 'lucide-react';
+import { Plus, Pencil, Trash2, Loader2, Search, FileText, Upload } from 'lucide-react';
+import { BulkImportDialog } from '@/components/admin/BulkImportDialog';
 
 export default function PYQs() {
   const [papers, setPapers] = useState<any[]>([]);
@@ -36,6 +37,7 @@ export default function PYQs() {
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
   const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [isImportOpen, setIsImportOpen] = useState(false);
   const [editingPaper, setEditingPaper] = useState<any>(null);
   
   const [formData, setFormData] = useState({
@@ -141,13 +143,18 @@ export default function PYQs() {
             <h2 className="text-3xl font-bold tracking-tight text-foreground">PYQ Papers</h2>
             <p className="text-muted-foreground">Manage previous year question papers</p>
           </div>
-          <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-            <DialogTrigger asChild>
-              <Button onClick={() => { setEditingPaper(null); resetForm(); setIsDialogOpen(true); }}>
-                <Plus className="mr-2 h-4 w-4" />
-                Add Paper
-              </Button>
-            </DialogTrigger>
+          <div className="flex gap-2">
+            <Button variant="outline" onClick={() => setIsImportOpen(true)}>
+              <Upload className="mr-2 h-4 w-4" />
+              Import
+            </Button>
+            <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+              <DialogTrigger asChild>
+                <Button onClick={() => { setEditingPaper(null); resetForm(); setIsDialogOpen(true); }}>
+                  <Plus className="mr-2 h-4 w-4" />
+                  Add Paper
+                </Button>
+              </DialogTrigger>
             <DialogContent className="sm:max-w-[500px]">
               <DialogHeader>
                 <DialogTitle>{editingPaper ? 'Edit Paper' : 'Add New Paper'}</DialogTitle>
