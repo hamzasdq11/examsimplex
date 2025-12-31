@@ -262,7 +262,7 @@ export default function Courses() {
                 </div>
                 <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-2">
-                    <Label htmlFor="duration">Duration (semesters)</Label>
+                    <Label htmlFor="duration">Duration (years)</Label>
                     <Input
                       id="duration"
                       type="number"
