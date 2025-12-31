@@ -53,7 +53,7 @@ export const importConfigs: Record<string, ImportConfig> = {
     sampleData: {
       university_name: 'AKTU',
       name: 'B.Tech Computer Science',
-      code: 'btech-cse',
+      code: 'tech-cse',
       duration_years: 4,
     },
   },
@@ -74,7 +74,7 @@ export const importConfigs: Record<string, ImportConfig> = {
     ],
     sampleData: {
       university_name: 'AKTU',
-      course_code: 'btech-cse',
+      course_code: 'tech-cse',
       number: 5,
       name: 'Semester 5',
     },
@@ -108,7 +108,7 @@ export const importConfigs: Record<string, ImportConfig> = {
     ],
     sampleData: {
       university_name: 'AKTU',
-      course_code: 'btech-cse',
+      course_code: 'tech-cse',
       semester_number: 5,
       name: 'Database Management System',
       code: 'KCS501',

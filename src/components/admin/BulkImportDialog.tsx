@@ -391,7 +391,10 @@ async function processRecord(
       const university = lookupData.universities.find(
         u => u.name?.toLowerCase() === record.university_name?.toLowerCase()
       );
-      if (!university) return { data: {}, error: `University not found: ${record.university_name}` };
+      if (!university) {
+        const availableUniversities = lookupData.universities.map(u => u.name).join(', ');
+        return { data: {}, error: `University not found: "${record.university_name}". Available: ${availableUniversities || 'none'}` };
+      }
       
       processed.university_id = university.id;
       processed.name = record.name;
@@ -404,12 +407,18 @@ async function processRecord(
       const university = lookupData.universities.find(
         u => u.name?.toLowerCase() === record.university_name?.toLowerCase()
       );
-      if (!university) return { data: {}, error: `University not found: ${record.university_name}` };
+      if (!university) {
+        const availableUniversities = lookupData.universities.map(u => u.name).join(', ');
+        return { data: {}, error: `University not found: "${record.university_name}". Available: ${availableUniversities || 'none'}` };
+      }
 
       const course = lookupData.courses.find(
         c => c.university_id === university.id && c.code?.toLowerCase() === record.course_code?.toLowerCase()
       );
-      if (!course) return { data: {}, error: `Course not found: ${record.course_code}` };
+      if (!course) {
+        const availableCourses = lookupData.courses.filter(c => c.university_id === university.id).map(c => c.code).join(', ');
+        return { data: {}, error: `Course not found: "${record.course_code}" for ${university.name}. Available: ${availableCourses || 'none'}` };
+      }
 
       processed.course_id = course.id;
       processed.number = toNumber(record.number);
@@ -421,17 +430,26 @@ async function processRecord(
       const university = lookupData.universities.find(
         u => u.name?.toLowerCase() === record.university_name?.toLowerCase()
       );
-      if (!university) return { data: {}, error: `University not found: ${record.university_name}` };
+      if (!university) {
+        const availableUniversities = lookupData.universities.map(u => u.name).join(', ');
+        return { data: {}, error: `University not found: "${record.university_name}". Available: ${availableUniversities || 'none'}` };
+      }
 
       const course = lookupData.courses.find(
         c => c.university_id === university.id && c.code?.toLowerCase() === record.course_code?.toLowerCase()
       );
-      if (!course) return { data: {}, error: `Course not found: ${record.course_code}` };
+      if (!course) {
+        const availableCourses = lookupData.courses.filter(c => c.university_id === university.id).map(c => c.code).join(', ');
+        return { data: {}, error: `Course not found: "${record.course_code}" for ${university.name}. Available: ${availableCourses || 'none'}` };
+      }
 
       const semester = lookupData.semesters.find(
         s => s.course_id === course.id && s.number === toNumber(record.semester_number)
       );
-      if (!semester) return { data: {}, error: `Semester not found: ${record.semester_number}` };
+      if (!semester) {
+        const availableSemesters = lookupData.semesters.filter(s => s.course_id === course.id).map(s => s.number).join(', ');
+        return { data: {}, error: `Semester not found: ${record.semester_number} for ${course.code}. Available: ${availableSemesters || 'none'}` };
+      }
 
       processed.semester_id = semester.id;
       processed.name = record.name;
