@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
 import { useProfile } from '@/hooks/useProfile';
 import { supabase } from '@/integrations/supabase/client';
@@ -53,14 +53,11 @@ export default function Onboarding() {
   const { user, loading: authLoading } = useAuth();
   const { profile, loading: profileLoading, updateProfile, isProfileComplete } = useProfile();
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const { toast } = useToast();
 
-  // Redirect if already complete
-  useEffect(() => {
-    if (!authLoading && !profileLoading && isProfileComplete) {
-      navigate('/dashboard', { replace: true });
-    }
-  }, [authLoading, profileLoading, isProfileComplete, navigate]);
+  // Check if user is editing (allows complete profiles to access onboarding)
+  const isEditMode = searchParams.get('edit') === 'true';
 
   // Pre-fill existing data
   useEffect(() => {
@@ -170,6 +167,7 @@ export default function Onboarding() {
     }
   };
 
+  // Show loading while checking auth/profile status
   if (authLoading || profileLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-background">
@@ -178,9 +176,20 @@ export default function Onboarding() {
     );
   }
 
+  // Redirect to auth if not logged in
   if (!user) {
     navigate('/auth');
     return null;
+  }
+
+  // Redirect to dashboard if profile is already complete (unless in edit mode)
+  if (isProfileComplete && !isEditMode) {
+    navigate('/dashboard', { replace: true });
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-background">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+      </div>
+    );
   }
 
   return (

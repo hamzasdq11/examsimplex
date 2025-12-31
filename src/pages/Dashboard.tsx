@@ -120,7 +120,7 @@ export default function Dashboard() {
                 <h1 className="text-2xl font-bold">{profile.full_name}</h1>
                 <p className="text-muted-foreground">{user.email}</p>
               </div>
-              <Button variant="outline" size="sm" onClick={() => navigate('/onboarding')}>
+              <Button variant="outline" size="sm" onClick={() => navigate('/onboarding?edit=true')}>
                 <Edit className="h-4 w-4 mr-2" />
                 Edit Profile
               </Button>
