@@ -157,14 +157,17 @@ export default function Onboarding() {
         description: error.message || 'Failed to save profile',
         variant: 'destructive',
       });
+      setLoading(false);
     } else {
       toast({
         title: 'Profile Complete!',
         description: 'Welcome to ExamPrep. Let\'s get started!',
       });
-      navigate('/dashboard', { replace: true });
+      // Small delay to ensure profile state is updated before navigation
+      setTimeout(() => {
+        navigate('/dashboard', { replace: true });
+      }, 100);
     }
-    setLoading(false);
   };
 
   if (authLoading || profileLoading) {
