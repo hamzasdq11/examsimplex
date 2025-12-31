@@ -214,6 +214,13 @@ export default function PYQs() {
               </form>
             </DialogContent>
           </Dialog>
+          </div>
+          <BulkImportDialog
+            open={isImportOpen}
+            onOpenChange={setIsImportOpen}
+            tableName="pyq_papers"
+            onImportComplete={fetchData}
+          />
         </div>
 
         <Card>

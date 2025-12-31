@@ -213,6 +213,13 @@ export default function Units() {
               </form>
             </DialogContent>
           </Dialog>
+          </div>
+          <BulkImportDialog
+            open={isImportOpen}
+            onOpenChange={setIsImportOpen}
+            tableName="units"
+            onImportComplete={fetchData}
+          />
         </div>
 
         <Card>

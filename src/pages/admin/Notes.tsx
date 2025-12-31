@@ -256,6 +256,13 @@ export default function Notes() {
               </form>
             </DialogContent>
           </Dialog>
+          </div>
+          <BulkImportDialog
+            open={isImportOpen}
+            onOpenChange={setIsImportOpen}
+            tableName="notes"
+            onImportComplete={fetchData}
+          />
         </div>
 
         <Card>
