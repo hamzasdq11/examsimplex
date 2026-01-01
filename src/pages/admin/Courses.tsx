@@ -20,16 +20,11 @@ import {
   DialogTitle,
   DialogTrigger,
 } from '@/components/ui/dialog';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
 import { useToast } from '@/hooks/use-toast';
 import { Plus, Pencil, Trash2, Loader2, Search, Upload } from 'lucide-react';
 import { BulkImportDialog } from '@/components/admin/BulkImportDialog';
+import { HierarchyBreadcrumb } from '@/components/admin/HierarchyBreadcrumb';
+import { SelectionGrid, SelectionItem } from '@/components/admin/SelectionGrid';
 import type { Course, University } from '@/types/database';
 
 interface CourseWithUniversity extends Course {
@@ -45,6 +40,10 @@ export default function Courses() {
   const [isImportOpen, setIsImportOpen] = useState(false);
   const [editingCourse, setEditingCourse] = useState<Course | null>(null);
   const [existingSemesterCount, setExistingSemesterCount] = useState<number>(0);
+  
+  // Hierarchy state
+  const [selectedUniversity, setSelectedUniversity] = useState<University | null>(null);
+  
   const [formData, setFormData] = useState({
     university_id: '',
     name: '',
@@ -88,19 +87,25 @@ export default function Courses() {
     setSaving(true);
 
     try {
+      const courseData = {
+        ...formData,
+        university_id: selectedUniversity?.id || formData.university_id,
+      };
+      
       if (editingCourse) {
+        const { total_semesters, ...updateData } = courseData;
         const { error } = await supabase
           .from('courses')
-          .update(formData)
+          .update(updateData)
           .eq('id', editingCourse.id);
 
         if (error) throw error;
         toast({ title: 'Success', description: 'Course updated successfully' });
       } else {
-        const { total_semesters, ...courseData } = formData;
+        const { total_semesters, ...insertData } = courseData;
         const { data: newCourse, error } = await supabase
           .from('courses')
-          .insert([courseData])
+          .insert([insertData])
           .select()
           .single();
 
@@ -193,13 +198,39 @@ export default function Courses() {
     setEditingCourse(null);
     setExistingSemesterCount(0);
     resetForm();
+    if (selectedUniversity) {
+      setFormData(prev => ({ ...prev, university_id: selectedUniversity.id }));
+    }
     setIsDialogOpen(true);
   };
 
-  const filteredCourses = courses.filter(c =>
+  // Filter courses for selected university
+  const universityCourses = selectedUniversity 
+    ? courses.filter(c => c.university_id === selectedUniversity.id)
+    : [];
+
+  const filteredCourses = universityCourses.filter(c =>
     c.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
     c.code.toLowerCase().includes(searchQuery.toLowerCase())
   );
+
+  // Transform universities for selection grid
+  const universityItems: SelectionItem[] = universities.map(uni => ({
+    id: uni.id,
+    title: uni.name,
+    subtitle: uni.full_name,
+    metadata: uni.location,
+    badge: `${courses.filter(c => c.university_id === uni.id).length} courses`,
+  }));
+
+  const handleSelectUniversity = (item: SelectionItem) => {
+    const uni = universities.find(u => u.id === item.id);
+    if (uni) setSelectedUniversity(uni);
+  };
+
+  const breadcrumbItems = selectedUniversity
+    ? [{ label: selectedUniversity.name }]
+    : [];
 
   return (
     <AdminLayout>
@@ -207,226 +238,230 @@ export default function Courses() {
         <div className="flex items-center justify-between">
           <div>
             <h2 className="text-3xl font-bold tracking-tight text-foreground">Courses</h2>
-            <p className="text-muted-foreground">Manage courses for universities</p>
+            <p className="text-muted-foreground">
+              {selectedUniversity 
+                ? `Manage courses for ${selectedUniversity.name}`
+                : 'Select a university to manage its courses'
+              }
+            </p>
           </div>
-          <div className="flex gap-2">
-            <Button variant="outline" onClick={() => setIsImportOpen(true)}>
-              <Upload className="mr-2 h-4 w-4" />
-              Import
-            </Button>
-            <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-              <DialogTrigger asChild>
-                <Button onClick={openNewDialog}>
-                  <Plus className="mr-2 h-4 w-4" />
-                  Add Course
-                </Button>
-              </DialogTrigger>
-            <DialogContent className="sm:max-w-[500px]">
-              <DialogHeader>
-                <DialogTitle>{editingCourse ? 'Edit Course' : 'Add New Course'}</DialogTitle>
-              </DialogHeader>
-              <form onSubmit={handleSubmit} className="space-y-4">
-                <div className="space-y-2">
-                  <Label htmlFor="university">University</Label>
-                  <Select
-                    value={formData.university_id}
-                    onValueChange={(value) => setFormData({ ...formData, university_id: value })}
-                    required
-                  >
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select university" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {universities.map((uni) => (
-                        <SelectItem key={uni.id} value={uni.id}>
-                          {uni.name}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="name">Course Name</Label>
-                    <Input
-                      id="name"
-                      placeholder="B.Tech CSE"
-                      value={formData.name}
-                      onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                      required
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="code">Course Code</Label>
-                    <Input
-                      id="code"
-                      placeholder="btech-cse"
-                      value={formData.code}
-                      onChange={(e) => setFormData({ ...formData, code: e.target.value })}
-                      required
-                    />
-                  </div>
-                </div>
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="duration">Duration (years)</Label>
-                    <Input
-                      id="duration"
-                      type="number"
-                      min={1}
-                      max={12}
-                      value={formData.duration_years}
-                      onChange={(e) => setFormData({ ...formData, duration_years: parseInt(e.target.value) })}
-                      required
-                    />
-                  </div>
-                  {editingCourse ? (
+          {selectedUniversity && (
+            <div className="flex gap-2">
+              <Button variant="outline" onClick={() => setIsImportOpen(true)}>
+                <Upload className="mr-2 h-4 w-4" />
+                Import
+              </Button>
+              <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+                <DialogTrigger asChild>
+                  <Button onClick={openNewDialog}>
+                    <Plus className="mr-2 h-4 w-4" />
+                    Add Course
+                  </Button>
+                </DialogTrigger>
+                <DialogContent className="sm:max-w-[500px]">
+                  <DialogHeader>
+                    <DialogTitle>{editingCourse ? 'Edit Course' : 'Add New Course'}</DialogTitle>
+                  </DialogHeader>
+                  <form onSubmit={handleSubmit} className="space-y-4">
                     <div className="space-y-2">
-                      <Label>Total Semesters</Label>
-                      <div className="flex items-center gap-2">
+                      <Label>University</Label>
+                      <Input value={selectedUniversity.name} disabled />
+                    </div>
+                    <div className="grid grid-cols-2 gap-4">
+                      <div className="space-y-2">
+                        <Label htmlFor="name">Course Name</Label>
                         <Input
+                          id="name"
+                          placeholder="B.Tech CSE"
+                          value={formData.name}
+                          onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                          required
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label htmlFor="code">Course Code</Label>
+                        <Input
+                          id="code"
+                          placeholder="btech-cse"
+                          value={formData.code}
+                          onChange={(e) => setFormData({ ...formData, code: e.target.value })}
+                          required
+                        />
+                      </div>
+                    </div>
+                    <div className="grid grid-cols-2 gap-4">
+                      <div className="space-y-2">
+                        <Label htmlFor="duration">Duration (years)</Label>
+                        <Input
+                          id="duration"
                           type="number"
                           min={1}
                           max={12}
-                          value={formData.total_semesters || existingSemesterCount}
-                          onChange={(e) => setFormData({ ...formData, total_semesters: parseInt(e.target.value) })}
+                          value={formData.duration_years}
+                          onChange={(e) => setFormData({ ...formData, duration_years: parseInt(e.target.value) })}
+                          required
                         />
-                        <Button
-                          type="button"
-                          variant="outline"
-                          size="sm"
-                          onClick={async () => {
-                            const newCount = formData.total_semesters || existingSemesterCount;
-                            if (newCount === existingSemesterCount) return;
-                            
-                            setSaving(true);
-                            try {
-                              if (newCount > existingSemesterCount) {
-                                // Add more semesters
-                                const newSemesters = Array.from(
-                                  { length: newCount - existingSemesterCount },
-                                  (_, i) => ({
-                                    course_id: editingCourse.id,
-                                    number: existingSemesterCount + i + 1,
-                                    name: `Semester ${existingSemesterCount + i + 1}`,
-                                  })
-                                );
-                                await supabase.from('semesters').insert(newSemesters);
-                              } else {
-                                // Remove extra semesters
-                                await supabase
-                                  .from('semesters')
-                                  .delete()
-                                  .eq('course_id', editingCourse.id)
-                                  .gt('number', newCount);
-                              }
-                              setExistingSemesterCount(newCount);
-                              toast({ title: 'Success', description: 'Semesters updated' });
-                            } catch (err: any) {
-                              toast({ title: 'Error', description: err.message, variant: 'destructive' });
-                            } finally {
-                              setSaving(false);
-                            }
-                          }}
-                        >
-                          Update
-                        </Button>
                       </div>
+                      {editingCourse ? (
+                        <div className="space-y-2">
+                          <Label>Total Semesters</Label>
+                          <div className="flex items-center gap-2">
+                            <Input
+                              type="number"
+                              min={1}
+                              max={12}
+                              value={formData.total_semesters || existingSemesterCount}
+                              onChange={(e) => setFormData({ ...formData, total_semesters: parseInt(e.target.value) })}
+                            />
+                            <Button
+                              type="button"
+                              variant="outline"
+                              size="sm"
+                              onClick={async () => {
+                                const newCount = formData.total_semesters || existingSemesterCount;
+                                if (newCount === existingSemesterCount) return;
+                                
+                                setSaving(true);
+                                try {
+                                  if (newCount > existingSemesterCount) {
+                                    const newSemesters = Array.from(
+                                      { length: newCount - existingSemesterCount },
+                                      (_, i) => ({
+                                        course_id: editingCourse.id,
+                                        number: existingSemesterCount + i + 1,
+                                        name: `Semester ${existingSemesterCount + i + 1}`,
+                                      })
+                                    );
+                                    await supabase.from('semesters').insert(newSemesters);
+                                  } else {
+                                    await supabase
+                                      .from('semesters')
+                                      .delete()
+                                      .eq('course_id', editingCourse.id)
+                                      .gt('number', newCount);
+                                  }
+                                  setExistingSemesterCount(newCount);
+                                  toast({ title: 'Success', description: 'Semesters updated' });
+                                } catch (err: any) {
+                                  toast({ title: 'Error', description: err.message, variant: 'destructive' });
+                                } finally {
+                                  setSaving(false);
+                                }
+                              }}
+                            >
+                              Update
+                            </Button>
+                          </div>
+                        </div>
+                      ) : (
+                        <div className="space-y-2">
+                          <Label htmlFor="semesters">Total Semesters</Label>
+                          <Input
+                            id="semesters"
+                            type="number"
+                            min={1}
+                            max={12}
+                            value={formData.total_semesters}
+                            onChange={(e) => setFormData({ ...formData, total_semesters: parseInt(e.target.value) })}
+                            required
+                          />
+                        </div>
+                      )}
                     </div>
-                  ) : (
-                    <div className="space-y-2">
-                      <Label htmlFor="semesters">Total Semesters</Label>
-                      <Input
-                        id="semesters"
-                        type="number"
-                        min={1}
-                        max={12}
-                        value={formData.total_semesters}
-                        onChange={(e) => setFormData({ ...formData, total_semesters: parseInt(e.target.value) })}
-                        required
-                      />
+                    <div className="flex justify-end gap-2">
+                      <Button type="button" variant="outline" onClick={() => setIsDialogOpen(false)}>
+                        Cancel
+                      </Button>
+                      <Button type="submit" disabled={saving}>
+                        {saving && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                        {editingCourse ? 'Update' : 'Create'}
+                      </Button>
                     </div>
-                  )}
-                </div>
-                <div className="flex justify-end gap-2">
-                  <Button type="button" variant="outline" onClick={() => setIsDialogOpen(false)}>
-                    Cancel
-                  </Button>
-                  <Button type="submit" disabled={saving}>
-                    {saving && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                    {editingCourse ? 'Update' : 'Create'}
-                  </Button>
-                </div>
-              </form>
-            </DialogContent>
-          </Dialog>
-          </div>
-          <BulkImportDialog
-            open={isImportOpen}
-            onOpenChange={setIsImportOpen}
-            tableName="courses"
-            onImportComplete={fetchData}
-          />
+                  </form>
+                </DialogContent>
+              </Dialog>
+              <BulkImportDialog
+                open={isImportOpen}
+                onOpenChange={setIsImportOpen}
+                tableName="courses"
+                onImportComplete={fetchData}
+              />
+            </div>
+          )}
         </div>
 
-        <Card>
-          <CardHeader>
-            <div className="flex items-center gap-4">
-              <div className="relative flex-1 max-w-sm">
-                <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-                <Input
-                  placeholder="Search courses..."
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  className="pl-9"
-                />
+        <HierarchyBreadcrumb 
+          items={breadcrumbItems} 
+          onHomeClick={() => setSelectedUniversity(null)} 
+        />
+
+        {!selectedUniversity ? (
+          // University Selection View
+          <SelectionGrid
+            items={universityItems}
+            onSelect={handleSelectUniversity}
+            loading={loading}
+            emptyMessage="No universities found. Add one first!"
+          />
+        ) : (
+          // Courses Table View
+          <Card>
+            <CardHeader>
+              <div className="flex items-center gap-4">
+                <div className="relative flex-1 max-w-sm">
+                  <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+                  <Input
+                    placeholder="Search courses..."
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    className="pl-9"
+                  />
+                </div>
               </div>
-            </div>
-          </CardHeader>
-          <CardContent>
-            {loading ? (
-              <div className="flex items-center justify-center py-8">
-                <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
-              </div>
-            ) : filteredCourses.length === 0 ? (
-              <div className="text-center py-8 text-muted-foreground">
-                {searchQuery ? 'No courses found' : 'No courses yet. Add one to get started!'}
-              </div>
-            ) : (
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Name</TableHead>
-                    <TableHead>Code</TableHead>
-                    <TableHead>University</TableHead>
-                    <TableHead>Duration</TableHead>
-                    <TableHead className="text-right">Actions</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {filteredCourses.map((course) => (
-                    <TableRow key={course.id}>
-                      <TableCell className="font-medium">{course.name}</TableCell>
-                      <TableCell>{course.code}</TableCell>
-                      <TableCell>{(course.universities as any)?.name}</TableCell>
-                      <TableCell>{course.duration_years} years</TableCell>
-                      <TableCell className="text-right">
-                        <div className="flex justify-end gap-2">
-                          <Button variant="ghost" size="icon" onClick={() => handleEdit(course)}>
-                            <Pencil className="h-4 w-4" />
-                          </Button>
-                          <Button variant="ghost" size="icon" onClick={() => handleDelete(course.id)}>
-                            <Trash2 className="h-4 w-4 text-destructive" />
-                          </Button>
-                        </div>
-                      </TableCell>
+            </CardHeader>
+            <CardContent>
+              {loading ? (
+                <div className="flex items-center justify-center py-8">
+                  <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+                </div>
+              ) : filteredCourses.length === 0 ? (
+                <div className="text-center py-8 text-muted-foreground">
+                  {searchQuery ? 'No courses found' : 'No courses yet. Add one to get started!'}
+                </div>
+              ) : (
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Name</TableHead>
+                      <TableHead>Code</TableHead>
+                      <TableHead>Duration</TableHead>
+                      <TableHead className="text-right">Actions</TableHead>
                     </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-            )}
-          </CardContent>
-        </Card>
+                  </TableHeader>
+                  <TableBody>
+                    {filteredCourses.map((course) => (
+                      <TableRow key={course.id}>
+                        <TableCell className="font-medium">{course.name}</TableCell>
+                        <TableCell>{course.code}</TableCell>
+                        <TableCell>{course.duration_years} years</TableCell>
+                        <TableCell className="text-right">
+                          <div className="flex justify-end gap-2">
+                            <Button variant="ghost" size="icon" onClick={() => handleEdit(course)}>
+                              <Pencil className="h-4 w-4" />
+                            </Button>
+                            <Button variant="ghost" size="icon" onClick={() => handleDelete(course.id)}>
+                              <Trash2 className="h-4 w-4 text-destructive" />
+                            </Button>
+                          </div>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              )}
+            </CardContent>
+          </Card>
+        )}
       </div>
     </AdminLayout>
   );

@@ -20,16 +20,11 @@ import {
   DialogTitle,
   DialogTrigger,
 } from '@/components/ui/dialog';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
 import { useToast } from '@/hooks/use-toast';
 import { Plus, Pencil, Trash2, Loader2, Search, Upload } from 'lucide-react';
 import { BulkImportDialog } from '@/components/admin/BulkImportDialog';
+import { HierarchyBreadcrumb, BreadcrumbItem } from '@/components/admin/HierarchyBreadcrumb';
+import { SelectionGrid, SelectionItem } from '@/components/admin/SelectionGrid';
 import type { Subject, Semester, Course, University } from '@/types/database';
 
 export default function Subjects() {
@@ -43,10 +38,10 @@ export default function Subjects() {
   const [isImportOpen, setIsImportOpen] = useState(false);
   const [editingSubject, setEditingSubject] = useState<Subject | null>(null);
   
-  const [selectedUniversity, setSelectedUniversity] = useState('');
-  const [selectedCourse, setSelectedCourse] = useState('');
-  const [filteredCourses, setFilteredCourses] = useState<Course[]>([]);
-  const [filteredSemesters, setFilteredSemesters] = useState<Semester[]>([]);
+  // Hierarchy state
+  const [selectedUniversity, setSelectedUniversity] = useState<University | null>(null);
+  const [selectedCourse, setSelectedCourse] = useState<Course | null>(null);
+  const [selectedSemester, setSelectedSemester] = useState<Semester | null>(null);
   
   const [formData, setFormData] = useState({
     semester_id: '',
@@ -69,20 +64,6 @@ export default function Subjects() {
   useEffect(() => {
     fetchData();
   }, []);
-
-  useEffect(() => {
-    if (selectedUniversity) {
-      setFilteredCourses(courses.filter(c => c.university_id === selectedUniversity));
-      setSelectedCourse('');
-      setFilteredSemesters([]);
-    }
-  }, [selectedUniversity, courses]);
-
-  useEffect(() => {
-    if (selectedCourse) {
-      setFilteredSemesters(semesters.filter(s => s.course_id === selectedCourse));
-    }
-  }, [selectedCourse, semesters]);
 
   async function fetchData() {
     try {
@@ -111,12 +92,17 @@ export default function Subjects() {
     setSaving(true);
 
     try {
+      const dataToSave = {
+        ...formData,
+        semester_id: selectedSemester?.id || formData.semester_id,
+      };
+
       if (editingSubject) {
-        const { error } = await supabase.from('subjects').update(formData).eq('id', editingSubject.id);
+        const { error } = await supabase.from('subjects').update(dataToSave).eq('id', editingSubject.id);
         if (error) throw error;
         toast({ title: 'Success', description: 'Subject updated successfully' });
       } else {
-        const { error } = await supabase.from('subjects').insert([formData]);
+        const { error } = await supabase.from('subjects').insert([dataToSave]);
         if (error) throw error;
         toast({ title: 'Success', description: 'Subject created successfully' });
       }
@@ -134,19 +120,6 @@ export default function Subjects() {
 
   const handleEdit = (subject: any) => {
     setEditingSubject(subject);
-    const sem = subject.semesters;
-    const course = sem?.courses;
-    const uni = course?.universities;
-    
-    if (uni) setSelectedUniversity(uni.id);
-    if (course) {
-      setFilteredCourses(courses.filter(c => c.university_id === uni?.id));
-      setSelectedCourse(course.id);
-    }
-    if (course) {
-      setFilteredSemesters(semesters.filter(s => s.course_id === course?.id));
-    }
-    
     setFormData({
       semester_id: subject.semester_id,
       name: subject.name,
@@ -193,22 +166,96 @@ export default function Subjects() {
       gradient_to: '#8B5CF6',
       icon: 'BookOpen',
     });
-    setSelectedUniversity('');
-    setSelectedCourse('');
-    setFilteredCourses([]);
-    setFilteredSemesters([]);
   };
 
   const openNewDialog = () => {
     setEditingSubject(null);
     resetForm();
+    if (selectedSemester) {
+      setFormData(prev => ({ ...prev, semester_id: selectedSemester.id }));
+    }
     setIsDialogOpen(true);
   };
 
-  const filteredSubjects = subjects.filter(s =>
+  // Filter data based on hierarchy
+  const universityCourses = selectedUniversity 
+    ? courses.filter(c => c.university_id === selectedUniversity.id)
+    : [];
+
+  const courseSemesters = selectedCourse
+    ? semesters.filter(s => s.course_id === selectedCourse.id)
+    : [];
+
+  const semesterSubjects = selectedSemester
+    ? subjects.filter(s => s.semester_id === selectedSemester.id)
+    : [];
+
+  const filteredSubjects = semesterSubjects.filter(s =>
     s.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
     s.code.toLowerCase().includes(searchQuery.toLowerCase())
   );
+
+  // Transform data for selection grids
+  const universityItems: SelectionItem[] = universities.map(uni => ({
+    id: uni.id,
+    title: uni.name,
+    subtitle: uni.full_name,
+    metadata: uni.location,
+    badge: `${courses.filter(c => c.university_id === uni.id).length} courses`,
+  }));
+
+  const courseItems: SelectionItem[] = universityCourses.map(course => ({
+    id: course.id,
+    title: course.name,
+    subtitle: course.code,
+    metadata: `${course.duration_years} years`,
+    badge: `${semesters.filter(s => s.course_id === course.id).length} semesters`,
+  }));
+
+  const semesterItems: SelectionItem[] = courseSemesters.map(sem => ({
+    id: sem.id,
+    title: sem.name,
+    subtitle: `Semester ${sem.number}`,
+    badge: `${subjects.filter(s => s.semester_id === sem.id).length} subjects`,
+  }));
+
+  // Breadcrumb items
+  const breadcrumbItems: BreadcrumbItem[] = [];
+  if (selectedUniversity) {
+    breadcrumbItems.push({
+      label: selectedUniversity.name,
+      onClick: () => {
+        setSelectedCourse(null);
+        setSelectedSemester(null);
+      },
+    });
+  }
+  if (selectedCourse) {
+    breadcrumbItems.push({
+      label: selectedCourse.name,
+      onClick: () => {
+        setSelectedSemester(null);
+      },
+    });
+  }
+  if (selectedSemester) {
+    breadcrumbItems.push({ label: selectedSemester.name });
+  }
+
+  const handleHomeClick = () => {
+    setSelectedUniversity(null);
+    setSelectedCourse(null);
+    setSelectedSemester(null);
+  };
+
+  const getCurrentLevel = () => {
+    if (!selectedUniversity) return 'university';
+    if (!selectedCourse) return 'course';
+    if (!selectedSemester) return 'semester';
+    return 'subject';
+  };
+
+  const currentLevel = getCurrentLevel();
 
   return (
     <AdminLayout>
@@ -216,215 +263,226 @@ export default function Subjects() {
         <div className="flex items-center justify-between">
           <div>
             <h2 className="text-3xl font-bold tracking-tight text-foreground">Subjects</h2>
-            <p className="text-muted-foreground">Manage subjects for courses</p>
+            <p className="text-muted-foreground">
+              {currentLevel === 'university' && 'Select a university'}
+              {currentLevel === 'course' && `Select a course from ${selectedUniversity?.name}`}
+              {currentLevel === 'semester' && `Select a semester from ${selectedCourse?.name}`}
+              {currentLevel === 'subject' && `Manage subjects for ${selectedSemester?.name}`}
+            </p>
           </div>
-          <div className="flex gap-2">
-            <Button variant="outline" onClick={() => setIsImportOpen(true)}>
-              <Upload className="mr-2 h-4 w-4" />
-              Import
-            </Button>
-            <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-              <DialogTrigger asChild>
-                <Button onClick={openNewDialog}>
-                  <Plus className="mr-2 h-4 w-4" />
-                  Add Subject
-                </Button>
-              </DialogTrigger>
-            <DialogContent className="sm:max-w-[600px] max-h-[90vh] overflow-y-auto">
-              <DialogHeader>
-                <DialogTitle>{editingSubject ? 'Edit Subject' : 'Add New Subject'}</DialogTitle>
-              </DialogHeader>
-              <form onSubmit={handleSubmit} className="space-y-4">
-                <div className="grid grid-cols-3 gap-4">
-                  <div className="space-y-2">
-                    <Label>University</Label>
-                    <Select value={selectedUniversity} onValueChange={setSelectedUniversity}>
-                      <SelectTrigger><SelectValue placeholder="Select" /></SelectTrigger>
-                      <SelectContent>
-                        {universities.map((u) => (
-                          <SelectItem key={u.id} value={u.id}>{u.name}</SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
-                  <div className="space-y-2">
-                    <Label>Course</Label>
-                    <Select value={selectedCourse} onValueChange={setSelectedCourse} disabled={!selectedUniversity}>
-                      <SelectTrigger><SelectValue placeholder="Select" /></SelectTrigger>
-                      <SelectContent>
-                        {filteredCourses.map((c) => (
-                          <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
-                  <div className="space-y-2">
-                    <Label>Semester</Label>
-                    <Select 
-                      value={formData.semester_id} 
-                      onValueChange={(v) => setFormData({ ...formData, semester_id: v })} 
-                      disabled={!selectedCourse}
-                    >
-                      <SelectTrigger><SelectValue placeholder="Select" /></SelectTrigger>
-                      <SelectContent>
-                        {filteredSemesters.map((s) => (
-                          <SelectItem key={s.id} value={s.id}>{s.name}</SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
-                </div>
-                
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="space-y-2">
-                    <Label>Subject Name</Label>
-                    <Input
-                      placeholder="Database Management System"
-                      value={formData.name}
-                      onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                      required
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label>Code</Label>
-                    <Input
-                      placeholder="BCS501"
-                      value={formData.code}
-                      onChange={(e) => setFormData({ ...formData, code: e.target.value })}
-                      required
-                    />
-                  </div>
-                </div>
-                
-                <div className="space-y-2">
-                  <Label>Slug</Label>
-                  <Input
-                    placeholder="dbms"
-                    value={formData.slug}
-                    onChange={(e) => setFormData({ ...formData, slug: e.target.value })}
-                    required
-                  />
-                </div>
-
-                <div className="grid grid-cols-3 gap-4">
-                  <div className="space-y-2">
-                    <Label>Total Marks</Label>
-                    <Input
-                      type="number"
-                      value={formData.total_marks}
-                      onChange={(e) => setFormData({ ...formData, total_marks: parseInt(e.target.value) })}
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label>Theory Marks</Label>
-                    <Input
-                      type="number"
-                      value={formData.theory_marks}
-                      onChange={(e) => setFormData({ ...formData, theory_marks: parseInt(e.target.value) })}
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label>Internal Marks</Label>
-                    <Input
-                      type="number"
-                      value={formData.internal_marks}
-                      onChange={(e) => setFormData({ ...formData, internal_marks: parseInt(e.target.value) })}
-                    />
-                  </div>
-                </div>
-
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="space-y-2">
-                    <Label>Gradient From</Label>
-                    <Input
-                      type="color"
-                      value={formData.gradient_from}
-                      onChange={(e) => setFormData({ ...formData, gradient_from: e.target.value })}
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label>Gradient To</Label>
-                    <Input
-                      type="color"
-                      value={formData.gradient_to}
-                      onChange={(e) => setFormData({ ...formData, gradient_to: e.target.value })}
-                    />
-                  </div>
-                </div>
-
-                <div className="flex justify-end gap-2">
-                  <Button type="button" variant="outline" onClick={() => setIsDialogOpen(false)}>Cancel</Button>
-                  <Button type="submit" disabled={saving}>
-                    {saving && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                    {editingSubject ? 'Update' : 'Create'}
+          {selectedSemester && (
+            <div className="flex gap-2">
+              <Button variant="outline" onClick={() => setIsImportOpen(true)}>
+                <Upload className="mr-2 h-4 w-4" />
+                Import
+              </Button>
+              <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+                <DialogTrigger asChild>
+                  <Button onClick={openNewDialog}>
+                    <Plus className="mr-2 h-4 w-4" />
+                    Add Subject
                   </Button>
-                </div>
-              </form>
-            </DialogContent>
-          </Dialog>
-          </div>
-          <BulkImportDialog
-            open={isImportOpen}
-            onOpenChange={setIsImportOpen}
-            tableName="subjects"
-            onImportComplete={fetchData}
-          />
-        </div>
+                </DialogTrigger>
+                <DialogContent className="sm:max-w-[600px] max-h-[90vh] overflow-y-auto">
+                  <DialogHeader>
+                    <DialogTitle>{editingSubject ? 'Edit Subject' : 'Add New Subject'}</DialogTitle>
+                  </DialogHeader>
+                  <form onSubmit={handleSubmit} className="space-y-4">
+                    <div className="space-y-2">
+                      <Label>Semester</Label>
+                      <Input value={`${selectedUniversity?.name} > ${selectedCourse?.name} > ${selectedSemester?.name}`} disabled />
+                    </div>
+                    
+                    <div className="grid grid-cols-2 gap-4">
+                      <div className="space-y-2">
+                        <Label>Subject Name</Label>
+                        <Input
+                          placeholder="Database Management System"
+                          value={formData.name}
+                          onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                          required
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label>Code</Label>
+                        <Input
+                          placeholder="BCS501"
+                          value={formData.code}
+                          onChange={(e) => setFormData({ ...formData, code: e.target.value })}
+                          required
+                        />
+                      </div>
+                    </div>
+                    
+                    <div className="space-y-2">
+                      <Label>Slug</Label>
+                      <Input
+                        placeholder="dbms"
+                        value={formData.slug}
+                        onChange={(e) => setFormData({ ...formData, slug: e.target.value })}
+                        required
+                      />
+                    </div>
 
-        <Card>
-          <CardHeader>
-            <div className="relative max-w-sm">
-              <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-              <Input
-                placeholder="Search subjects..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="pl-9"
+                    <div className="grid grid-cols-3 gap-4">
+                      <div className="space-y-2">
+                        <Label>Total Marks</Label>
+                        <Input
+                          type="number"
+                          value={formData.total_marks}
+                          onChange={(e) => setFormData({ ...formData, total_marks: parseInt(e.target.value) })}
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label>Theory Marks</Label>
+                        <Input
+                          type="number"
+                          value={formData.theory_marks}
+                          onChange={(e) => setFormData({ ...formData, theory_marks: parseInt(e.target.value) })}
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label>Internal Marks</Label>
+                        <Input
+                          type="number"
+                          value={formData.internal_marks}
+                          onChange={(e) => setFormData({ ...formData, internal_marks: parseInt(e.target.value) })}
+                        />
+                      </div>
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-4">
+                      <div className="space-y-2">
+                        <Label>Gradient From</Label>
+                        <Input
+                          type="color"
+                          value={formData.gradient_from}
+                          onChange={(e) => setFormData({ ...formData, gradient_from: e.target.value })}
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label>Gradient To</Label>
+                        <Input
+                          type="color"
+                          value={formData.gradient_to}
+                          onChange={(e) => setFormData({ ...formData, gradient_to: e.target.value })}
+                        />
+                      </div>
+                    </div>
+
+                    <div className="flex justify-end gap-2">
+                      <Button type="button" variant="outline" onClick={() => setIsDialogOpen(false)}>Cancel</Button>
+                      <Button type="submit" disabled={saving}>
+                        {saving && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                        {editingSubject ? 'Update' : 'Create'}
+                      </Button>
+                    </div>
+                  </form>
+                </DialogContent>
+              </Dialog>
+              <BulkImportDialog
+                open={isImportOpen}
+                onOpenChange={setIsImportOpen}
+                tableName="subjects"
+                onImportComplete={fetchData}
               />
             </div>
-          </CardHeader>
-          <CardContent>
-            {loading ? (
-              <div className="flex items-center justify-center py-8">
-                <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+          )}
+        </div>
+
+        <HierarchyBreadcrumb items={breadcrumbItems} onHomeClick={handleHomeClick} />
+
+        {currentLevel === 'university' && (
+          <SelectionGrid
+            items={universityItems}
+            onSelect={(item) => {
+              const uni = universities.find(u => u.id === item.id);
+              if (uni) setSelectedUniversity(uni);
+            }}
+            loading={loading}
+            emptyMessage="No universities found"
+          />
+        )}
+
+        {currentLevel === 'course' && (
+          <SelectionGrid
+            items={courseItems}
+            onSelect={(item) => {
+              const course = courses.find(c => c.id === item.id);
+              if (course) setSelectedCourse(course);
+            }}
+            loading={loading}
+            emptyMessage="No courses found for this university"
+          />
+        )}
+
+        {currentLevel === 'semester' && (
+          <SelectionGrid
+            items={semesterItems}
+            onSelect={(item) => {
+              const sem = semesters.find(s => s.id === item.id);
+              if (sem) setSelectedSemester(sem);
+            }}
+            loading={loading}
+            emptyMessage="No semesters found for this course"
+            columns={4}
+          />
+        )}
+
+        {currentLevel === 'subject' && (
+          <Card>
+            <CardHeader>
+              <div className="relative max-w-sm">
+                <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+                <Input
+                  placeholder="Search subjects..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  className="pl-9"
+                />
               </div>
-            ) : filteredSubjects.length === 0 ? (
-              <div className="text-center py-8 text-muted-foreground">No subjects found</div>
-            ) : (
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Name</TableHead>
-                    <TableHead>Code</TableHead>
-                    <TableHead>Course</TableHead>
-                    <TableHead>Semester</TableHead>
-                    <TableHead className="text-right">Actions</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {filteredSubjects.map((subject) => (
-                    <TableRow key={subject.id}>
-                      <TableCell className="font-medium">{subject.name}</TableCell>
-                      <TableCell>{subject.code}</TableCell>
-                      <TableCell>{subject.semesters?.courses?.name}</TableCell>
-                      <TableCell>{subject.semesters?.name}</TableCell>
-                      <TableCell className="text-right">
-                        <div className="flex justify-end gap-2">
-                          <Button variant="ghost" size="icon" onClick={() => handleEdit(subject)}>
-                            <Pencil className="h-4 w-4" />
-                          </Button>
-                          <Button variant="ghost" size="icon" onClick={() => handleDelete(subject.id)}>
-                            <Trash2 className="h-4 w-4 text-destructive" />
-                          </Button>
-                        </div>
-                      </TableCell>
+            </CardHeader>
+            <CardContent>
+              {loading ? (
+                <div className="flex items-center justify-center py-8">
+                  <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+                </div>
+              ) : filteredSubjects.length === 0 ? (
+                <div className="text-center py-8 text-muted-foreground">No subjects found</div>
+              ) : (
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Name</TableHead>
+                      <TableHead>Code</TableHead>
+                      <TableHead>Marks</TableHead>
+                      <TableHead className="text-right">Actions</TableHead>
                     </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-            )}
-          </CardContent>
-        </Card>
+                  </TableHeader>
+                  <TableBody>
+                    {filteredSubjects.map((subject) => (
+                      <TableRow key={subject.id}>
+                        <TableCell className="font-medium">{subject.name}</TableCell>
+                        <TableCell>{subject.code}</TableCell>
+                        <TableCell>{subject.total_marks}</TableCell>
+                        <TableCell className="text-right">
+                          <div className="flex justify-end gap-2">
+                            <Button variant="ghost" size="icon" onClick={() => handleEdit(subject)}>
+                              <Pencil className="h-4 w-4" />
+                            </Button>
+                            <Button variant="ghost" size="icon" onClick={() => handleDelete(subject.id)}>
+                              <Trash2 className="h-4 w-4 text-destructive" />
+                            </Button>
+                          </div>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              )}
+            </CardContent>
+          </Card>
+        )}
       </div>
     </AdminLayout>
   );
