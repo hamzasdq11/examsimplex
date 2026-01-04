@@ -57,6 +57,7 @@ export default function Subjects() {
     gradient_from: '#3B82F6',
     gradient_to: '#8B5CF6',
     icon: 'BookOpen',
+    units: 5, // Number of units to create
   });
   const [saving, setSaving] = useState(false);
   const { toast } = useToast();
@@ -92,8 +93,9 @@ export default function Subjects() {
     setSaving(true);
 
     try {
+      const { units: unitCount, ...subjectData } = formData;
       const dataToSave = {
-        ...formData,
+        ...subjectData,
         semester_id: selectedSemester?.id || formData.semester_id,
       };
 
@@ -102,9 +104,29 @@ export default function Subjects() {
         if (error) throw error;
         toast({ title: 'Success', description: 'Subject updated successfully' });
       } else {
-        const { error } = await supabase.from('subjects').insert([dataToSave]);
-        if (error) throw error;
-        toast({ title: 'Success', description: 'Subject created successfully' });
+        // Create subject first
+        const { data: newSubject, error: subjectError } = await supabase
+          .from('subjects')
+          .insert([dataToSave])
+          .select()
+          .single();
+        
+        if (subjectError) throw subjectError;
+
+        // Create units for the subject
+        if (unitCount > 0 && newSubject) {
+          const unitsToCreate = Array.from({ length: unitCount }, (_, i) => ({
+            subject_id: newSubject.id,
+            number: i + 1,
+            name: `Unit ${i + 1}`,
+            weight: Math.floor(100 / unitCount),
+          }));
+
+          const { error: unitsError } = await supabase.from('units').insert(unitsToCreate);
+          if (unitsError) throw unitsError;
+        }
+
+        toast({ title: 'Success', description: `Subject created with ${unitCount} units` });
       }
 
       setIsDialogOpen(false);
@@ -134,6 +156,7 @@ export default function Subjects() {
       gradient_from: subject.gradient_from || '#3B82F6',
       gradient_to: subject.gradient_to || '#8B5CF6',
       icon: subject.icon || 'BookOpen',
+      units: 5, // Not editable for existing subjects
     });
     setIsDialogOpen(true);
   };
@@ -165,6 +188,7 @@ export default function Subjects() {
       gradient_from: '#3B82F6',
       gradient_to: '#8B5CF6',
       icon: 'BookOpen',
+      units: 5,
     });
   };
 
@@ -314,14 +338,31 @@ export default function Subjects() {
                       </div>
                     </div>
                     
-                    <div className="space-y-2">
-                      <Label>Slug</Label>
-                      <Input
-                        placeholder="dbms"
-                        value={formData.slug}
-                        onChange={(e) => setFormData({ ...formData, slug: e.target.value })}
-                        required
-                      />
+                    <div className="grid grid-cols-2 gap-4">
+                      <div className="space-y-2">
+                        <Label>Slug</Label>
+                        <Input
+                          placeholder="dbms"
+                          value={formData.slug}
+                          onChange={(e) => setFormData({ ...formData, slug: e.target.value })}
+                          required
+                        />
+                      </div>
+                      {!editingSubject && (
+                        <div className="space-y-2">
+                          <Label>Units</Label>
+                          <Input
+                            type="number"
+                            min={1}
+                            max={10}
+                            placeholder="5"
+                            value={formData.units}
+                            onChange={(e) => setFormData({ ...formData, units: parseInt(e.target.value) || 5 })}
+                            required
+                          />
+                          <p className="text-xs text-muted-foreground">Number of units to create (1-10)</p>
+                        </div>
+                      )}
                     </div>
 
                     <div className="grid grid-cols-3 gap-4">
