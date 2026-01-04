@@ -57,7 +57,7 @@ export default function Notes() {
   const [filteredUnits, setFilteredUnits] = useState<any[]>([]);
   
   const [formData, setFormData] = useState({
-    unit_id: '',
+    unit_number: 1,
     chapter_title: '',
     points: '',
     order_index: 0,
@@ -108,8 +108,16 @@ export default function Notes() {
     try {
       const pointsArray = formData.points.split('\n').filter(p => p.trim()).map(p => p.trim());
       
+      // Find the unit by number for the selected subject
+      const unit = filteredUnits.find(u => u.number === formData.unit_number);
+      if (!unit) {
+        toast({ title: 'Error', description: `Unit ${formData.unit_number} does not exist for this subject`, variant: 'destructive' });
+        setSaving(false);
+        return;
+      }
+      
       const dataToSave = {
-        unit_id: formData.unit_id,
+        unit_id: unit.id,
         chapter_title: formData.chapter_title,
         points: pointsArray,
         order_index: formData.order_index,
@@ -139,7 +147,7 @@ export default function Notes() {
   const handleEdit = (note: any) => {
     setEditingNote(note);
     setFormData({
-      unit_id: note.unit_id,
+      unit_number: note.units?.number || 1,
       chapter_title: note.chapter_title,
       points: Array.isArray(note.points) ? note.points.join('\n') : '',
       order_index: note.order_index,
@@ -160,7 +168,7 @@ export default function Notes() {
   };
 
   const resetForm = () => {
-    setFormData({ unit_id: '', chapter_title: '', points: '', order_index: 0 });
+    setFormData({ unit_number: 1, chapter_title: '', points: '', order_index: 0 });
   };
 
   // Filter data based on hierarchy
@@ -308,18 +316,20 @@ export default function Notes() {
                     </div>
 
                     <div className="space-y-2">
-                      <Label>Unit</Label>
-                      <Select 
-                        value={formData.unit_id} 
-                        onValueChange={(v) => setFormData({ ...formData, unit_id: v })}
-                      >
-                        <SelectTrigger><SelectValue placeholder="Select unit" /></SelectTrigger>
-                        <SelectContent>
-                          {filteredUnits.map((u) => (
-                            <SelectItem key={u.id} value={u.id}>Unit {u.number}: {u.name}</SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
+                      <Label>Unit (number)</Label>
+                      <Input
+                        type="number"
+                        min={1}
+                        placeholder="e.g. 1, 2, 3..."
+                        value={formData.unit_number}
+                        onChange={(e) => setFormData({ ...formData, unit_number: parseInt(e.target.value) || 1 })}
+                        required
+                      />
+                      {filteredUnits.length > 0 && (
+                        <p className="text-xs text-muted-foreground">
+                          Available units: {filteredUnits.map(u => u.number).join(', ')}
+                        </p>
+                      )}
                     </div>
 
                     <div className="space-y-2">
