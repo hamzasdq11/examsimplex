@@ -317,18 +317,26 @@ export default function Notes() {
 
                     <div className="space-y-2">
                       <Label>Unit (number)</Label>
-                      <Input
-                        type="number"
-                        min={1}
-                        placeholder="e.g. 1, 2, 3..."
-                        value={formData.unit_number}
-                        onChange={(e) => setFormData({ ...formData, unit_number: parseInt(e.target.value) || 1 })}
-                        required
-                      />
-                      {filteredUnits.length > 0 && (
-                        <p className="text-xs text-muted-foreground">
-                          Available units: {filteredUnits.map(u => u.number).join(', ')}
-                        </p>
+                      {filteredUnits.length === 0 ? (
+                        <div className="p-3 rounded-md bg-destructive/10 border border-destructive/20">
+                          <p className="text-sm text-destructive">
+                            No units exist for this subject. Please create units first in the Units page.
+                          </p>
+                        </div>
+                      ) : (
+                        <>
+                          <Input
+                            type="number"
+                            min={1}
+                            placeholder="e.g. 1, 2, 3..."
+                            value={formData.unit_number}
+                            onChange={(e) => setFormData({ ...formData, unit_number: parseInt(e.target.value) || 1 })}
+                            required
+                          />
+                          <p className="text-xs text-muted-foreground">
+                            Available units: {filteredUnits.map(u => u.number).join(', ')}
+                          </p>
+                        </>
                       )}
                     </div>
 
@@ -365,7 +373,7 @@ export default function Notes() {
 
                     <div className="flex justify-end gap-2">
                       <Button type="button" variant="outline" onClick={() => setIsDialogOpen(false)}>Cancel</Button>
-                      <Button type="submit" disabled={saving}>
+                      <Button type="submit" disabled={saving || filteredUnits.length === 0}>
                         {saving && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                         {editingNote ? 'Update' : 'Create'}
                       </Button>
