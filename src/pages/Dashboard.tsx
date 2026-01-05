@@ -7,7 +7,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
-import { Loader2, BookOpen, FileText, HelpCircle, GraduationCap, Calendar, Edit, LogOut, Home } from 'lucide-react';
+import { Loader2, BookOpen, FileText, HelpCircle, GraduationCap, MapPin, Calendar, Edit, LogOut, Home } from 'lucide-react';
 
 interface Subject {
   id: string;
@@ -24,8 +24,6 @@ export default function Dashboard() {
   const navigate = useNavigate();
   const [subjects, setSubjects] = useState<Subject[]>([]);
   const [loadingSubjects, setLoadingSubjects] = useState(true);
-  const [notesCount, setNotesCount] = useState(0);
-  const [questionsCount, setQuestionsCount] = useState(0);
 
   // Redirect to onboarding if profile is incomplete
   useEffect(() => {
@@ -60,43 +58,6 @@ export default function Dashboard() {
       fetchSubjects();
     }
   }, [profile]);
-
-  // Fetch notes and questions counts
-  useEffect(() => {
-    const fetchCounts = async () => {
-      if (subjects.length === 0) return;
-
-      const subjectIds = subjects.map(s => s.id);
-
-      // Get unit IDs for these subjects first
-      const { data: units } = await supabase
-        .from('units')
-        .select('id')
-        .in('subject_id', subjectIds);
-
-      if (units && units.length > 0) {
-        const unitIds = units.map(u => u.id);
-
-        // Fetch notes count
-        const { count: notes } = await supabase
-          .from('notes')
-          .select('id', { count: 'exact', head: true })
-          .in('unit_id', unitIds);
-
-        setNotesCount(notes || 0);
-      }
-
-      // Fetch questions count
-      const { count: questions } = await supabase
-        .from('important_questions')
-        .select('id', { count: 'exact', head: true })
-        .in('subject_id', subjectIds);
-
-      setQuestionsCount(questions || 0);
-    };
-
-    fetchCounts();
-  }, [subjects]);
 
   const handleSignOut = async () => {
     await signOut();
@@ -165,24 +126,24 @@ export default function Dashboard() {
               </Button>
             </div>
 
-            <div className="mt-6 flex flex-wrap gap-2">
+            <div className="mt-6 flex flex-wrap gap-4">
               {profile.university && (
-                <Badge variant="secondary" className="flex items-center gap-1.5 px-3 py-1">
-                  <GraduationCap className="h-3.5 w-3.5" />
-                  {profile.university.name}
-                </Badge>
+                <div className="flex items-center gap-2 text-sm">
+                  <GraduationCap className="h-4 w-4 text-muted-foreground" />
+                  <span>{profile.university.name}</span>
+                </div>
               )}
               {profile.course && (
-                <Badge variant="secondary" className="flex items-center gap-1.5 px-3 py-1">
-                  <BookOpen className="h-3.5 w-3.5" />
-                  {profile.course.name}
-                </Badge>
+                <div className="flex items-center gap-2 text-sm">
+                  <BookOpen className="h-4 w-4 text-muted-foreground" />
+                  <span>{profile.course.name}</span>
+                </div>
               )}
               {profile.semester && (
-                <Badge variant="secondary" className="flex items-center gap-1.5 px-3 py-1">
-                  <Calendar className="h-3.5 w-3.5" />
-                  {profile.semester.name}
-                </Badge>
+                <div className="flex items-center gap-2 text-sm">
+                  <Calendar className="h-4 w-4 text-muted-foreground" />
+                  <span>{profile.semester.name}</span>
+                </div>
               )}
             </div>
           </CardContent>
@@ -190,51 +151,42 @@ export default function Dashboard() {
 
         {/* Quick Access */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <Card 
-            className="border-0 text-white"
-            style={{ background: 'linear-gradient(135deg, hsl(185 70% 50%) 0%, hsl(160 60% 45%) 100%)' }}
-          >
+          <Card className="bg-gradient-to-br from-hsl(var(--card-cyan)) to-hsl(var(--card-mint)) border-0">
             <CardHeader className="pb-2">
-              <CardTitle className="flex items-center gap-2 text-lg text-white">
+              <CardTitle className="flex items-center gap-2 text-lg">
                 <BookOpen className="h-5 w-5" />
                 My Subjects
               </CardTitle>
             </CardHeader>
             <CardContent>
               <p className="text-3xl font-bold">{subjects.length}</p>
-              <p className="text-sm text-white/80">subjects this semester</p>
+              <p className="text-sm text-muted-foreground">subjects this semester</p>
             </CardContent>
           </Card>
 
-          <Card 
-            className="border-0 text-white"
-            style={{ background: 'linear-gradient(135deg, hsl(260 60% 65%) 0%, hsl(280 50% 55%) 100%)' }}
-          >
+          <Card className="bg-gradient-to-br from-hsl(var(--card-lavender)) to-hsl(var(--card-purple)) border-0">
             <CardHeader className="pb-2">
-              <CardTitle className="flex items-center gap-2 text-lg text-white">
+              <CardTitle className="flex items-center gap-2 text-lg">
                 <FileText className="h-5 w-5" />
                 Study Notes
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <p className="text-3xl font-bold">{notesCount}</p>
-              <p className="text-sm text-white/80">available for your subjects</p>
+              <p className="text-3xl font-bold">-</p>
+              <p className="text-sm text-muted-foreground">available for your subjects</p>
             </CardContent>
           </Card>
 
-          <Card 
-            className="border-0 text-white"
-            style={{ background: 'linear-gradient(135deg, hsl(330 60% 55%) 0%, hsl(280 50% 60%) 100%)' }}
-          >
+          <Card className="bg-gradient-to-br from-hsl(var(--card-pink)) to-hsl(var(--card-lavender)) border-0">
             <CardHeader className="pb-2">
-              <CardTitle className="flex items-center gap-2 text-lg text-white">
+              <CardTitle className="flex items-center gap-2 text-lg">
                 <HelpCircle className="h-5 w-5" />
                 Important Questions
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <p className="text-3xl font-bold">{questionsCount}</p>
-              <p className="text-sm text-white/80">to practice</p>
+              <p className="text-3xl font-bold">-</p>
+              <p className="text-sm text-muted-foreground">to practice</p>
             </CardContent>
           </Card>
         </div>
@@ -290,38 +242,11 @@ export default function Dashboard() {
                     </CardHeader>
                     <CardContent>
                       <div className="flex gap-2 text-xs text-muted-foreground">
-                        <span 
-                          className="hover:text-primary transition-colors"
-                          onClick={(e) => {
-                            e.preventDefault();
-                            e.stopPropagation();
-                            navigate(`/university/${profile.university_id}/${profile.course_id}/${profile.semester_id}/${subject.id}?tab=notes`);
-                          }}
-                        >
-                          Notes
-                        </span>
+                        <span>Notes</span>
                         <span>•</span>
-                        <span 
-                          className="hover:text-primary transition-colors"
-                          onClick={(e) => {
-                            e.preventDefault();
-                            e.stopPropagation();
-                            navigate(`/university/${profile.university_id}/${profile.course_id}/${profile.semester_id}/${subject.id}?tab=pyqs`);
-                          }}
-                        >
-                          PYQs
-                        </span>
+                        <span>PYQs</span>
                         <span>•</span>
-                        <span 
-                          className="hover:text-primary transition-colors"
-                          onClick={(e) => {
-                            e.preventDefault();
-                            e.stopPropagation();
-                            navigate(`/university/${profile.university_id}/${profile.course_id}/${profile.semester_id}/${subject.id}?tab=questions`);
-                          }}
-                        >
-                          Questions
-                        </span>
+                        <span>Questions</span>
                       </div>
                     </CardContent>
                   </Card>
