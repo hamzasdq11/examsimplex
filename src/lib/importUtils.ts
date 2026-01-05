@@ -77,11 +77,21 @@ export async function parseFile(file: File): Promise<{ data: Record<string, any>
   }
 }
 
+// Helper function to escape CSV values (handles commas, quotes, newlines)
+function escapeCSVValue(value: any): string {
+  const str = String(value ?? '');
+  // If value contains comma, newline, or quotes, wrap in quotes and escape internal quotes
+  if (str.includes(',') || str.includes('\n') || str.includes('"')) {
+    return `"${str.replace(/"/g, '""')}"`;
+  }
+  return str;
+}
+
 // Generate CSV template string
 export function generateCSVTemplate(headers: string[], sampleData?: Record<string, string>): string {
   const headerLine = headers.join(',');
   const sampleLine = sampleData 
-    ? headers.map(h => sampleData[h] || '').join(',')
+    ? headers.map(h => escapeCSVValue(sampleData[h])).join(',')
     : headers.map(() => '').join(',');
   return `${headerLine}\n${sampleLine}`;
 }

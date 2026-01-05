@@ -125,27 +125,6 @@ export const importConfigs: Record<string, ImportConfig> = {
     },
   },
 
-  units: {
-    tableName: 'units',
-    displayName: 'Units',
-    fields: [
-      { name: 'subject_code', required: true, type: 'string', description: 'Subject code (e.g., KCS501)' },
-      { name: 'number', required: true, type: 'number', description: 'Unit number (1-10)' },
-      { name: 'name', required: true, type: 'string', description: 'Unit name (e.g., Introduction to DBMS)' },
-      { name: 'weight', required: false, type: 'number', description: 'Weight percentage (default: 20)' },
-    ],
-    upsertKeys: ['subject_id', 'number'],
-    referenceFields: [
-      { field: 'subject_code', lookupTable: 'subjects', lookupField: 'code' },
-    ],
-    sampleData: {
-      subject_code: 'KCS501',
-      number: 1,
-      name: 'Introduction to DBMS',
-      weight: 20,
-    },
-  },
-
   important_questions: {
     tableName: 'important_questions',
     displayName: 'Important Questions',
