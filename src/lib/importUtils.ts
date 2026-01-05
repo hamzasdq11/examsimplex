@@ -155,12 +155,13 @@ export async function fetchUnitByNumber(subjectId: string, number: number): Prom
 
 // Fetch all lookup data for batch processing
 export async function fetchAllLookupData() {
-  const [universities, courses, semesters, subjects, units] = await Promise.all([
+  const [universities, courses, semesters, subjects, units, pyqPapers] = await Promise.all([
     supabase.from('universities').select('id, name, slug'),
     supabase.from('courses').select('id, university_id, code'),
     supabase.from('semesters').select('id, course_id, number'),
     supabase.from('subjects').select('id, semester_id, code'),
     supabase.from('units').select('id, subject_id, number'),
+    supabase.from('pyq_papers').select('id, subject_id, year'),
   ]);
 
   return {
@@ -169,6 +170,7 @@ export async function fetchAllLookupData() {
     semesters: semesters.data || [],
     subjects: subjects.data || [],
     units: units.data || [],
+    pyqPapers: pyqPapers.data || [],
   };
 }
 

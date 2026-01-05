@@ -541,6 +541,38 @@ async function processRecord(
       break;
     }
 
+    case 'pyq_questions': {
+      const subject = lookupData.subjects.find(
+        s => s.code?.toLowerCase() === record.subject_code?.toLowerCase()
+      );
+      if (!subject) return { data: {}, error: `Subject not found: ${record.subject_code}` };
+
+      const paper = lookupData.pyqPapers.find(
+        p => p.subject_id === subject.id && p.year === record.year
+      );
+      if (!paper) {
+        const availableYears = lookupData.pyqPapers
+          .filter(p => p.subject_id === subject.id)
+          .map(p => p.year)
+          .join(', ');
+        return { data: {}, error: `PYQ Paper not found for year: ${record.year}. Available: ${availableYears || 'none'}` };
+      }
+
+      processed.pyq_paper_id = paper.id;
+      processed.question = record.question;
+      if (record.marks) processed.marks = toNumber(record.marks, 10);
+      if (record.answer) processed.answer = record.answer;
+      if (record.order_index) processed.order_index = toNumber(record.order_index, 0);
+
+      if (record.unit_number) {
+        const unit = lookupData.units.find(
+          u => u.subject_id === subject.id && u.number === toNumber(record.unit_number)
+        );
+        if (unit) processed.unit_id = unit.id;
+      }
+      break;
+    }
+
     default:
       return { data: {}, error: `Unknown table: ${config.tableName}` };
   }
