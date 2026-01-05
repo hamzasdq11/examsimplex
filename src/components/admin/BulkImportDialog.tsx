@@ -467,19 +467,6 @@ async function processRecord(
       break;
     }
 
-    case 'units': {
-      const subject = lookupData.subjects.find(
-        s => s.code?.toLowerCase() === record.subject_code?.toLowerCase()
-      );
-      if (!subject) return { data: {}, error: `Subject not found: ${record.subject_code}` };
-
-      processed.subject_id = subject.id;
-      processed.number = toNumber(record.number);
-      processed.name = record.name;
-      if (record.weight) processed.weight = toNumber(record.weight, 20);
-      break;
-    }
-
     case 'important_questions': {
       const subject = lookupData.subjects.find(
         s => s.code?.toLowerCase() === record.subject_code?.toLowerCase()

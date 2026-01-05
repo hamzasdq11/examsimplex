@@ -11,7 +11,6 @@ export interface ImportConfig {
   fields: ImportField[];
   upsertKeys: string[];
   sampleData: Record<string, any>;
-  referenceFields?: { field: string; lookupTable: string; lookupField: string }[];
 }
 
 export const importConfigs: Record<string, ImportConfig> = {
@@ -47,9 +46,6 @@ export const importConfigs: Record<string, ImportConfig> = {
       { name: 'duration_years', required: false, type: 'number', description: 'Duration in years (default: 4)' },
     ],
     upsertKeys: ['university_id', 'code'],
-    referenceFields: [
-      { field: 'university_name', lookupTable: 'universities', lookupField: 'name' },
-    ],
     sampleData: {
       university_name: 'AKTU',
       name: 'B.Tech Computer Science',
@@ -68,10 +64,6 @@ export const importConfigs: Record<string, ImportConfig> = {
       { name: 'name', required: true, type: 'string', description: 'Display name (e.g., Semester 5)' },
     ],
     upsertKeys: ['course_id', 'number'],
-    referenceFields: [
-      { field: 'university_name', lookupTable: 'universities', lookupField: 'name' },
-      { field: 'course_code', lookupTable: 'courses', lookupField: 'code' },
-    ],
     sampleData: {
       university_name: 'AKTU',
       course_code: 'btech-cse',
@@ -101,11 +93,6 @@ export const importConfigs: Record<string, ImportConfig> = {
       { name: 'icon', required: false, type: 'string', description: 'Lucide icon name (e.g., Database)' },
     ],
     upsertKeys: ['semester_id', 'code'],
-    referenceFields: [
-      { field: 'university_name', lookupTable: 'universities', lookupField: 'name' },
-      { field: 'course_code', lookupTable: 'courses', lookupField: 'code' },
-      { field: 'semester_number', lookupTable: 'semesters', lookupField: 'number' },
-    ],
     sampleData: {
       university_name: 'AKTU',
       course_code: 'btech-cse',
@@ -136,10 +123,6 @@ export const importConfigs: Record<string, ImportConfig> = {
       { name: 'frequency', required: false, type: 'string', description: 'Very Frequent/Repeated/Expected' },
     ],
     upsertKeys: ['subject_id', 'question'],
-    referenceFields: [
-      { field: 'subject_code', lookupTable: 'subjects', lookupField: 'code' },
-      { field: 'unit_number', lookupTable: 'units', lookupField: 'number' },
-    ],
     sampleData: {
       subject_code: 'KCS501',
       unit_number: 1,
@@ -160,10 +143,6 @@ export const importConfigs: Record<string, ImportConfig> = {
       { name: 'order_index', required: false, type: 'number', description: 'Display order (default: 0)' },
     ],
     upsertKeys: ['unit_id', 'chapter_title'],
-    referenceFields: [
-      { field: 'subject_code', lookupTable: 'subjects', lookupField: 'code' },
-      { field: 'unit_number', lookupTable: 'units', lookupField: 'number' },
-    ],
     sampleData: {
       subject_code: 'KCS501',
       unit_number: 1,
@@ -183,9 +162,6 @@ export const importConfigs: Record<string, ImportConfig> = {
       { name: 'pdf_url', required: false, type: 'string', description: 'PDF file path or URL' },
     ],
     upsertKeys: ['subject_id', 'year'],
-    referenceFields: [
-      { field: 'subject_code', lookupTable: 'subjects', lookupField: 'code' },
-    ],
     sampleData: {
       subject_code: 'KCS501',
       year: '2023',
@@ -207,11 +183,6 @@ export const importConfigs: Record<string, ImportConfig> = {
       { name: 'order_index', required: false, type: 'number', description: 'Question order in paper' },
     ],
     upsertKeys: ['pyq_paper_id', 'question'],
-    referenceFields: [
-      { field: 'subject_code', lookupTable: 'subjects', lookupField: 'code' },
-      { field: 'year', lookupTable: 'pyq_papers', lookupField: 'year' },
-      { field: 'unit_number', lookupTable: 'units', lookupField: 'number' },
-    ],
     sampleData: {
       subject_code: 'KCS501',
       year: '2023',
