@@ -36,7 +36,7 @@ export function parseCSVString(csvContent: string): Record<string, string>[] {
   return records;
 }
 
-// Parse a single CSV line, handling quoted values
+// Parse a single CSV line, handling quoted values and escaped quotes
 function parseCSVLine(line: string): string[] {
   const values: string[] = [];
   let current = '';
@@ -45,7 +45,13 @@ function parseCSVLine(line: string): string[] {
   for (let i = 0; i < line.length; i++) {
     const char = line[i];
     if (char === '"') {
-      inQuotes = !inQuotes;
+      // Check for escaped quote ("")
+      if (inQuotes && line[i + 1] === '"') {
+        current += '"';
+        i++; // Skip next quote
+      } else {
+        inQuotes = !inQuotes;
+      }
     } else if (char === ',' && !inQuotes) {
       values.push(current);
       current = '';
