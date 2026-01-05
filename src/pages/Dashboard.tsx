@@ -108,9 +108,9 @@ export default function Dashboard() {
       <main className="container py-8 space-y-8">
         {/* Profile Card */}
         <Card className="overflow-hidden">
-          <div className="h-24 bg-gradient-to-r from-primary/80 to-primary" />
+          <div className="h-32 bg-gradient-to-r from-primary/80 to-primary" />
           <CardContent className="relative pt-0">
-            <div className="flex flex-col sm:flex-row sm:items-end gap-4 -mt-12">
+            <div className="flex flex-col sm:flex-row sm:items-end gap-4 -mt-8">
               <Avatar className="h-24 w-24 border-4 border-background shadow-lg">
                 <AvatarFallback className="text-2xl bg-primary text-primary-foreground">
                   {getUserInitials()}
