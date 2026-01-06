@@ -24,9 +24,25 @@ export default function Dashboard() {
   const navigate = useNavigate();
   const [subjects, setSubjects] = useState<Subject[]>([]);
   const [loadingSubjects, setLoadingSubjects] = useState(true);
+  const [isProcessingOAuth, setIsProcessingOAuth] = useState(false);
+
+  // Detect OAuth callback (tokens in URL hash)
+  useEffect(() => {
+    const hashParams = new URLSearchParams(window.location.hash.substring(1));
+    if (hashParams.get('access_token') || hashParams.get('refresh_token')) {
+      setIsProcessingOAuth(true);
+      // Clean up the URL hash
+      window.history.replaceState(null, '', window.location.pathname);
+      // Give Supabase time to process the tokens
+      const timer = setTimeout(() => setIsProcessingOAuth(false), 3000);
+      return () => clearTimeout(timer);
+    }
+  }, []);
 
   // Redirect to onboarding if profile is incomplete
   useEffect(() => {
+    if (isProcessingOAuth) return; // Don't redirect while processing OAuth
+    
     if (!authLoading && !profileLoading) {
       if (!user) {
         navigate('/auth', { replace: true });
@@ -34,7 +50,7 @@ export default function Dashboard() {
         navigate('/onboarding', { replace: true });
       }
     }
-  }, [authLoading, profileLoading, user, isProfileComplete, navigate]);
+  }, [authLoading, profileLoading, user, isProfileComplete, navigate, isProcessingOAuth]);
 
   // Fetch subjects for user's semester
   useEffect(() => {
