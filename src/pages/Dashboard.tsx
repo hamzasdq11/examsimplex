@@ -104,7 +104,7 @@ export default function Dashboard() {
         <div className="container flex h-16 items-center justify-between">
           <Link to="/" className="flex items-center gap-2 text-lg font-semibold">
             <BookOpen className="h-6 w-6 text-primary" />
-            ExamPrep
+            EXAM Simplex
           </Link>
           <div className="flex items-center gap-4">
             <Button variant="ghost" size="sm" asChild>

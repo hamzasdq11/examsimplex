@@ -154,7 +154,7 @@ export default function Auth() {
               <BookOpen className="h-8 w-8 text-primary" />
             </div>
           </div>
-          <CardTitle className="text-2xl">ExamPrep</CardTitle>
+          <CardTitle className="text-2xl">EXAM Simplex</CardTitle>
           <CardDescription>
             Sign in to your account or create a new one
           </CardDescription>
