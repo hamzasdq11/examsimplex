@@ -158,7 +158,7 @@ export default function Onboarding() {
     } else {
       toast({
         title: 'Profile Complete!',
-        description: 'Welcome to ExamPrep. Let\'s get started!',
+        description: 'Welcome to EXAM Simplex. Let\'s get started!',
       });
       // Small delay to ensure profile state is updated before navigation
       setTimeout(() => {

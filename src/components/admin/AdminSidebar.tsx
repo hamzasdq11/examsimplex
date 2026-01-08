@@ -43,7 +43,7 @@ export function AdminSidebar() {
             <BookOpen className="h-5 w-5 text-primary" />
           </div>
           <div>
-            <h2 className="font-semibold text-foreground">ExamPrep</h2>
+            <h2 className="font-semibold text-foreground">EXAM Simplex</h2>
             <p className="text-xs text-muted-foreground">Admin Panel</p>
           </div>
         </div>
