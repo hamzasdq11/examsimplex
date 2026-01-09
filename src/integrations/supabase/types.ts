@@ -180,6 +180,33 @@ export type Database = {
           },
         ]
       }
+      pending_password_resets: {
+        Row: {
+          attempts: number | null
+          created_at: string | null
+          email: string
+          id: string
+          otp_code: string
+          otp_expires_at: string
+        }
+        Insert: {
+          attempts?: number | null
+          created_at?: string | null
+          email: string
+          id?: string
+          otp_code: string
+          otp_expires_at: string
+        }
+        Update: {
+          attempts?: number | null
+          created_at?: string | null
+          email?: string
+          id?: string
+          otp_code?: string
+          otp_expires_at?: string
+        }
+        Relationships: []
+      }
       pending_signups: {
         Row: {
           attempts: number | null
