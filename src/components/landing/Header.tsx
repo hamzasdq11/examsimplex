@@ -115,14 +115,14 @@ const Header = () => {
               </DropdownMenuContent>
             </DropdownMenu>
           ) : (
-            <>
-              <Link to="/auth" className="text-sm font-medium text-primary hover:text-primary/80 transition-colors">
-                Log in
-              </Link>
-              <Button asChild className="bg-primary hover:bg-primary/90 text-primary-foreground rounded-full px-6">
-                <Link to="/get-started">Get Started for Free</Link>
+            <div className="flex items-center gap-3">
+              <Button asChild variant="ghost" className="text-sm font-medium">
+                <Link to="/auth">Log in</Link>
               </Button>
-            </>
+              <Button asChild className="bg-primary hover:bg-primary/90 text-primary-foreground rounded-full px-6">
+                <Link to="/auth?tab=signup">Sign Up</Link>
+              </Button>
+            </div>
           )}
         </div>
 
@@ -193,18 +193,14 @@ const Header = () => {
                   </Button>
                 </>
               ) : (
-                <>
-                  <Link 
-                    to="/auth" 
-                    onClick={() => setMobileMenuOpen(false)}
-                    className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors"
-                  >
-                    Log in
-                  </Link>
-                  <Button asChild className="bg-primary hover:bg-primary/90 text-primary-foreground rounded-full w-full">
-                    <Link to="/get-started" onClick={() => setMobileMenuOpen(false)}>Get Started for Free</Link>
+                <div className="flex flex-col gap-3">
+                  <Button asChild variant="outline" className="w-full">
+                    <Link to="/auth" onClick={() => setMobileMenuOpen(false)}>Log in</Link>
                   </Button>
-                </>
+                  <Button asChild className="bg-primary hover:bg-primary/90 text-primary-foreground rounded-full w-full">
+                    <Link to="/auth?tab=signup" onClick={() => setMobileMenuOpen(false)}>Sign Up</Link>
+                  </Button>
+                </div>
               )}
             </div>
           </nav>

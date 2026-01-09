@@ -34,7 +34,10 @@ export default function Auth() {
   const [otp, setOtp] = useState('');
   const [loading, setLoading] = useState(false);
   const [googleLoading, setGoogleLoading] = useState(false);
-  const [activeTab, setActiveTab] = useState('login');
+  const [activeTab, setActiveTab] = useState(() => {
+    const params = new URLSearchParams(window.location.search);
+    return params.get('tab') === 'signup' ? 'signup' : 'login';
+  });
   const [authStep, setAuthStep] = useState<AuthStep>('credentials');
   const [signupStep, setSignupStep] = useState<SignupStep>('email');
   const [resendCooldown, setResendCooldown] = useState(0);
