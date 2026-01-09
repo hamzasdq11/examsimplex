@@ -180,6 +180,36 @@ export type Database = {
           },
         ]
       }
+      pending_signups: {
+        Row: {
+          attempts: number | null
+          created_at: string | null
+          email: string
+          id: string
+          otp_code: string
+          otp_expires_at: string
+          verified: boolean | null
+        }
+        Insert: {
+          attempts?: number | null
+          created_at?: string | null
+          email: string
+          id?: string
+          otp_code: string
+          otp_expires_at: string
+          verified?: boolean | null
+        }
+        Update: {
+          attempts?: number | null
+          created_at?: string | null
+          email?: string
+          id?: string
+          otp_code?: string
+          otp_expires_at?: string
+          verified?: boolean | null
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           avatar_url: string | null
@@ -188,6 +218,7 @@ export type Database = {
           created_at: string
           full_name: string | null
           id: string
+          phone: string | null
           semester_id: string | null
           university_id: string | null
           updated_at: string
@@ -199,6 +230,7 @@ export type Database = {
           created_at?: string
           full_name?: string | null
           id: string
+          phone?: string | null
           semester_id?: string | null
           university_id?: string | null
           updated_at?: string
@@ -210,6 +242,7 @@ export type Database = {
           created_at?: string
           full_name?: string | null
           id?: string
+          phone?: string | null
           semester_id?: string | null
           university_id?: string | null
           updated_at?: string
