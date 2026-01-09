@@ -14,14 +14,14 @@ const StatsBanner = () => {
           </div>
           
           <div className="flex -space-x-4">
-            <div className="w-16 h-16 md:w-20 md:h-20 rounded-full bg-card-pink border-4 border-primary flex items-center justify-center text-2xl">
-              👩🏻
+            <div className="w-16 h-16 md:w-20 md:h-20 rounded-full bg-card-pink border-4 border-primary overflow-hidden">
+              <img src="https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=100&h=100&fit=crop&crop=face" alt="Student" className="w-full h-full object-cover" />
             </div>
-            <div className="w-16 h-16 md:w-20 md:h-20 rounded-full bg-card-cyan border-4 border-primary flex items-center justify-center text-2xl">
-              👨🏽
+            <div className="w-16 h-16 md:w-20 md:h-20 rounded-full bg-card-cyan border-4 border-primary overflow-hidden">
+              <img src="https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=100&h=100&fit=crop&crop=face" alt="Student" className="w-full h-full object-cover" />
             </div>
-            <div className="w-16 h-16 md:w-20 md:h-20 rounded-full bg-card-lavender border-4 border-primary flex items-center justify-center text-2xl">
-              👩🏼
+            <div className="w-16 h-16 md:w-20 md:h-20 rounded-full bg-card-lavender border-4 border-primary overflow-hidden">
+              <img src="https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=100&h=100&fit=crop&crop=face" alt="Student" className="w-full h-full object-cover" />
             </div>
           </div>
         </div>
