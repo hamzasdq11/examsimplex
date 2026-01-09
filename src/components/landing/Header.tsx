@@ -135,77 +135,96 @@ const Header = () => {
         </button>
       </div>
 
-      {/* Mobile Menu */}
+      {/* Mobile Menu Overlay */}
       {mobileMenuOpen && (
-        <div className="md:hidden border-t border-border bg-background">
-          <nav className="container py-4 flex flex-col gap-4">
-            <button
-              onClick={() => scrollToSection("features")}
-              className="text-left text-sm font-medium text-muted-foreground hover:text-foreground transition-colors"
-            >
-              University
-            </button>
-            <button
-              onClick={() => scrollToSection("how-it-works")}
-              className="text-left text-sm font-medium text-muted-foreground hover:text-foreground transition-colors"
-            >
-              Exams
-            </button>
-            <button
-              onClick={() => scrollToSection("testimonials")}
-              className="text-left text-sm font-medium text-muted-foreground hover:text-foreground transition-colors"
-            >
-              Practice
-            </button>
-            <button
-              onClick={() => scrollToSection("faq")}
-              className="text-left text-sm font-medium text-muted-foreground hover:text-foreground transition-colors"
-            >
-              Free Resources
-            </button>
-            <div className="pt-4 border-t border-border flex flex-col gap-3">
-              {user ? (
-                <>
-                  <div className="flex items-center gap-2 py-2">
-                    <Avatar className="h-8 w-8">
-                      <AvatarFallback className="bg-primary text-primary-foreground text-sm">
-                        {getUserInitials()}
-                      </AvatarFallback>
-                    </Avatar>
-                    <div>
-                      <p className="text-sm font-medium">{user.email}</p>
-                      <p className="text-xs text-muted-foreground">{isAdmin ? "Admin" : "User"}</p>
-                    </div>
-                  </div>
-                  <Button variant="outline" onClick={() => { navigate("/dashboard"); setMobileMenuOpen(false); }} className="w-full justify-start">
-                    <User className="mr-2 h-4 w-4" />
-                    My Dashboard
-                  </Button>
-                  {isAdmin && (
-                    <Button variant="outline" onClick={() => { navigate("/admin"); setMobileMenuOpen(false); }} className="w-full justify-start">
-                      <LayoutDashboard className="mr-2 h-4 w-4" />
-                      Admin Dashboard
-                    </Button>
-                  )}
-                  <Button variant="outline" onClick={handleSignOut} className="w-full justify-start">
-                    <LogOut className="mr-2 h-4 w-4" />
-                    Sign out
-                  </Button>
-                </>
-              ) : (
-                <div className="flex flex-col gap-3">
-                  <Button asChild variant="outline" className="w-full">
-                    <Link to="/auth" onClick={() => setMobileMenuOpen(false)}>Log in</Link>
-                  </Button>
-                  <Button asChild className="bg-primary hover:bg-primary/90 text-primary-foreground rounded-full w-full">
-                    <Link to="/auth?tab=signup" onClick={() => setMobileMenuOpen(false)}>Sign Up</Link>
-                  </Button>
-                </div>
-              )}
-            </div>
-          </nav>
-        </div>
+        <div 
+          className="md:hidden fixed inset-0 top-16 z-40 bg-background/80 backdrop-blur-sm"
+          onClick={() => setMobileMenuOpen(false)}
+        />
       )}
+
+      {/* Mobile Menu Panel */}
+      <div className={`md:hidden fixed top-16 left-0 right-0 z-50 bg-background border-b border-border shadow-lg transform transition-all duration-300 ease-out ${mobileMenuOpen ? 'translate-y-0 opacity-100' : '-translate-y-full opacity-0 pointer-events-none'}`}>
+        <nav className="container py-6 flex flex-col">
+          {/* Navigation Links */}
+          <div className="space-y-1">
+            {[
+              { label: "University", section: "features" },
+              { label: "Exams", section: "how-it-works" },
+              { label: "Practice", section: "testimonials" },
+              { label: "Free Resources", section: "faq" },
+            ].map((item) => (
+              <button
+                key={item.section}
+                onClick={() => scrollToSection(item.section)}
+                className="w-full text-left py-3 px-4 text-base font-medium text-foreground hover:bg-muted rounded-lg transition-colors"
+              >
+                {item.label}
+              </button>
+            ))}
+          </div>
+
+          {/* Divider */}
+          <div className="my-4 border-t border-border" />
+
+          {/* User Section */}
+          {user ? (
+            <div className="space-y-3">
+              {/* User Info Card */}
+              <div className="flex items-center gap-3 p-4 bg-muted/50 rounded-xl">
+                <Avatar className="h-10 w-10">
+                  <AvatarFallback className="bg-primary text-primary-foreground font-semibold">
+                    {getUserInitials()}
+                  </AvatarFallback>
+                </Avatar>
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm font-medium text-foreground truncate">{user.email}</p>
+                  <p className="text-xs text-muted-foreground">{isAdmin ? "Admin" : "User"}</p>
+                </div>
+              </div>
+
+              {/* Action Buttons */}
+              <div className="grid gap-2">
+                <Button 
+                  variant="outline" 
+                  onClick={() => { navigate("/dashboard"); setMobileMenuOpen(false); }} 
+                  className="w-full justify-start h-12 rounded-xl"
+                >
+                  <User className="mr-3 h-5 w-5" />
+                  My Dashboard
+                </Button>
+                {isAdmin && (
+                  <Button 
+                    variant="outline" 
+                    onClick={() => { navigate("/admin"); setMobileMenuOpen(false); }} 
+                    className="w-full justify-start h-12 rounded-xl"
+                  >
+                    <LayoutDashboard className="mr-3 h-5 w-5" />
+                    Admin Dashboard
+                  </Button>
+                )}
+                <Button 
+                  variant="ghost" 
+                  onClick={handleSignOut} 
+                  className="w-full justify-start h-12 rounded-xl text-destructive hover:text-destructive hover:bg-destructive/10"
+                >
+                  <LogOut className="mr-3 h-5 w-5" />
+                  Sign out
+                </Button>
+              </div>
+            </div>
+          ) : (
+            <div className="flex flex-col gap-3">
+              <Button asChild variant="outline" className="w-full h-12 rounded-xl">
+                <Link to="/auth" onClick={() => setMobileMenuOpen(false)}>Log in</Link>
+              </Button>
+              <Button asChild className="w-full h-12 rounded-xl">
+                <Link to="/auth?tab=signup" onClick={() => setMobileMenuOpen(false)}>Sign Up</Link>
+              </Button>
+            </div>
+          )}
+        </nav>
+      </div>
     </header>
   );
 };
