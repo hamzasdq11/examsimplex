@@ -19,14 +19,42 @@ const ResetPassword = () => {
   const [checkingSession, setCheckingSession] = useState(true);
 
   useEffect(() => {
+    // Set up auth state listener FIRST
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(
+      (event, session) => {
+        if (event === 'PASSWORD_RECOVERY' || (event === 'SIGNED_IN' && session)) {
+          setIsValidSession(true);
+          setCheckingSession(false);
+        }
+      }
+    );
+
+    // Check for recovery params in URL hash or existing session
     const checkSession = async () => {
+      const hashParams = new URLSearchParams(window.location.hash.substring(1));
+      const accessToken = hashParams.get('access_token');
+      const type = hashParams.get('type');
+      
+      if (accessToken && type === 'recovery') {
+        // Recovery params exist - wait for onAuthStateChange to process them
+        setTimeout(() => {
+          setCheckingSession(prev => {
+            if (prev) {
+              toast.error('Invalid or expired reset link. Please request a new one.');
+              navigate('/auth');
+            }
+            return false;
+          });
+        }, 5000);
+        return;
+      }
+
+      // No hash params, check for existing session
       const { data: { session } } = await supabase.auth.getSession();
       
-      // Check if we have a recovery session
       if (session) {
         setIsValidSession(true);
       } else {
-        // No valid session, redirect to auth
         toast.error('Invalid or expired reset link. Please request a new one.');
         navigate('/auth');
       }
@@ -34,6 +62,8 @@ const ResetPassword = () => {
     };
 
     checkSession();
+
+    return () => subscription.unsubscribe();
   }, [navigate]);
 
   const handleResetPassword = async (e: React.FormEvent) => {
