@@ -50,22 +50,30 @@ const handler = async (req: Request): Promise<Response> => {
     const otp = generateOTP();
     const expiresAt = new Date(Date.now() + 10 * 60 * 1000); // 10 minutes
 
-    // Upsert pending signup
-    const { error: upsertError } = await supabase
-      .from("pending_signups")
-      .upsert(
-        {
-          email,
-          otp_code: otp,
-          otp_expires_at: expiresAt.toISOString(),
-          attempts: 0,
-          verified: false,
-        },
-        { onConflict: "email" }
-      );
+    console.log("Generated OTP for email:", email, "OTP:", otp);
 
-    if (upsertError) {
-      console.error("Database error:", upsertError);
+    // Delete existing pending signup first, then insert new one
+    await supabase
+      .from("pending_signups")
+      .delete()
+      .eq("email", email);
+
+    const { data: insertData, error: insertError } = await supabase
+      .from("pending_signups")
+      .insert({
+        email,
+        otp_code: otp,
+        otp_expires_at: expiresAt.toISOString(),
+        attempts: 0,
+        verified: false,
+      })
+      .select()
+      .single();
+
+    console.log("Insert result:", insertData, "Error:", insertError);
+
+    if (insertError) {
+      console.error("Database error:", insertError);
       return new Response(
         JSON.stringify({ error: "Failed to create OTP. Please try again." }),
         { status: 500, headers: { "Content-Type": "application/json", ...corsHeaders } }
