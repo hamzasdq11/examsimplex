@@ -43,15 +43,22 @@ const handler = async (req: Request): Promise<Response> => {
                      req.headers.get("x-real-ip") || 
                      "unknown";
 
-    // Initialize Deno KV for rate limiting
-    const kv = await Deno.openKv();
+    const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
+    const supabaseServiceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
+    const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
     // Check email-based rate limit
-    const emailRateLimitKey = ["otp_request", "email", email];
-    const emailRateLimit = await kv.get<number>(emailRateLimitKey);
-    
-    if (emailRateLimit.value && emailRateLimit.value >= OTP_REQUEST_LIMIT) {
-      await kv.close();
+    const { data: emailLimit } = await supabase
+      .from("rate_limits")
+      .select("request_count, window_start")
+      .eq("identifier", email)
+      .eq("identifier_type", "email")
+      .single();
+
+    const emailWindowExpired = emailLimit?.window_start && 
+      new Date().getTime() - new Date(emailLimit.window_start).getTime() > OTP_REQUEST_WINDOW_MS;
+
+    if (emailLimit && !emailWindowExpired && emailLimit.request_count >= OTP_REQUEST_LIMIT) {
       return new Response(
         JSON.stringify({ error: "Too many OTP requests. Please wait 10 minutes before requesting again." }),
         { status: 429, headers: { "Content-Type": "application/json", ...corsHeaders } }
@@ -59,28 +66,28 @@ const handler = async (req: Request): Promise<Response> => {
     }
 
     // Check IP-based rate limit
-    const ipRateLimitKey = ["otp_request", "ip", clientIP];
-    const ipRateLimit = await kv.get<number>(ipRateLimitKey);
-    
-    if (ipRateLimit.value && ipRateLimit.value >= IP_REQUEST_LIMIT) {
-      await kv.close();
+    const { data: ipLimit } = await supabase
+      .from("rate_limits")
+      .select("request_count, window_start")
+      .eq("identifier", clientIP)
+      .eq("identifier_type", "ip")
+      .single();
+
+    const ipWindowExpired = ipLimit?.window_start && 
+      new Date().getTime() - new Date(ipLimit.window_start).getTime() > IP_REQUEST_WINDOW_MS;
+
+    if (ipLimit && !ipWindowExpired && ipLimit.request_count >= IP_REQUEST_LIMIT) {
       return new Response(
         JSON.stringify({ error: "Too many requests from this location. Please try again later." }),
         { status: 429, headers: { "Content-Type": "application/json", ...corsHeaders } }
       );
     }
 
-    const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
-    const supabaseServiceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
-    const supabase = createClient(supabaseUrl, supabaseServiceKey);
-
     // Check if user already exists
     const { data: existingUser } = await supabase.auth.admin.listUsers();
     const existingUserData = existingUser?.users?.find(u => u.email === email);
     
     if (existingUserData) {
-      await kv.close();
-      
       // Check if user signed up via OAuth (Google)
       const isOAuthUser = existingUserData.app_metadata?.provider === 'google' ||
                           existingUserData.identities?.some(i => i.provider === 'google');
@@ -102,7 +109,7 @@ const handler = async (req: Request): Promise<Response> => {
     }
 
     const otp = generateOTP();
-    const expiresAt = new Date(Date.now() + 5 * 60 * 1000); // 5 minutes (reduced from 10)
+    const expiresAt = new Date(Date.now() + 5 * 60 * 1000); // 5 minutes
 
     // Upsert pending signup
     const { error: upsertError } = await supabase
@@ -120,7 +127,6 @@ const handler = async (req: Request): Promise<Response> => {
 
     if (upsertError) {
       console.error("Database error:", upsertError);
-      await kv.close();
       return new Response(
         JSON.stringify({ error: "Failed to create OTP. Please try again." }),
         { status: 500, headers: { "Content-Type": "application/json", ...corsHeaders } }
@@ -154,17 +160,34 @@ const handler = async (req: Request): Promise<Response> => {
     // Properly check for errors from Resend
     if (emailResponse.error) {
       console.error("Resend error:", emailResponse.error);
-      await kv.close();
       return new Response(
         JSON.stringify({ error: "Failed to send verification email. Please try again later." }),
         { status: 500, headers: { "Content-Type": "application/json", ...corsHeaders } }
       );
     }
 
-    // Increment rate limit counters after successful send
-    await kv.set(emailRateLimitKey, (emailRateLimit.value || 0) + 1, { expireIn: OTP_REQUEST_WINDOW_MS });
-    await kv.set(ipRateLimitKey, (ipRateLimit.value || 0) + 1, { expireIn: IP_REQUEST_WINDOW_MS });
-    await kv.close();
+    // Update rate limit counters after successful send
+    const now = new Date().toISOString();
+    
+    // Upsert email rate limit
+    await supabase
+      .from("rate_limits")
+      .upsert({
+        identifier: email,
+        identifier_type: "email",
+        request_count: emailWindowExpired || !emailLimit ? 1 : emailLimit.request_count + 1,
+        window_start: emailWindowExpired || !emailLimit ? now : emailLimit.window_start
+      }, { onConflict: "identifier,identifier_type" });
+
+    // Upsert IP rate limit
+    await supabase
+      .from("rate_limits")
+      .upsert({
+        identifier: clientIP,
+        identifier_type: "ip",
+        request_count: ipWindowExpired || !ipLimit ? 1 : ipLimit.request_count + 1,
+        window_start: ipWindowExpired || !ipLimit ? now : ipLimit.window_start
+      }, { onConflict: "identifier,identifier_type" });
 
     console.log("Email sent successfully:", emailResponse.data);
 
