@@ -11,7 +11,6 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useToast } from '@/hooks/use-toast';
 import { Loader2, BookOpen, ArrowLeft } from 'lucide-react';
 import { z } from 'zod';
-import { InputOTP, InputOTPGroup, InputOTPSlot } from '@/components/ui/input-otp';
 
 const emailAuthSchema = z.object({
   email: z.string().email('Invalid email address').max(255),
@@ -21,13 +20,12 @@ const emailAuthSchema = z.object({
 const emailSchema = z.string().email('Invalid email address').max(255);
 const passwordSchema = z.string().min(6, 'Password must be at least 6 characters').max(100);
 
-type AuthStep = 'credentials' | 'otp' | 'forgot-password' | 'reset-otp' | 'new-password';
+type AuthStep = 'credentials' | 'forgot-password' | 'new-password';
 
 export default function Auth() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
-  const [otp, setOtp] = useState('');
   const [loading, setLoading] = useState(false);
   const [googleLoading, setGoogleLoading] = useState(false);
   const [activeTab, setActiveTab] = useState('login');
@@ -41,15 +39,31 @@ export default function Auth() {
 
   const from = (location.state as any)?.from?.pathname || '/dashboard';
 
+  // Check for password recovery token in URL hash
   useEffect(() => {
-    if (!authLoading && !profileLoading && user) {
+    const hashParams = new URLSearchParams(window.location.hash.substring(1));
+    const accessToken = hashParams.get('access_token');
+    const type = hashParams.get('type');
+    
+    if (accessToken && type === 'recovery') {
+      // User clicked password reset link, show new password form
+      setAuthStep('new-password');
+      toast({
+        title: 'Reset Link Verified',
+        description: 'Please enter your new password.',
+      });
+    }
+  }, [toast]);
+
+  useEffect(() => {
+    if (!authLoading && !profileLoading && user && authStep !== 'new-password') {
       if (isProfileComplete) {
         navigate(from, { replace: true });
       } else {
         navigate('/onboarding', { replace: true });
       }
     }
-  }, [user, authLoading, profileLoading, isProfileComplete, navigate, from]);
+  }, [user, authLoading, profileLoading, isProfileComplete, navigate, from, authStep]);
 
   const signInWithGoogle = async () => {
     setGoogleLoading(true);
@@ -97,9 +111,6 @@ export default function Auth() {
       const { error } = await supabase.auth.signUp({
         email,
         password,
-        options: {
-          emailRedirectTo: `${window.location.origin}/auth`,
-        }
       });
 
       if (error) {
@@ -118,73 +129,14 @@ export default function Auth() {
         }
       } else {
         toast({
-          title: 'Verification Code Sent',
-          description: 'Please check your email for the 6-digit verification code.',
-        });
-        setAuthStep('otp');
-      }
-    } catch (err) {
-      toast({
-        title: 'Error',
-        description: 'An unexpected error occurred. Please try again.',
-        variant: 'destructive',
-      });
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleVerifyOtp = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setLoading(true);
-
-    try {
-      const { error } = await supabase.auth.verifyOtp({
-        email,
-        token: otp,
-        type: 'signup',
-      });
-
-      if (error) {
-        toast({
-          title: 'Verification Failed',
-          description: error.message,
-          variant: 'destructive',
-        });
-      } else {
-        toast({
-          title: 'Email Verified!',
-          description: 'Your account has been created successfully.',
+          title: 'Account Created!',
+          description: 'You have been signed up successfully.',
         });
       }
     } catch (err) {
       toast({
         title: 'Error',
         description: 'An unexpected error occurred. Please try again.',
-        variant: 'destructive',
-      });
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleResendOtp = async () => {
-    setLoading(true);
-    try {
-      const { error } = await supabase.auth.resend({
-        type: 'signup',
-        email,
-      });
-      if (error) throw error;
-      
-      toast({
-        title: 'Code Resent',
-        description: 'A new verification code has been sent to your email.',
-      });
-    } catch (err: any) {
-      toast({
-        title: 'Resend Failed',
-        description: err.message || 'Failed to resend code. Please try again.',
         variant: 'destructive',
       });
     } finally {
@@ -263,81 +215,21 @@ export default function Auth() {
 
       if (error) {
         toast({
-          title: 'Failed to send reset code',
+          title: 'Failed to send reset link',
           description: error.message,
           variant: 'destructive',
         });
       } else {
         toast({
-          title: 'Reset Code Sent',
-          description: 'Please check your email for the password reset code.',
+          title: 'Reset Link Sent',
+          description: 'Please check your email and click the password reset link.',
         });
-        setAuthStep('reset-otp');
+        setAuthStep('credentials');
       }
     } catch (err) {
       toast({
         title: 'Error',
         description: 'An unexpected error occurred. Please try again.',
-        variant: 'destructive',
-      });
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleVerifyResetOtp = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setLoading(true);
-
-    try {
-      const { error } = await supabase.auth.verifyOtp({
-        email,
-        token: otp,
-        type: 'recovery',
-      });
-
-      if (error) {
-        toast({
-          title: 'Verification Failed',
-          description: error.message,
-          variant: 'destructive',
-        });
-      } else {
-        toast({
-          title: 'Code Verified',
-          description: 'Please enter your new password.',
-        });
-        setOtp('');
-        setAuthStep('new-password');
-      }
-    } catch (err) {
-      toast({
-        title: 'Error',
-        description: 'An unexpected error occurred. Please try again.',
-        variant: 'destructive',
-      });
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleResendResetOtp = async () => {
-    setLoading(true);
-    try {
-      const { error } = await supabase.auth.resetPasswordForEmail(email, {
-        redirectTo: `${window.location.origin}/auth`,
-      });
-      
-      if (error) throw error;
-      
-      toast({
-        title: 'Code Resent',
-        description: 'A new reset code has been sent to your email.',
-      });
-    } catch (err: any) {
-      toast({
-        title: 'Resend Failed',
-        description: err.message || 'Failed to resend code. Please try again.',
         variant: 'destructive',
       });
     } finally {
@@ -386,6 +278,9 @@ export default function Auth() {
           title: 'Password Reset Successful',
           description: 'Your password has been updated. You are now logged in.',
         });
+        // Clear hash from URL
+        window.history.replaceState(null, '', window.location.pathname);
+        setAuthStep('credentials');
       }
     } catch (err) {
       toast({
@@ -399,16 +294,13 @@ export default function Auth() {
   };
 
   const handleBack = () => {
-    if (authStep === 'otp') {
+    if (authStep === 'forgot-password') {
       setAuthStep('credentials');
-      setOtp('');
-    } else if (authStep === 'forgot-password') {
-      setAuthStep('credentials');
-    } else if (authStep === 'reset-otp') {
-      setAuthStep('forgot-password');
-      setOtp('');
     } else if (authStep === 'new-password') {
-      setAuthStep('reset-otp');
+      // Sign out and go back to credentials
+      supabase.auth.signOut();
+      window.history.replaceState(null, '', window.location.pathname);
+      setAuthStep('credentials');
       setPassword('');
       setConfirmPassword('');
     }
@@ -416,12 +308,8 @@ export default function Auth() {
 
   const getCardDescription = () => {
     switch (authStep) {
-      case 'otp':
-        return 'Enter the verification code sent to your email';
       case 'forgot-password':
-        return 'Enter your email to receive a password reset code';
-      case 'reset-otp':
-        return 'Enter the reset code sent to your email';
+        return 'Enter your email to receive a password reset link';
       case 'new-password':
         return 'Create a new password for your account';
       default:
@@ -450,46 +338,6 @@ export default function Auth() {
           <CardDescription>{getCardDescription()}</CardDescription>
         </CardHeader>
         <CardContent>
-          {/* OTP Verification for Signup */}
-          {authStep === 'otp' && (
-            <div className="space-y-4">
-              <Button variant="ghost" size="sm" onClick={handleBack} className="mb-2">
-                <ArrowLeft className="h-4 w-4 mr-2" />
-                Back
-              </Button>
-              
-              <p className="text-sm text-muted-foreground text-center">
-                We sent a verification code to <strong>{email}</strong>
-              </p>
-              
-              <form onSubmit={handleVerifyOtp} className="space-y-4">
-                <div className="flex justify-center">
-                  <InputOTP maxLength={6} value={otp} onChange={setOtp} disabled={loading}>
-                    <InputOTPGroup>
-                      <InputOTPSlot index={0} />
-                      <InputOTPSlot index={1} />
-                      <InputOTPSlot index={2} />
-                      <InputOTPSlot index={3} />
-                      <InputOTPSlot index={4} />
-                      <InputOTPSlot index={5} />
-                    </InputOTPGroup>
-                  </InputOTP>
-                </div>
-                
-                <Button type="submit" className="w-full" disabled={loading || otp.length !== 6}>
-                  {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                  Verify Email
-                </Button>
-              </form>
-              
-              <div className="text-center">
-                <Button variant="link" onClick={handleResendOtp} disabled={loading} className="text-sm">
-                  Didn't receive the code? Resend
-                </Button>
-              </div>
-            </div>
-          )}
-
           {/* Forgot Password - Enter Email */}
           {authStep === 'forgot-password' && (
             <div className="space-y-4">
@@ -513,49 +361,9 @@ export default function Auth() {
                 </div>
                 <Button type="submit" className="w-full" disabled={loading}>
                   {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                  Send Reset Code
+                  Send Reset Link
                 </Button>
               </form>
-            </div>
-          )}
-
-          {/* Reset Password - OTP Verification */}
-          {authStep === 'reset-otp' && (
-            <div className="space-y-4">
-              <Button variant="ghost" size="sm" onClick={handleBack} className="mb-2">
-                <ArrowLeft className="h-4 w-4 mr-2" />
-                Back
-              </Button>
-              
-              <p className="text-sm text-muted-foreground text-center">
-                We sent a reset code to <strong>{email}</strong>
-              </p>
-              
-              <form onSubmit={handleVerifyResetOtp} className="space-y-4">
-                <div className="flex justify-center">
-                  <InputOTP maxLength={6} value={otp} onChange={setOtp} disabled={loading}>
-                    <InputOTPGroup>
-                      <InputOTPSlot index={0} />
-                      <InputOTPSlot index={1} />
-                      <InputOTPSlot index={2} />
-                      <InputOTPSlot index={3} />
-                      <InputOTPSlot index={4} />
-                      <InputOTPSlot index={5} />
-                    </InputOTPGroup>
-                  </InputOTP>
-                </div>
-                
-                <Button type="submit" className="w-full" disabled={loading || otp.length !== 6}>
-                  {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                  Verify Code
-                </Button>
-              </form>
-              
-              <div className="text-center">
-                <Button variant="link" onClick={handleResendResetOtp} disabled={loading} className="text-sm">
-                  Didn't receive the code? Resend
-                </Button>
-              </div>
             </div>
           )}
 
@@ -564,7 +372,7 @@ export default function Auth() {
             <div className="space-y-4">
               <Button variant="ghost" size="sm" onClick={handleBack} className="mb-2">
                 <ArrowLeft className="h-4 w-4 mr-2" />
-                Back
+                Cancel
               </Button>
               
               <form onSubmit={handleSetNewPassword} className="space-y-4">
