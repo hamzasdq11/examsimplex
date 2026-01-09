@@ -96,7 +96,16 @@ const handler = async (req: Request): Promise<Response> => {
       `,
     });
 
-    console.log("Email sent successfully:", emailResponse);
+    // Properly check for errors from Resend
+    if (emailResponse.error) {
+      console.error("Resend error:", emailResponse.error);
+      return new Response(
+        JSON.stringify({ error: "Failed to send verification email. Please try again later." }),
+        { status: 500, headers: { "Content-Type": "application/json", ...corsHeaders } }
+      );
+    }
+
+    console.log("Email sent successfully:", emailResponse.data);
 
     return new Response(
       JSON.stringify({ success: true, message: "OTP sent successfully" }),
