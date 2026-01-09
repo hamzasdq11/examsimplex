@@ -412,13 +412,10 @@ const UniversityPage = () => {
                 ) : (
                   <div className="text-center py-12 bg-muted/30 rounded-lg">
                     <GraduationCap className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-                    <h3 className="text-lg font-medium text-foreground mb-2">No courses added yet</h3>
-                    <p className="text-muted-foreground mb-4">
-                      Courses and subjects will appear here once added by administrators.
+                    <h3 className="text-lg font-medium text-foreground mb-2">No courses available</h3>
+                    <p className="text-muted-foreground">
+                      Courses and subjects for this university will appear here soon.
                     </p>
-                    <Button variant="outline" asChild>
-                      <Link to="/admin">Go to Admin Panel</Link>
-                    </Button>
                   </div>
                 )}
               </TabsContent>
