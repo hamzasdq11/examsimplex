@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { useParams, Link } from "react-router-dom";
+import DOMPurify from "dompurify";
 import Header from "@/components/landing/Header";
 import Footer from "@/components/landing/Footer";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -448,8 +449,10 @@ const SubjectPage = () => {
                                         key={pidx}
                                         className="text-sm text-muted-foreground"
                                         dangerouslySetInnerHTML={{
-                                          __html: point
-                                            .replace(/\*\*(.*?)\*\*/g, '<strong class="text-foreground">$1</strong>'),
+                                          __html: DOMPurify.sanitize(
+                                            point.replace(/\*\*(.*?)\*\*/g, '<strong class="text-foreground">$1</strong>'),
+                                            { ALLOWED_TAGS: ['strong', 'em', 'b', 'i', 'br'], ALLOWED_ATTR: ['class'] }
+                                          ),
                                         }}
                                       />
                                     ))}
@@ -550,13 +553,16 @@ const SubjectPage = () => {
                                         <div 
                                           className="text-sm text-muted-foreground leading-relaxed prose prose-sm max-w-none dark:prose-invert"
                                           dangerouslySetInnerHTML={{
-                                            __html: q.answer
-                                              .replace(/\*\*(.*?)\*\*/g, '<strong class="text-foreground font-semibold">$1</strong>')
-                                              .replace(/```sql([\s\S]*?)```/g, '<pre class="bg-muted p-3 rounded-md text-xs overflow-x-auto my-2"><code class="text-foreground">$1</code></pre>')
-                                              .replace(/```([\s\S]*?)```/g, '<pre class="bg-muted p-3 rounded-md text-xs overflow-x-auto my-2"><code class="text-foreground">$1</code></pre>')
-                                              .replace(/\n\n/g, '</p><p class="mt-2">')
-                                              .replace(/\n- /g, '</p><p class="mt-1 pl-4">• ')
-                                              .replace(/\n\d\. /g, (match) => `</p><p class="mt-1 pl-4">${match.trim()} `)
+                                            __html: DOMPurify.sanitize(
+                                              q.answer
+                                                .replace(/\*\*(.*?)\*\*/g, '<strong class="text-foreground font-semibold">$1</strong>')
+                                                .replace(/```sql([\s\S]*?)```/g, '<pre class="bg-muted p-3 rounded-md text-xs overflow-x-auto my-2"><code class="text-foreground">$1</code></pre>')
+                                                .replace(/```([\s\S]*?)```/g, '<pre class="bg-muted p-3 rounded-md text-xs overflow-x-auto my-2"><code class="text-foreground">$1</code></pre>')
+                                                .replace(/\n\n/g, '</p><p class="mt-2">')
+                                                .replace(/\n- /g, '</p><p class="mt-1 pl-4">• ')
+                                                .replace(/\n\d\. /g, (match) => `</p><p class="mt-1 pl-4">${match.trim()} `),
+                                              { ALLOWED_TAGS: ['strong', 'em', 'b', 'i', 'br', 'p', 'pre', 'code'], ALLOWED_ATTR: ['class'] }
+                                            ),
                                           }}
                                         />
                                       </div>
