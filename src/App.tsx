@@ -6,7 +6,6 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { AuthProvider } from "@/hooks/useAuth";
 import { ProtectedRoute } from "@/components/admin/ProtectedRoute";
 import Index from "./pages/Index";
-import GetStarted from "./pages/GetStarted";
 import UniversityPage from "./pages/UniversityPage";
 import SubjectPage from "./pages/SubjectPage";
 import Auth from "./pages/Auth";
@@ -34,7 +33,6 @@ const App = () => (
         <BrowserRouter>
           <Routes>
             <Route path="/" element={<Index />} />
-            <Route path="/get-started" element={<GetStarted />} />
             <Route path="/auth" element={<Auth />} />
             <Route path="/onboarding" element={<Onboarding />} />
             <Route path="/dashboard" element={<UserDashboard />} />
