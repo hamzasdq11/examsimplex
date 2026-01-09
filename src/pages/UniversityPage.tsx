@@ -46,6 +46,7 @@ import { Separator } from "@/components/ui/separator";
 import AIToolDialog from "@/components/AIToolDialog";
 import { supabase } from "@/integrations/supabase/client";
 import type { University, Course, Semester, Subject } from "@/types/database";
+import { SEO, createBreadcrumbSchema, createWebPageSchema } from "@/components/SEO";
 
 // Fallback mock data
 const fallbackUniversityData: Record<string, {
@@ -182,8 +183,31 @@ const UniversityPage = () => {
     );
   }
 
+  // SEO data
+  const origin = typeof window !== 'undefined' ? window.location.origin : '';
+  const canonicalUrl = `/university/${universityId}`;
+  const seoTitle = `${displayUniversity.name} - Courses, Notes & Past Papers`;
+  const seoDescription = `Explore ${displayUniversity.name} exam resources. Access ${displayUniversity.stats.courses} courses, study notes, and previous year question papers for all semesters.`;
+  
+  const breadcrumbSchema = createBreadcrumbSchema([
+    { name: 'Home', url: origin },
+    { name: displayUniversity.name, url: `${origin}${canonicalUrl}` },
+  ]);
+  
+  const webPageSchema = createWebPageSchema({
+    title: seoTitle,
+    description: seoDescription,
+    url: `${origin}${canonicalUrl}`,
+  });
+
   return (
     <div className="min-h-screen bg-background flex">
+      <SEO
+        title={seoTitle}
+        description={seoDescription}
+        canonicalUrl={canonicalUrl}
+        jsonLd={[breadcrumbSchema, webPageSchema]}
+      />
       {/* Sidebar */}
       <aside className="w-72 border-r border-border bg-background flex flex-col sticky top-0 h-screen overflow-y-auto">
         {/* User Profile */}
