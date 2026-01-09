@@ -19,51 +19,30 @@ const ResetPassword = () => {
   const [checkingSession, setCheckingSession] = useState(true);
 
   useEffect(() => {
-    // Set up auth state listener FIRST
+    // Single auth state listener - Supabase auto-processes the hash
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       (event, session) => {
-        if (event === 'PASSWORD_RECOVERY' || (event === 'SIGNED_IN' && session)) {
+        if (session) {
           setIsValidSession(true);
           setCheckingSession(false);
         }
       }
     );
 
-    // Check for recovery params in URL hash or existing session
-    const checkSession = async () => {
-      const hashParams = new URLSearchParams(window.location.hash.substring(1));
-      const accessToken = hashParams.get('access_token');
-      const type = hashParams.get('type');
-      
-      if (accessToken && type === 'recovery') {
-        // Recovery params exist - wait for onAuthStateChange to process them
-        setTimeout(() => {
-          setCheckingSession(prev => {
-            if (prev) {
-              toast.error('Invalid or expired reset link. Please request a new one.');
-              navigate('/auth');
-            }
-            return false;
-          });
-        }, 5000);
-        return;
-      }
-
-      // No hash params, check for existing session
+    // Fallback: if no session after 3 seconds, redirect
+    const timeout = setTimeout(async () => {
       const { data: { session } } = await supabase.auth.getSession();
-      
-      if (session) {
-        setIsValidSession(true);
-      } else {
+      if (!session) {
         toast.error('Invalid or expired reset link. Please request a new one.');
         navigate('/auth');
       }
       setCheckingSession(false);
+    }, 3000);
+
+    return () => {
+      subscription.unsubscribe();
+      clearTimeout(timeout);
     };
-
-    checkSession();
-
-    return () => subscription.unsubscribe();
   }, [navigate]);
 
   const handleResetPassword = async (e: React.FormEvent) => {
