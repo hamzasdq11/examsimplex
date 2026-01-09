@@ -82,7 +82,7 @@ serve(async (req: Request): Promise<Response> => {
 
     // Send OTP email
     const { error: emailError } = await resend.emails.send({
-      from: "EXAM Simplex <onboarding@resend.dev>",
+      from: "EXAM Simplex <noreply@examsimplex.com>",
       to: [email],
       subject: "Password Reset Code - EXAM Simplex",
       html: `
