@@ -76,10 +76,25 @@ const handler = async (req: Request): Promise<Response> => {
 
     // Check if user already exists
     const { data: existingUser } = await supabase.auth.admin.listUsers();
-    const userExists = existingUser?.users?.some(u => u.email === email);
+    const existingUserData = existingUser?.users?.find(u => u.email === email);
     
-    if (userExists) {
+    if (existingUserData) {
       await kv.close();
+      
+      // Check if user signed up via OAuth (Google)
+      const isOAuthUser = existingUserData.app_metadata?.provider === 'google' ||
+                          existingUserData.identities?.some(i => i.provider === 'google');
+      
+      if (isOAuthUser) {
+        return new Response(
+          JSON.stringify({ 
+            error: "This email is registered via Google. Log in with Google, or use 'Forgot Password' to add a password.",
+            errorType: "oauth_user"
+          }),
+          { status: 400, headers: { "Content-Type": "application/json", ...corsHeaders } }
+        );
+      }
+      
       return new Response(
         JSON.stringify({ error: "This email is already registered. Please log in instead." }),
         { status: 400, headers: { "Content-Type": "application/json", ...corsHeaders } }

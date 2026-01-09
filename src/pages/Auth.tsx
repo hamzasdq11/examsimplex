@@ -123,11 +123,22 @@ export default function Auth() {
       const data = await response.json();
 
       if (!response.ok) {
-        toast({
-          title: 'Failed to send OTP',
-          description: data.error || 'Please try again.',
-          variant: 'destructive',
-        });
+        // Check if this is an OAuth user trying to sign up with email
+        if (data.errorType === 'oauth_user') {
+          toast({
+            title: 'Account exists via Google',
+            description: "You can log in with Google, or use 'Forgot Password' to add a password to your account.",
+            variant: 'destructive',
+          });
+          // Switch to login tab to help the user
+          setActiveTab('login');
+        } else {
+          toast({
+            title: 'Failed to send OTP',
+            description: data.error || 'Please try again.',
+            variant: 'destructive',
+          });
+        }
       } else {
         toast({
           title: 'OTP Sent!',
