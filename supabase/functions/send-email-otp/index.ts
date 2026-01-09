@@ -74,7 +74,7 @@ const handler = async (req: Request): Promise<Response> => {
 
     // Send email via Resend
     const emailResponse = await resend.emails.send({
-      from: "EXAM Simplex <onboarding@resend.dev>",
+      from: "EXAM Simplex <noreply@examsimplex.com>",
       to: [email],
       subject: "Your Verification Code",
       html: `
