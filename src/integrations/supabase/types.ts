@@ -387,6 +387,33 @@ export type Database = {
           },
         ]
       }
+      rate_limits: {
+        Row: {
+          created_at: string | null
+          id: string
+          identifier: string
+          identifier_type: string
+          request_count: number | null
+          window_start: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          identifier: string
+          identifier_type: string
+          request_count?: number | null
+          window_start?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          identifier?: string
+          identifier_type?: string
+          request_count?: number | null
+          window_start?: string | null
+        }
+        Relationships: []
+      }
       semesters: {
         Row: {
           course_id: string

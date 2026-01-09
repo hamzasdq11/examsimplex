@@ -36,15 +36,22 @@ const handler = async (req: Request): Promise<Response> => {
                      req.headers.get("x-real-ip") || 
                      "unknown";
 
-    // Initialize Deno KV for rate limiting
-    const kv = await Deno.openKv();
+    const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
+    const supabaseServiceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
+    const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
     // Check email-based verification rate limit
-    const emailVerifyKey = ["otp_verify", "email", email];
-    const emailVerifyLimit = await kv.get<number>(emailVerifyKey);
-    
-    if (emailVerifyLimit.value && emailVerifyLimit.value >= VERIFY_ATTEMPT_LIMIT) {
-      await kv.close();
+    const { data: emailVerifyLimit } = await supabase
+      .from("rate_limits")
+      .select("request_count, window_start")
+      .eq("identifier", `verify_${email}`)
+      .eq("identifier_type", "email")
+      .single();
+
+    const emailWindowExpired = emailVerifyLimit?.window_start && 
+      new Date().getTime() - new Date(emailVerifyLimit.window_start).getTime() > VERIFY_ATTEMPT_WINDOW_MS;
+
+    if (emailVerifyLimit && !emailWindowExpired && emailVerifyLimit.request_count >= VERIFY_ATTEMPT_LIMIT) {
       return new Response(
         JSON.stringify({ error: "Too many verification attempts. Please request a new OTP." }),
         { status: 429, headers: { "Content-Type": "application/json", ...corsHeaders } }
@@ -52,11 +59,17 @@ const handler = async (req: Request): Promise<Response> => {
     }
 
     // Check IP-based verification rate limit
-    const ipVerifyKey = ["otp_verify", "ip", clientIP];
-    const ipVerifyLimit = await kv.get<number>(ipVerifyKey);
-    
-    if (ipVerifyLimit.value && ipVerifyLimit.value >= IP_VERIFY_LIMIT) {
-      await kv.close();
+    const { data: ipVerifyLimit } = await supabase
+      .from("rate_limits")
+      .select("request_count, window_start")
+      .eq("identifier", `verify_${clientIP}`)
+      .eq("identifier_type", "ip")
+      .single();
+
+    const ipWindowExpired = ipVerifyLimit?.window_start && 
+      new Date().getTime() - new Date(ipVerifyLimit.window_start).getTime() > VERIFY_ATTEMPT_WINDOW_MS;
+
+    if (ipVerifyLimit && !ipWindowExpired && ipVerifyLimit.request_count >= IP_VERIFY_LIMIT) {
       return new Response(
         JSON.stringify({ error: "Too many verification attempts from this location. Please try again later." }),
         { status: 429, headers: { "Content-Type": "application/json", ...corsHeaders } }
@@ -64,12 +77,25 @@ const handler = async (req: Request): Promise<Response> => {
     }
 
     // Increment rate limit counters immediately (before verification)
-    await kv.set(emailVerifyKey, (emailVerifyLimit.value || 0) + 1, { expireIn: VERIFY_ATTEMPT_WINDOW_MS });
-    await kv.set(ipVerifyKey, (ipVerifyLimit.value || 0) + 1, { expireIn: VERIFY_ATTEMPT_WINDOW_MS });
+    const now = new Date().toISOString();
+    
+    await supabase
+      .from("rate_limits")
+      .upsert({
+        identifier: `verify_${email}`,
+        identifier_type: "email",
+        request_count: emailWindowExpired || !emailVerifyLimit ? 1 : emailVerifyLimit.request_count + 1,
+        window_start: emailWindowExpired || !emailVerifyLimit ? now : emailVerifyLimit.window_start
+      }, { onConflict: "identifier,identifier_type" });
 
-    const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
-    const supabaseServiceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
-    const supabase = createClient(supabaseUrl, supabaseServiceKey);
+    await supabase
+      .from("rate_limits")
+      .upsert({
+        identifier: `verify_${clientIP}`,
+        identifier_type: "ip",
+        request_count: ipWindowExpired || !ipVerifyLimit ? 1 : ipVerifyLimit.request_count + 1,
+        window_start: ipWindowExpired || !ipVerifyLimit ? now : ipVerifyLimit.window_start
+      }, { onConflict: "identifier,identifier_type" });
 
     // Get pending signup
     const { data: pending, error: fetchError } = await supabase
@@ -79,7 +105,6 @@ const handler = async (req: Request): Promise<Response> => {
       .single();
 
     if (fetchError || !pending) {
-      await kv.close();
       return new Response(
         JSON.stringify({ error: "No pending verification found. Please request a new OTP." }),
         { status: 400, headers: { "Content-Type": "application/json", ...corsHeaders } }
@@ -88,7 +113,6 @@ const handler = async (req: Request): Promise<Response> => {
 
     // Check if already verified
     if (pending.verified) {
-      await kv.close();
       return new Response(
         JSON.stringify({ success: true, message: "Email already verified" }),
         { status: 200, headers: { "Content-Type": "application/json", ...corsHeaders } }
@@ -97,7 +121,6 @@ const handler = async (req: Request): Promise<Response> => {
 
     // Check attempts (per-OTP limit - still useful for immediate feedback)
     if (pending.attempts >= 5) {
-      await kv.close();
       return new Response(
         JSON.stringify({ error: "Too many attempts. Please request a new OTP." }),
         { status: 400, headers: { "Content-Type": "application/json", ...corsHeaders } }
@@ -106,7 +129,6 @@ const handler = async (req: Request): Promise<Response> => {
 
     // Check expiration (5 minutes)
     if (new Date(pending.otp_expires_at) < new Date()) {
-      await kv.close();
       return new Response(
         JSON.stringify({ error: "OTP has expired. Please request a new one." }),
         { status: 400, headers: { "Content-Type": "application/json", ...corsHeaders } }
@@ -121,7 +143,6 @@ const handler = async (req: Request): Promise<Response> => {
         .update({ attempts: pending.attempts + 1 })
         .eq("email", email);
 
-      await kv.close();
       return new Response(
         JSON.stringify({ error: "Invalid OTP. Please try again.", attemptsLeft: 4 - pending.attempts }),
         { status: 400, headers: { "Content-Type": "application/json", ...corsHeaders } }
@@ -136,14 +157,12 @@ const handler = async (req: Request): Promise<Response> => {
 
     if (updateError) {
       console.error("Update error:", updateError);
-      await kv.close();
       return new Response(
         JSON.stringify({ error: "Failed to verify. Please try again." }),
         { status: 500, headers: { "Content-Type": "application/json", ...corsHeaders } }
       );
     }
 
-    await kv.close();
     return new Response(
       JSON.stringify({ success: true, message: "Email verified successfully" }),
       { status: 200, headers: { "Content-Type": "application/json", ...corsHeaders } }
