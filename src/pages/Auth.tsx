@@ -12,6 +12,7 @@ import { useToast } from '@/hooks/use-toast';
 import { Loader2, BookOpen, ArrowLeft, Mail, KeyRound, Phone, Lock, Check } from 'lucide-react';
 import { z } from 'zod';
 import { InputOTP, InputOTPGroup, InputOTPSlot } from '@/components/ui/input-otp';
+import { SEO } from '@/components/SEO';
 
 const emailAuthSchema = z.object({
   email: z.string().email('Invalid email address').max(255),
@@ -638,6 +639,12 @@ export default function Auth() {
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-background via-background to-muted/20 p-4">
+      <SEO
+        title="Sign In"
+        description="Sign in to EXAM Simplex to access your personalized study materials, notes, and previous year questions."
+        canonicalUrl="/auth"
+        noIndex={true}
+      />
       <Card className="w-full max-w-md">
         <CardHeader className="text-center">
           <div className="flex justify-center mb-4">

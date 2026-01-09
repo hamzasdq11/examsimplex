@@ -8,6 +8,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import { Loader2, BookOpen, FileText, HelpCircle, GraduationCap, MapPin, Calendar, Edit, LogOut, Home } from 'lucide-react';
+import { SEO } from '@/components/SEO';
 
 interface Subject {
   id: string;
@@ -99,6 +100,12 @@ export default function Dashboard() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-background via-background to-muted/10">
+      <SEO
+        title="Dashboard"
+        description="Your personalized EXAM Simplex dashboard. Access your courses, study materials, and track your exam preparation progress."
+        canonicalUrl="/dashboard"
+        noIndex={true}
+      />
       {/* Header */}
       <header className="sticky top-0 z-50 border-b border-border/40 bg-background/95 backdrop-blur">
         <div className="container flex h-16 items-center justify-between">

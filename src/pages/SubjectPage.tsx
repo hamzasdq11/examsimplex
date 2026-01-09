@@ -33,6 +33,7 @@ import {
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import type { Subject, Unit, Note, ImportantQuestion, PYQPaper, PYQQuestion, University, Course, Semester } from "@/types/database";
+import { SEO, createBreadcrumbSchema, createCourseSchema } from "@/components/SEO";
 
 interface NoteWithUnit extends Note {
   units: Unit;
@@ -249,8 +250,35 @@ const SubjectPage = () => {
     );
   }
 
+  // SEO data
+  const origin = typeof window !== 'undefined' ? window.location.origin : '';
+  const canonicalUrl = `/university/${universityId}/${courseId}/${semesterId}/${subjectId}`;
+  const seoTitle = `${subject.name} - ${course?.name || 'Course'} | ${university?.name || 'University'}`;
+  const seoDescription = `${subject.name} (${subject.code}) study materials for ${course?.name || ''} at ${university?.name || ''}. Get important questions, chapter-wise notes, and previous year question papers.`;
+  
+  const breadcrumbSchema = createBreadcrumbSchema([
+    { name: 'Home', url: origin },
+    { name: university?.name || 'University', url: `${origin}/university/${universityId}` },
+    { name: course?.name || 'Course', url: `${origin}/university/${universityId}` },
+    { name: semester?.name || 'Semester', url: `${origin}/university/${universityId}` },
+    { name: subject.name, url: `${origin}${canonicalUrl}` },
+  ]);
+  
+  const courseSchema = createCourseSchema({
+    name: subject.name,
+    code: subject.code,
+    university: university?.name || '',
+    description: seoDescription,
+  });
+
   return (
     <div className="min-h-screen bg-background">
+      <SEO
+        title={seoTitle}
+        description={seoDescription}
+        canonicalUrl={canonicalUrl}
+        jsonLd={[breadcrumbSchema, courseSchema]}
+      />
       <Header />
 
       <main className="container mx-auto px-4 py-8">
