@@ -21,8 +21,9 @@ const emailAuthSchema = z.object({
 const emailSchema = z.string().email('Invalid email address').max(255);
 const passwordSchema = z.string().min(6, 'Password must be at least 6 characters').max(100);
 
-type AuthStep = 'credentials' | 'forgot-password' | 'new-password';
+type AuthStep = 'credentials' | 'forgot-password';
 type SignupStep = 'email' | 'otp' | 'details';
+type ForgotPasswordStep = 'email' | 'otp' | 'new-password';
 
 const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL;
 
@@ -40,6 +41,7 @@ export default function Auth() {
   });
   const [authStep, setAuthStep] = useState<AuthStep>('credentials');
   const [signupStep, setSignupStep] = useState<SignupStep>('email');
+  const [forgotPasswordStep, setForgotPasswordStep] = useState<ForgotPasswordStep>('email');
   const [resendCooldown, setResendCooldown] = useState(0);
   
   const { signIn, user, loading: authLoading } = useAuth();
@@ -58,30 +60,15 @@ export default function Auth() {
     }
   }, [resendCooldown]);
 
-  // Check for password recovery token in URL hash
   useEffect(() => {
-    const hashParams = new URLSearchParams(window.location.hash.substring(1));
-    const accessToken = hashParams.get('access_token');
-    const type = hashParams.get('type');
-    
-    if (accessToken && type === 'recovery') {
-      setAuthStep('new-password');
-      toast({
-        title: 'Reset Link Verified',
-        description: 'Please enter your new password.',
-      });
-    }
-  }, [toast]);
-
-  useEffect(() => {
-    if (!authLoading && !profileLoading && user && authStep !== 'new-password') {
+    if (!authLoading && !profileLoading && user) {
       if (isProfileComplete) {
         navigate(from, { replace: true });
       } else {
         navigate('/onboarding', { replace: true });
       }
     }
-  }, [user, authLoading, profileLoading, isProfileComplete, navigate, from, authStep]);
+  }, [user, authLoading, profileLoading, isProfileComplete, navigate, from]);
 
   const signInWithGoogle = async () => {
     setGoogleLoading(true);
@@ -110,7 +97,7 @@ export default function Auth() {
     }
   };
 
-  // Step 1: Send OTP to email
+  // Step 1: Send OTP to email (Signup)
   const handleSendOTP = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
@@ -160,7 +147,7 @@ export default function Auth() {
     }
   };
 
-  // Step 2: Verify OTP
+  // Step 2: Verify OTP (Signup)
   const handleVerifyOTP = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
@@ -277,7 +264,11 @@ export default function Auth() {
     
     setLoading(true);
     try {
-      const response = await fetch(`${SUPABASE_URL}/functions/v1/send-email-otp`, {
+      const endpoint = authStep === 'forgot-password' 
+        ? `${SUPABASE_URL}/functions/v1/send-password-reset-otp`
+        : `${SUPABASE_URL}/functions/v1/send-email-otp`;
+
+      const response = await fetch(endpoint, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email }),
@@ -359,7 +350,8 @@ export default function Auth() {
     }
   };
 
-  const handleForgotPassword = async (e: React.FormEvent) => {
+  // Forgot Password: Step 1 - Send OTP
+  const handleSendResetOTP = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
 
@@ -375,22 +367,27 @@ export default function Auth() {
         return;
       }
 
-      const { error } = await supabase.auth.resetPasswordForEmail(email, {
-        redirectTo: `${window.location.origin}/reset-password`,
+      const response = await fetch(`${SUPABASE_URL}/functions/v1/send-password-reset-otp`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email }),
       });
 
-      if (error) {
+      const data = await response.json();
+
+      if (!response.ok) {
         toast({
-          title: 'Failed to send reset link',
-          description: error.message,
+          title: 'Failed to send OTP',
+          description: data.error || 'Please try again.',
           variant: 'destructive',
         });
       } else {
         toast({
-          title: 'Reset Link Sent',
-          description: 'Please check your email and click the password reset link.',
+          title: 'OTP Sent!',
+          description: 'Check your email for the reset code.',
         });
-        setAuthStep('credentials');
+        setForgotPasswordStep('otp');
+        setResendCooldown(30);
       }
     } catch (err) {
       toast({
@@ -403,7 +400,25 @@ export default function Auth() {
     }
   };
 
-  const handleSetNewPassword = async (e: React.FormEvent) => {
+  // Forgot Password: Step 2 - Verify OTP
+  const handleVerifyResetOTP = async (e: React.FormEvent) => {
+    e.preventDefault();
+
+    if (otp.length !== 6) {
+      toast({
+        title: 'Invalid OTP',
+        description: 'Please enter the 6-digit code.',
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    // Just move to next step - OTP will be verified when setting new password
+    setForgotPasswordStep('new-password');
+  };
+
+  // Forgot Password: Step 3 - Reset Password
+  const handleResetPassword = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
 
@@ -429,23 +444,35 @@ export default function Auth() {
         return;
       }
 
-      const { error } = await supabase.auth.updateUser({
-        password,
+      const response = await fetch(`${SUPABASE_URL}/functions/v1/reset-password-with-otp`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, otp, newPassword: password }),
       });
 
-      if (error) {
+      const data = await response.json();
+
+      if (!response.ok) {
         toast({
-          title: 'Failed to reset password',
-          description: error.message,
+          title: 'Password Reset Failed',
+          description: data.error || 'Please try again.',
           variant: 'destructive',
         });
+        // If OTP error, go back to OTP step
+        if (data.error?.includes('OTP') || data.error?.includes('expired')) {
+          setForgotPasswordStep('otp');
+        }
       } else {
         toast({
-          title: 'Password Reset Successful',
-          description: 'Your password has been updated. You are now logged in.',
+          title: 'Password Reset Successful!',
+          description: 'Please sign in with your new password.',
         });
-        window.history.replaceState(null, '', window.location.pathname);
+        // Reset and switch to login
         setAuthStep('credentials');
+        setForgotPasswordStep('email');
+        setOtp('');
+        setPassword('');
+        setConfirmPassword('');
       }
     } catch (err) {
       toast({
@@ -460,13 +487,16 @@ export default function Auth() {
 
   const handleBack = () => {
     if (authStep === 'forgot-password') {
-      setAuthStep('credentials');
-    } else if (authStep === 'new-password') {
-      supabase.auth.signOut();
-      window.history.replaceState(null, '', window.location.pathname);
-      setAuthStep('credentials');
-      setPassword('');
-      setConfirmPassword('');
+      if (forgotPasswordStep === 'email') {
+        setAuthStep('credentials');
+      } else if (forgotPasswordStep === 'otp') {
+        setForgotPasswordStep('email');
+        setOtp('');
+      } else if (forgotPasswordStep === 'new-password') {
+        setForgotPasswordStep('otp');
+        setPassword('');
+        setConfirmPassword('');
+      }
     }
   };
 
@@ -485,9 +515,15 @@ export default function Auth() {
   const getCardDescription = () => {
     switch (authStep) {
       case 'forgot-password':
-        return 'Enter your email to receive a password reset link';
-      case 'new-password':
-        return 'Create a new password for your account';
+        switch (forgotPasswordStep) {
+          case 'email':
+            return 'Enter your email to receive a password reset code';
+          case 'otp':
+            return `Enter the 6-digit code sent to ${email}`;
+          case 'new-password':
+            return 'Create a new password for your account';
+        }
+        break;
       default:
         if (activeTab === 'signup') {
           switch (signupStep) {
@@ -502,6 +538,45 @@ export default function Auth() {
         return 'Sign in to your account or create a new one';
     }
   };
+
+  // Forgot Password step indicator
+  const ForgotPasswordStepIndicator = () => (
+    <div className="flex items-center justify-center gap-2 mb-6">
+      {[
+        { step: 'email', icon: Mail, label: 'Email' },
+        { step: 'otp', icon: KeyRound, label: 'Verify' },
+        { step: 'new-password', icon: Lock, label: 'Password' },
+      ].map((item, index) => {
+        const isActive = forgotPasswordStep === item.step;
+        const isCompleted = 
+          (forgotPasswordStep === 'otp' && item.step === 'email') ||
+          (forgotPasswordStep === 'new-password' && (item.step === 'email' || item.step === 'otp'));
+        
+        return (
+          <div key={item.step} className="flex items-center">
+            <div className={`flex items-center justify-center w-8 h-8 rounded-full transition-all ${
+              isCompleted 
+                ? 'bg-primary text-primary-foreground' 
+                : isActive 
+                  ? 'bg-primary/20 text-primary ring-2 ring-primary' 
+                  : 'bg-muted text-muted-foreground'
+            }`}>
+              {isCompleted ? (
+                <Check className="h-4 w-4" />
+              ) : (
+                <item.icon className="h-4 w-4" />
+              )}
+            </div>
+            {index < 2 && (
+              <div className={`w-8 h-0.5 mx-1 ${
+                isCompleted ? 'bg-primary' : 'bg-muted'
+              }`} />
+            )}
+          </div>
+        );
+      })}
+    </div>
+  );
 
   // Signup step indicator
   const SignupStepIndicator = () => (
@@ -563,73 +638,112 @@ export default function Auth() {
           <CardDescription>{getCardDescription()}</CardDescription>
         </CardHeader>
         <CardContent>
-          {/* Forgot Password - Enter Email */}
+          {/* Forgot Password Flow */}
           {authStep === 'forgot-password' && (
             <div className="space-y-4">
               <Button variant="ghost" size="sm" onClick={handleBack} className="mb-2">
                 <ArrowLeft className="h-4 w-4 mr-2" />
                 Back
               </Button>
-              
-              <form onSubmit={handleForgotPassword} className="space-y-4">
-                <div className="space-y-2">
-                  <Label htmlFor="reset-email">Email</Label>
-                  <Input
-                    id="reset-email"
-                    type="email"
-                    placeholder="you@example.com"
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    required
-                    disabled={loading}
-                  />
-                </div>
-                <Button type="submit" className="w-full" disabled={loading}>
-                  {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                  Send Reset Link
-                </Button>
-              </form>
-            </div>
-          )}
 
-          {/* Set New Password */}
-          {authStep === 'new-password' && (
-            <div className="space-y-4">
-              <Button variant="ghost" size="sm" onClick={handleBack} className="mb-2">
-                <ArrowLeft className="h-4 w-4 mr-2" />
-                Cancel
-              </Button>
+              <ForgotPasswordStepIndicator />
               
-              <form onSubmit={handleSetNewPassword} className="space-y-4">
-                <div className="space-y-2">
-                  <Label htmlFor="new-password">New Password</Label>
-                  <Input
-                    id="new-password"
-                    type="password"
-                    placeholder="••••••••"
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                    required
-                    disabled={loading}
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="confirm-password">Confirm Password</Label>
-                  <Input
-                    id="confirm-password"
-                    type="password"
-                    placeholder="••••••••"
-                    value={confirmPassword}
-                    onChange={(e) => setConfirmPassword(e.target.value)}
-                    required
-                    disabled={loading}
-                  />
-                </div>
-                <Button type="submit" className="w-full" disabled={loading}>
-                  {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                  Reset Password
-                </Button>
-              </form>
+              {/* Step 1: Email */}
+              {forgotPasswordStep === 'email' && (
+                <form onSubmit={handleSendResetOTP} className="space-y-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="reset-email">Email</Label>
+                    <Input
+                      id="reset-email"
+                      type="email"
+                      placeholder="you@example.com"
+                      value={email}
+                      onChange={(e) => setEmail(e.target.value)}
+                      required
+                      disabled={loading}
+                    />
+                  </div>
+                  <Button type="submit" className="w-full" disabled={loading}>
+                    {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                    Send Reset Code
+                  </Button>
+                </form>
+              )}
+
+              {/* Step 2: OTP Verification */}
+              {forgotPasswordStep === 'otp' && (
+                <form onSubmit={handleVerifyResetOTP} className="space-y-4">
+                  <div className="space-y-2">
+                    <Label>Verification Code</Label>
+                    <div className="flex justify-center">
+                      <InputOTP
+                        value={otp}
+                        onChange={setOtp}
+                        maxLength={6}
+                        disabled={loading}
+                      >
+                        <InputOTPGroup>
+                          <InputOTPSlot index={0} />
+                          <InputOTPSlot index={1} />
+                          <InputOTPSlot index={2} />
+                          <InputOTPSlot index={3} />
+                          <InputOTPSlot index={4} />
+                          <InputOTPSlot index={5} />
+                        </InputOTPGroup>
+                      </InputOTP>
+                    </div>
+                  </div>
+                  <Button type="submit" className="w-full" disabled={loading || otp.length !== 6}>
+                    {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                    Verify Code
+                  </Button>
+                  <div className="text-center">
+                    <Button
+                      type="button"
+                      variant="link"
+                      onClick={handleResendOTP}
+                      disabled={resendCooldown > 0 || loading}
+                      className="text-sm"
+                    >
+                      {resendCooldown > 0 ? `Resend in ${resendCooldown}s` : 'Resend Code'}
+                    </Button>
+                  </div>
+                </form>
+              )}
+
+              {/* Step 3: New Password */}
+              {forgotPasswordStep === 'new-password' && (
+                <form onSubmit={handleResetPassword} className="space-y-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="new-password">New Password</Label>
+                    <Input
+                      id="new-password"
+                      type="password"
+                      placeholder="••••••••"
+                      value={password}
+                      onChange={(e) => setPassword(e.target.value)}
+                      required
+                      disabled={loading}
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="confirm-password">Confirm Password</Label>
+                    <Input
+                      id="confirm-password"
+                      type="password"
+                      placeholder="••••••••"
+                      value={confirmPassword}
+                      onChange={(e) => setConfirmPassword(e.target.value)}
+                      required
+                      disabled={loading}
+                    />
+                  </div>
+                  <Button type="submit" className="w-full" disabled={loading}>
+                    {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                    Reset Password
+                  </Button>
+                </form>
+              )}
             </div>
           )}
 
