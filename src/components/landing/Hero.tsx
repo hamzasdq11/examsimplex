@@ -80,7 +80,7 @@ const Hero = () => {
               </div>
 
               {/* Floating Icons - smaller on mobile */}
-              <div className="absolute top-2 sm:top-4 right-0 sm:-right-2 w-10 h-10 sm:w-14 sm:h-14 bg-card rounded-xl shadow-lg flex items-center justify-center animate-float">
+              <div className="absolute top-4 sm:top-6 right-2 sm:right-0 w-10 h-10 sm:w-14 sm:h-14 bg-card rounded-xl shadow-lg flex items-center justify-center animate-float">
                 <MessageCircle className="h-5 w-5 sm:h-7 sm:w-7 text-primary" />
               </div>
               
