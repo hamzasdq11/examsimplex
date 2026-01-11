@@ -11,13 +11,7 @@ interface University {
   updated_at: string;
 }
 
-interface SubjectWithPath {
-  slug: string;
-  updated_at: string;
-  university_id: string;
-  course_id: string;
-  semester_id: string;
-}
+const SITE_URL = 'https://examsimplex.lovable.app';
 
 Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') {
@@ -29,31 +23,32 @@ Deno.serve(async (req) => {
     const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
     const supabase = createClient(supabaseUrl, supabaseKey);
 
-    // Get base URL from request or environment
-    const url = new URL(req.url);
-    const baseUrl = url.searchParams.get('baseUrl') || 'https://examsimplex.com';
-
     // Fetch all universities
     const { data: universities, error: uniError } = await supabase
       .from('universities')
-      .select('id, slug, updated_at');
+      .select('id, slug, updated_at')
+      .order('name');
 
     if (uniError) throw uniError;
 
-    // Fetch all subjects with their full path
+    // Fetch all subjects with their full path including course code and semester number
     const { data: subjects, error: subError } = await supabase
       .from('subjects')
       .select(`
         slug,
+        name,
         updated_at,
         semester:semesters!inner(
-          id,
+          number,
           course:courses!inner(
-            id,
-            university:universities!inner(id)
+            code,
+            university:universities!inner(
+              slug
+            )
           )
         )
-      `);
+      `)
+      .order('name');
 
     if (subError) throw subError;
 
@@ -61,21 +56,26 @@ Deno.serve(async (req) => {
     const now = new Date().toISOString().split('T')[0];
     
     let xml = `<?xml version="1.0" encoding="UTF-8"?>
-<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"
+        xmlns:image="http://www.google.com/schemas/sitemap-image/1.1">
   <!-- Homepage -->
   <url>
-    <loc>${baseUrl}/</loc>
+    <loc>${SITE_URL}/</loc>
     <lastmod>${now}</lastmod>
-    <changefreq>weekly</changefreq>
+    <changefreq>daily</changefreq>
     <priority>1.0</priority>
+    <image:image>
+      <image:loc>${SITE_URL}/og-image.png</image:loc>
+      <image:title>EXAM Simplex - AKTU Notes, PYQs and AI Study Help</image:title>
+    </image:image>
   </url>
   
   <!-- Auth page -->
   <url>
-    <loc>${baseUrl}/auth</loc>
+    <loc>${SITE_URL}/auth</loc>
     <lastmod>${now}</lastmod>
     <changefreq>monthly</changefreq>
-    <priority>0.5</priority>
+    <priority>0.4</priority>
   </url>
 `;
 
@@ -84,14 +84,14 @@ Deno.serve(async (req) => {
       const lastmod = uni.updated_at ? uni.updated_at.split('T')[0] : now;
       xml += `
   <url>
-    <loc>${baseUrl}/university/${uni.id}</loc>
+    <loc>${SITE_URL}/university/${uni.slug}</loc>
     <lastmod>${lastmod}</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.9</priority>
   </url>`;
     }
 
-    // Add subject pages
+    // Add subject pages with proper SEO-friendly URLs
     for (const subject of subjects || []) {
       const semester = (subject as any).semester;
       if (!semester) continue;
@@ -100,16 +100,17 @@ Deno.serve(async (req) => {
       if (!course) continue;
       
       const university = course.university;
-      if (!university) continue;
+      if (!university?.slug || !course?.code || !semester?.number || !subject.slug) continue;
 
       const lastmod = subject.updated_at ? subject.updated_at.split('T')[0] : now;
-      const subjectUrl = `${baseUrl}/university/${university.id}/${course.id}/${semester.id}/${subject.slug}`;
+      // SEO-friendly URL: /university/{uni-slug}/{course-code}/sem{number}/{subject-slug}
+      const subjectUrl = `${SITE_URL}/university/${university.slug}/${course.code.toLowerCase()}/sem${semester.number}/${subject.slug}`;
       
       xml += `
   <url>
     <loc>${subjectUrl}</loc>
     <lastmod>${lastmod}</lastmod>
-    <changefreq>monthly</changefreq>
+    <changefreq>weekly</changefreq>
     <priority>0.8</priority>
   </url>`;
     }
@@ -126,11 +127,23 @@ Deno.serve(async (req) => {
     });
   } catch (error) {
     console.error('Sitemap generation error:', error);
+    // Return a basic sitemap on error
     return new Response(
-      JSON.stringify({ error: 'Failed to generate sitemap' }),
+      `<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+  <url>
+    <loc>${SITE_URL}/</loc>
+    <changefreq>daily</changefreq>
+    <priority>1.0</priority>
+  </url>
+</urlset>`,
       {
-        status: 500,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        status: 200,
+        headers: { 
+          ...corsHeaders, 
+          'Content-Type': 'application/xml',
+          'Cache-Control': 'public, max-age=3600',
+        },
       }
     );
   }

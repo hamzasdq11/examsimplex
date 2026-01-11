@@ -5,26 +5,30 @@ import {
   AccordionTrigger,
 } from "@/components/ui/accordion";
 
-const faqs = [
+export const faqs = [
   {
-    question: "What is the score guarantee?",
-    answer: "We guarantee specific score improvements based on the test you're preparing for. If you complete our full program and don't achieve the guaranteed score, you'll get your money back or continue studying for free until you do.",
+    question: "What universities does EXAM Simplex cover?",
+    answer: "EXAM Simplex currently covers AKTU (Abdul Kalam Technical University), UPTU, and is expanding to more universities across India. We provide study materials, previous year questions, and notes for B.Tech, BCA, MCA, and other courses.",
   },
   {
-    question: "How long does it take to prepare?",
-    answer: "Preparation time varies by test and your starting point. Typically, MCAT prep takes 3-6 months, LSAT prep takes 2-4 months, and DAT prep takes 2-3 months. Our adaptive platform helps you optimize your study time.",
+    question: "Are the previous year questions (PYQs) from actual exams?",
+    answer: "Yes, all our PYQs are collected from actual university examinations. We verify and organize them by year, subject, and unit to help you understand exam patterns and prepare effectively.",
   },
   {
-    question: "Can I access the content on mobile?",
-    answer: "Yes! Our platform is fully responsive and works on all devices. You can study on your phone, tablet, or computer. We also offer offline access for premium subscribers.",
+    question: "How does the AI assistant help with exam preparation?",
+    answer: "Our AI assistant can explain complex topics, solve problems step-by-step, generate practice questions, summarize notes, and answer your doubts instantly. It's like having a personal tutor available 24/7.",
   },
   {
-    question: "What's included in the free account?",
-    answer: "Free accounts include access to sample lessons, limited practice questions, and our study planning tools. Premium subscriptions unlock full course content, unlimited practice, and personalized tutoring.",
+    question: "Is EXAM Simplex free to use?",
+    answer: "Yes, basic access to notes, PYQs, and study materials is completely free. We believe quality education should be accessible to everyone. Premium features like advanced AI assistance are available for subscribers.",
   },
   {
-    question: "Do you offer tutoring sessions?",
-    answer: "Yes, we offer 1-on-1 tutoring sessions with expert instructors who have achieved top scores on their respective tests. Tutoring is available as an add-on or included in our premium packages.",
+    question: "How are the study notes organized?",
+    answer: "Notes are organized by university, course, semester, and subject. Each subject is further divided into units following the official syllabus, making it easy to find exactly what you need for your exams.",
+  },
+  {
+    question: "Can I access EXAM Simplex on my mobile phone?",
+    answer: "Absolutely! EXAM Simplex is fully responsive and works perfectly on mobile phones, tablets, and computers. Study anywhere, anytime with our mobile-friendly platform.",
   },
 ];
 
@@ -37,7 +41,7 @@ const FAQ = () => {
             Frequently Asked Questions
           </h2>
           <p className="text-lg text-muted-foreground">
-            Got questions? We've got answers. If you don't see your question here, feel free to contact us.
+            Got questions about EXAM Simplex? Find answers to common questions below.
           </p>
         </div>
 
