@@ -39,8 +39,8 @@ const Hero = () => {
                     <Star key={i} className="h-4 w-4 sm:h-5 sm:w-5 fill-yellow-400 text-yellow-400" />
                   ))}
                 </div>
-                <span className="text-xs sm:text-sm text-muted-foreground">
-                  <span className="font-semibold text-foreground">3,76,300+</span> students served
+              <span className="text-xs sm:text-sm text-muted-foreground">
+                  <span className="font-semibold text-foreground">500+</span> students served
                 </span>
               </div>
             </div>
