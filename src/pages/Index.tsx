@@ -6,13 +6,14 @@ import SubjectCategories from "@/components/landing/SubjectCategories";
 import Advantages from "@/components/landing/Advantages";
 import CourseFeatures from "@/components/landing/CourseFeatures";
 import Testimonials from "@/components/landing/Testimonials";
-import FAQ from "@/components/landing/FAQ";
+import FAQ, { faqs } from "@/components/landing/FAQ";
 import Footer from "@/components/landing/Footer";
-import { SEO, createOrganizationSchema } from "@/components/SEO";
+import { SEO, createEducationalOrganizationSchema, createFAQSchema } from "@/components/SEO";
 
 const Index = () => {
   const jsonLd = [
-    createOrganizationSchema(),
+    createEducationalOrganizationSchema(),
+    createFAQSchema(faqs),
     {
       '@context': 'https://schema.org',
       '@type': 'WebSite',
@@ -32,10 +33,11 @@ const Index = () => {
   return (
     <div className="min-h-screen bg-background">
       <SEO
-        title="Your Exam Preparation Companion - Notes, PYQs & AI Help"
-        description="Ace your exams with EXAM Simplex. Access study notes, previous year questions, and AI-powered assistance for 10+ universities across India."
+        title="AKTU Notes, PYQs & AI Study Help - Free Exam Preparation"
+        description="Free AKTU exam preparation with study notes, previous year questions (PYQs), and AI-powered assistance. B.Tech CSE, ECE, ME notes for all semesters. Ace your university exams!"
         canonicalUrl="/"
         jsonLd={jsonLd}
+        keywords="AKTU notes, AKTU PYQ, AKTU previous year questions, B.Tech notes, UPTU notes, exam preparation India, university exam help, CSE notes, engineering notes, free study materials, AI tutor"
       />
       <Header />
       <main>

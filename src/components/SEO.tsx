@@ -8,6 +8,9 @@ interface SEOProps {
   ogType?: 'website' | 'article';
   jsonLd?: object | object[];
   noIndex?: boolean;
+  keywords?: string;
+  publishedTime?: string;
+  modifiedTime?: string;
 }
 
 const SITE_NAME = 'EXAM Simplex';
@@ -22,6 +25,9 @@ export const SEO = ({
   ogType = 'website',
   jsonLd,
   noIndex = false,
+  keywords,
+  publishedTime,
+  modifiedTime,
 }: SEOProps) => {
   const fullTitle = title ? `${title} | ${SITE_NAME}` : SITE_NAME;
   const origin = typeof window !== 'undefined' ? window.location.origin : '';
@@ -33,7 +39,13 @@ export const SEO = ({
       {/* Primary Meta Tags */}
       <title>{fullTitle}</title>
       <meta name="description" content={description} />
+      {keywords && <meta name="keywords" content={keywords} />}
       {noIndex && <meta name="robots" content="noindex, nofollow" />}
+      
+      {/* Geo & Language Tags for India */}
+      <meta name="geo.region" content="IN" />
+      <meta name="geo.placename" content="India" />
+      <meta httpEquiv="content-language" content="en-IN" />
       
       {/* Canonical URL */}
       {fullCanonicalUrl && <link rel="canonical" href={fullCanonicalUrl} />}
@@ -43,14 +55,21 @@ export const SEO = ({
       <meta property="og:title" content={fullTitle} />
       <meta property="og:description" content={description} />
       <meta property="og:image" content={fullOgImage} />
+      <meta property="og:image:width" content="1200" />
+      <meta property="og:image:height" content="630" />
+      <meta property="og:image:alt" content={title || SITE_NAME} />
       {fullCanonicalUrl && <meta property="og:url" content={fullCanonicalUrl} />}
       <meta property="og:site_name" content={SITE_NAME} />
+      <meta property="og:locale" content="en_IN" />
+      {publishedTime && <meta property="article:published_time" content={publishedTime} />}
+      {modifiedTime && <meta property="article:modified_time" content={modifiedTime} />}
       
       {/* Twitter */}
       <meta name="twitter:card" content="summary_large_image" />
       <meta name="twitter:title" content={fullTitle} />
       <meta name="twitter:description" content={description} />
       <meta name="twitter:image" content={fullOgImage} />
+      <meta name="twitter:image:alt" content={title || SITE_NAME} />
       
       {/* JSON-LD Structured Data */}
       {jsonLd && (
@@ -122,6 +141,33 @@ export const createWebPageSchema = ({
   name: title,
   description,
   url,
+});
+
+export const createFAQSchema = (faqs: { question: string; answer: string }[]) => ({
+  '@context': 'https://schema.org',
+  '@type': 'FAQPage',
+  mainEntity: faqs.map((faq) => ({
+    '@type': 'Question',
+    name: faq.question,
+    acceptedAnswer: {
+      '@type': 'Answer',
+      text: faq.answer,
+    },
+  })),
+});
+
+export const createEducationalOrganizationSchema = () => ({
+  '@context': 'https://schema.org',
+  '@type': 'EducationalOrganization',
+  name: 'EXAM Simplex',
+  description: 'India\'s leading exam preparation platform with study notes, previous year questions, and AI-powered assistance for AKTU, UPTU, and other universities.',
+  url: typeof window !== 'undefined' ? window.location.origin : '',
+  sameAs: [],
+  areaServed: {
+    '@type': 'Country',
+    name: 'India',
+  },
+  serviceType: 'Educational Resources',
 });
 
 export default SEO;
