@@ -414,6 +414,36 @@ export type Database = {
         }
         Relationships: []
       }
+      recent_views: {
+        Row: {
+          id: string
+          item_id: string
+          item_name: string
+          item_type: string
+          item_url: string
+          user_id: string
+          viewed_at: string
+        }
+        Insert: {
+          id?: string
+          item_id: string
+          item_name: string
+          item_type: string
+          item_url: string
+          user_id: string
+          viewed_at?: string
+        }
+        Update: {
+          id?: string
+          item_id?: string
+          item_name?: string
+          item_type?: string
+          item_url?: string
+          user_id?: string
+          viewed_at?: string
+        }
+        Relationships: []
+      }
       semesters: {
         Row: {
           course_id: string
@@ -448,6 +478,65 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      studylist_items: {
+        Row: {
+          created_at: string
+          id: string
+          item_id: string
+          item_type: string
+          studylist_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          item_id: string
+          item_type: string
+          studylist_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          item_id?: string
+          item_type?: string
+          studylist_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "studylist_items_studylist_id_fkey"
+            columns: ["studylist_id"]
+            isOneToOne: false
+            referencedRelation: "studylists"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      studylists: {
+        Row: {
+          created_at: string
+          description: string | null
+          id: string
+          name: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          name: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          name?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
       }
       subjects: {
         Row: {
@@ -585,6 +674,30 @@ export type Database = {
           slug?: string
           type?: string
           updated_at?: string
+        }
+        Relationships: []
+      }
+      user_library_items: {
+        Row: {
+          created_at: string
+          id: string
+          item_id: string
+          item_type: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          item_id: string
+          item_type: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          item_id?: string
+          item_type?: string
+          user_id?: string
         }
         Relationships: []
       }

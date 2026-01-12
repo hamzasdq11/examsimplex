@@ -12,10 +12,12 @@ import SubjectPage from "./pages/SubjectPage";
 import Auth from "./pages/Auth";
 import Onboarding from "./pages/Onboarding";
 import UserDashboard from "./pages/Dashboard";
+import Library from "./pages/Library";
+import Studylists from "./pages/Studylists";
+import StudylistDetail from "./pages/StudylistDetail";
 import AdminDashboard from "./pages/admin/Dashboard";
 import Universities from "./pages/admin/Universities";
 import Courses from "./pages/admin/Courses";
-
 import Subjects from "./pages/admin/Subjects";
 import Questions from "./pages/admin/Questions";
 import Notes from "./pages/admin/Notes";
@@ -38,6 +40,9 @@ const App = () => (
               <Route path="/auth" element={<Auth />} />
               <Route path="/onboarding" element={<Onboarding />} />
               <Route path="/dashboard" element={<UserDashboard />} />
+              <Route path="/library" element={<Library />} />
+              <Route path="/studylists" element={<Studylists />} />
+              <Route path="/studylists/:id" element={<StudylistDetail />} />
               <Route path="/university/:universityId" element={<UniversityPage />} />
               <Route path="/university/:universityId/:courseId/:semesterId/:subjectId" element={<SubjectPage />} />
               
