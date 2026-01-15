@@ -24,4 +24,4 @@ Disallow: /admin
 Disallow: /auth
 
 # Sitemap location
-Sitemap: https://examsimplex.lovable.app/sitemap.xml
+Sitemap: https://examsimplex.com/sitemap.xml
