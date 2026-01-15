@@ -14,6 +14,7 @@ interface SEOProps {
 }
 
 const SITE_NAME = 'EXAM Simplex';
+const SITE_URL = 'https://examsimplex.com';
 const DEFAULT_DESCRIPTION = 'Ace your exams with EXAM Simplex. Access study notes, previous year questions, and AI-powered assistance for universities across India.';
 const DEFAULT_OG_IMAGE = '/og-image.png';
 
@@ -30,9 +31,8 @@ export const SEO = ({
   modifiedTime,
 }: SEOProps) => {
   const fullTitle = title ? `${title} | ${SITE_NAME}` : SITE_NAME;
-  const origin = typeof window !== 'undefined' ? window.location.origin : '';
-  const fullCanonicalUrl = canonicalUrl ? `${origin}${canonicalUrl}` : undefined;
-  const fullOgImage = ogImage.startsWith('http') ? ogImage : `${origin}${ogImage}`;
+  const fullCanonicalUrl = canonicalUrl ? `${SITE_URL}${canonicalUrl}` : undefined;
+  const fullOgImage = ogImage.startsWith('http') ? ogImage : `${SITE_URL}${ogImage}`;
 
   return (
     <Helmet>
@@ -87,7 +87,7 @@ export const createOrganizationSchema = () => ({
   '@type': 'EducationalOrganization',
   name: 'EXAM Simplex',
   description: 'Exam preparation platform with notes, previous year questions, and AI-powered assistance',
-  url: typeof window !== 'undefined' ? window.location.origin : '',
+  url: SITE_URL,
 });
 
 export const createBreadcrumbSchema = (items: { name: string; url: string }[]) => ({
@@ -161,7 +161,7 @@ export const createEducationalOrganizationSchema = () => ({
   '@type': 'EducationalOrganization',
   name: 'EXAM Simplex',
   description: 'India\'s leading exam preparation platform with study notes, previous year questions, and AI-powered assistance for AKTU, UPTU, and other universities.',
-  url: typeof window !== 'undefined' ? window.location.origin : '',
+  url: SITE_URL,
   sameAs: [],
   areaServed: {
     '@type': 'Country',

@@ -11,7 +11,7 @@ interface University {
   updated_at: string;
 }
 
-const SITE_URL = 'https://examsimplex.lovable.app';
+const SITE_URL = 'https://examsimplex.com';
 
 Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') {
@@ -70,13 +70,6 @@ Deno.serve(async (req) => {
     </image:image>
   </url>
   
-  <!-- Auth page -->
-  <url>
-    <loc>${SITE_URL}/auth</loc>
-    <lastmod>${now}</lastmod>
-    <changefreq>monthly</changefreq>
-    <priority>0.4</priority>
-  </url>
 `;
 
     // Add university pages
