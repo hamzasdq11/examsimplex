@@ -14,6 +14,7 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
+import { ThemeToggle } from '@/components/ThemeToggle';
 
 export function AdminHeader() {
   const { user, signOut } = useAuth();
@@ -35,7 +36,9 @@ export function AdminHeader() {
         <h1 className="text-lg font-semibold text-foreground">Admin Dashboard</h1>
       </div>
 
-      <DropdownMenu>
+      <div className="flex items-center gap-2">
+        <ThemeToggle />
+        <DropdownMenu>
         <DropdownMenuTrigger asChild>
           <Button variant="ghost" className="flex items-center gap-2">
             <Avatar className="h-8 w-8">
@@ -64,7 +67,8 @@ export function AdminHeader() {
             Sign out
           </DropdownMenuItem>
         </DropdownMenuContent>
-      </DropdownMenu>
+        </DropdownMenu>
+      </div>
     </header>
   );
 }
