@@ -120,6 +120,11 @@ export function AppSidebar() {
                       <p className="text-xs text-muted-foreground truncate">
                         {user.email}
                       </p>
+                      {profile?.course && profile?.semester && profile?.university && (
+                        <p className="text-xs text-muted-foreground truncate mt-0.5">
+                          {profile.course.name} • Semester {profile.semester.number} • {profile.university.name}
+                        </p>
+                      )}
                     </div>
                   )}
                 </Button>
