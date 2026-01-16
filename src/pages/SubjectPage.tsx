@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { useParams, Link } from "react-router-dom";
+import { useParams, Link, useSearchParams } from "react-router-dom";
 import DOMPurify from "dompurify";
 import Header from "@/components/landing/Header";
 import Footer from "@/components/landing/Footer";
@@ -28,12 +28,13 @@ import {
   Printer,
   Send,
   Target,
-  TrendingUp,
   Loader2,
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import type { Subject, Unit, Note, ImportantQuestion, PYQPaper, PYQQuestion, University, Course, Semester } from "@/types/database";
 import { SEO, createBreadcrumbSchema, createCourseSchema } from "@/components/SEO";
+import { AddToLibraryButton } from "@/components/AddToLibraryButton";
+import { AddToStudylistButton } from "@/components/AddToStudylistButton";
 
 interface NoteWithUnit extends Note {
   units: Unit;
@@ -49,7 +50,9 @@ interface ImportantQuestionWithUnit extends ImportantQuestion {
 
 const SubjectPage = () => {
   const { universityId, courseId, semesterId, subjectId } = useParams();
-  const [activeTab, setActiveTab] = useState("questions");
+  const [searchParams] = useSearchParams();
+  const initialTab = searchParams.get('tab') || 'questions';
+  const [activeTab, setActiveTab] = useState(initialTab);
   const [openUnits, setOpenUnits] = useState<string[]>([]);
   const [openPyqYears, setOpenPyqYears] = useState<string[]>([]);
   const [aiMessage, setAiMessage] = useState("");
@@ -325,6 +328,10 @@ const SubjectPage = () => {
                     {subject.pattern}
                   </Badge>
                 </div>
+                <div className="flex gap-2 mt-2 md:mt-0">
+                  <AddToLibraryButton itemType="subject" itemId={subject.id} />
+                  <AddToStudylistButton itemType="subject" itemId={subject.id} />
+                </div>
               </div>
 
               {/* Exam Info */}
@@ -387,7 +394,7 @@ const SubjectPage = () => {
                       importantQuestions.map((q, idx) => (
                         <div
                           key={q.id}
-                          className="p-4 border rounded-lg hover:bg-muted/30 transition-colors"
+                          className="p-4 border rounded-lg hover:bg-muted/30 transition-colors group"
                         >
                           <div className="flex items-start gap-4">
                             <span className="flex items-center justify-center w-8 h-8 rounded-full bg-primary/10 text-primary text-sm font-semibold shrink-0">
@@ -395,7 +402,7 @@ const SubjectPage = () => {
                             </span>
                             <div className="flex-1 space-y-2">
                               <p className="text-foreground font-medium">{q.question}</p>
-                              <div className="flex flex-wrap gap-2">
+                              <div className="flex flex-wrap items-center gap-2">
                                 <Badge
                                   variant="outline"
                                   className={getFrequencyColor(q.frequency)}
@@ -410,6 +417,14 @@ const SubjectPage = () => {
                                     Unit {q.units.number}: {q.units.name}
                                   </Badge>
                                 )}
+                                <div className="ml-auto opacity-0 group-hover:opacity-100 transition-opacity">
+                                  <AddToStudylistButton 
+                                    itemType="question" 
+                                    itemId={q.id} 
+                                    size="sm"
+                                    showText={false}
+                                  />
+                                </div>
                               </div>
                             </div>
                           </div>
@@ -469,8 +484,18 @@ const SubjectPage = () => {
                               </div>
                             ) : (
                               unitNotes.map((note) => (
-                                <div key={note.id} className="ml-4 p-4 border-l-2 border-primary/20 bg-background">
-                                  <h4 className="font-medium text-foreground mb-3">{note.chapter_title}</h4>
+                                <div key={note.id} className="ml-4 p-4 border-l-2 border-primary/20 bg-background group">
+                                  <div className="flex items-start justify-between gap-2 mb-3">
+                                    <h4 className="font-medium text-foreground">{note.chapter_title}</h4>
+                                    <div className="opacity-0 group-hover:opacity-100 transition-opacity shrink-0">
+                                      <AddToStudylistButton 
+                                        itemType="note" 
+                                        itemId={note.id} 
+                                        size="sm"
+                                        showText={false}
+                                      />
+                                    </div>
+                                  </div>
                                   <ul className="space-y-2">
                                     {(note.points as string[]).map((point, pidx) => (
                                       <li
