@@ -15,29 +15,34 @@ serve(async (req) => {
   try {
     // Authenticate user
     const authHeader = req.headers.get("Authorization");
-    if (!authHeader?.startsWith("Bearer ")) {
-      return new Response(
-        JSON.stringify({ error: "Unauthorized - No valid token provided" }),
-        { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-      );
-    }
-
-    const supabaseClient = createClient(
-      Deno.env.get("SUPABASE_URL")!,
-      Deno.env.get("SUPABASE_ANON_KEY")!,
-      { global: { headers: { Authorization: authHeader } } }
-    );
-
-    const { data: { user }, error: authError } = await supabaseClient.auth.getUser();
+    let userId = "anonymous";
     
-    if (authError || !user) {
+    if (authHeader?.startsWith("Bearer ")) {
+      const supabaseClient = createClient(
+        Deno.env.get("SUPABASE_URL")!,
+        Deno.env.get("SUPABASE_ANON_KEY")!,
+        { global: { headers: { Authorization: authHeader } } }
+      );
+
+      const { data: { user }, error: authError } = await supabaseClient.auth.getUser();
+      
+      if (authError || !user) {
+        console.log("Auth error or no user:", authError?.message);
+        return new Response(
+          JSON.stringify({ error: "Please sign in to use the AI assistant." }),
+          { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        );
+      }
+      userId = user.id;
+    } else {
+      // No auth header - require authentication
       return new Response(
-        JSON.stringify({ error: "Unauthorized - Invalid token" }),
+        JSON.stringify({ error: "Please sign in to use the AI assistant." }),
         { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
 
-    console.log(`Authenticated request from user: ${user.id}`);
+    console.log(`Authenticated request from user: ${userId}`);
 
     const { type, message, subject, context } = await req.json();
     const OPENAI_API_KEY = Deno.env.get("OPENAI_API_KEY");
