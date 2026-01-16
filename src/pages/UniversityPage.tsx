@@ -637,58 +637,6 @@ const UniversityPage = () => {
               </div>
             </div>
 
-            <Separator className="my-5" />
-
-            {/* Your Context - Functional */}
-            <div className="mb-6">
-              <h3 className="text-sm font-semibold text-foreground mb-3 flex items-center gap-2">
-                <User className="h-4 w-4" />
-                Your Context
-              </h3>
-              <Card className="bg-muted/30 border-border">
-                <CardContent className="p-3">
-                  {profileLoading ? (
-                    <div className="flex items-center justify-center py-2">
-                      <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
-                    </div>
-                  ) : profile?.course ? (
-                    <div className="space-y-2">
-                      <div className="text-sm">
-                        <p className="font-medium text-foreground">{profile.course.name}</p>
-                        <p className="text-muted-foreground text-xs">
-                          {profile.semester?.name} • {profile.university?.name}
-                        </p>
-                      </div>
-                      <Button 
-                        variant="ghost" 
-                        size="sm" 
-                        className="w-full h-8 text-xs"
-                        onClick={() => navigate('/onboarding?edit=true')}
-                      >
-                        <Settings className="h-3 w-3 mr-1.5" />
-                        Change Course
-                      </Button>
-                    </div>
-                  ) : (
-                    <div className="space-y-2">
-                      <p className="text-xs text-muted-foreground">
-                        {user ? "Set your course to personalize content" : "Sign in to personalize your experience"}
-                      </p>
-                      <Button 
-                        variant="outline" 
-                        size="sm" 
-                        className="w-full h-8 text-xs"
-                        onClick={() => navigate(user ? '/onboarding?edit=true' : '/auth')}
-                      >
-                        {user ? "Set Your Course" : "Sign In"}
-                      </Button>
-                    </div>
-                  )}
-                </CardContent>
-              </Card>
-            </div>
-
-            <Separator className="my-5" />
 
             {/* Quick Actions */}
             <div>
