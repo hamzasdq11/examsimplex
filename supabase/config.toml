@@ -1,5 +1,8 @@
 project_id = "mlpnahzamlnfzeckxqaf"
 
+[functions.ai-assistant]
+verify_jwt = false
+
 [functions.send-email-otp]
 verify_jwt = false
 
