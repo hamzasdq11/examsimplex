@@ -13,36 +13,35 @@ serve(async (req) => {
   }
 
   try {
-    // Authenticate user
+    // Authenticate user using the service role to validate the token
     const authHeader = req.headers.get("Authorization");
-    let userId = "anonymous";
     
-    if (authHeader?.startsWith("Bearer ")) {
-      const supabaseClient = createClient(
-        Deno.env.get("SUPABASE_URL")!,
-        Deno.env.get("SUPABASE_ANON_KEY")!,
-        { global: { headers: { Authorization: authHeader } } }
-      );
-
-      const { data: { user }, error: authError } = await supabaseClient.auth.getUser();
-      
-      if (authError || !user) {
-        console.log("Auth error or no user:", authError?.message);
-        return new Response(
-          JSON.stringify({ error: "Please sign in to use the AI assistant." }),
-          { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-        );
-      }
-      userId = user.id;
-    } else {
-      // No auth header - require authentication
+    if (!authHeader?.startsWith("Bearer ")) {
       return new Response(
         JSON.stringify({ error: "Please sign in to use the AI assistant." }),
         { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
 
-    console.log(`Authenticated request from user: ${userId}`);
+    const token = authHeader.replace("Bearer ", "");
+    
+    // Use service role client to validate the token
+    const supabaseAdmin = createClient(
+      Deno.env.get("SUPABASE_URL")!,
+      Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!
+    );
+
+    const { data: { user }, error: authError } = await supabaseAdmin.auth.getUser(token);
+    
+    if (authError || !user) {
+      console.log("Auth error:", authError?.message);
+      return new Response(
+        JSON.stringify({ error: "Please sign in to use the AI assistant." }),
+        { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
+    console.log(`Authenticated request from user: ${user.id}`);
 
     const { type, message, subject, context } = await req.json();
     const OPENAI_API_KEY = Deno.env.get("OPENAI_API_KEY");
