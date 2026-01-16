@@ -7,9 +7,8 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Progress } from "@/components/ui/progress";
-import { Textarea } from "@/components/ui/textarea";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { Textarea } from "@/components/ui/textarea";
 import {
   Collapsible,
   CollapsibleContent,
@@ -27,7 +26,6 @@ import {
   Download,
   Printer,
   Send,
-  Target,
   Loader2,
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
@@ -35,6 +33,7 @@ import type { Subject, Unit, Note, ImportantQuestion, PYQPaper, PYQQuestion, Uni
 import { SEO, createBreadcrumbSchema, createCourseSchema } from "@/components/SEO";
 import { AddToLibraryButton } from "@/components/AddToLibraryButton";
 import { AddToStudylistButton } from "@/components/AddToStudylistButton";
+import { SubjectAIChat } from "@/components/SubjectAIChat";
 
 interface NoteWithUnit extends Note {
   units: Unit;
@@ -204,19 +203,41 @@ const SubjectPage = () => {
     }
   };
 
-  const handleAiSubmit = () => {
+  const handleAiSubmit = async () => {
     if (!aiMessage.trim()) return;
-    setAiMessages((prev) => [...prev, { role: "user", content: aiMessage }]);
-    setTimeout(() => {
+    const messageText = aiMessage;
+    setAiMessages((prev) => [...prev, { role: "user", content: messageText }]);
+    setAiMessage("");
+    
+    try {
+      const { data, error } = await supabase.functions.invoke("ai-assistant", {
+        body: {
+          type: "ask",
+          message: messageText,
+          subject: subject?.name,
+          context: university?.name ? `${university.name} - ${subject?.code}` : subject?.code
+        }
+      });
+
+      if (error) throw error;
+
       setAiMessages((prev) => [
         ...prev,
         {
           role: "assistant",
-          content: `Regarding "${aiMessage}":\n\n**Key Points for Exam:**\n1. Focus on the definition and core concept first\n2. Include relevant examples from previous years\n3. Use proper keywords that carry marks\n4. Draw diagrams wherever applicable\n\nWould you like me to explain this topic in more detail or provide an answer template?`,
+          content: data.content || "I couldn't generate a response. Please try again.",
         },
       ]);
-    }, 1000);
-    setAiMessage("");
+    } catch (error) {
+      console.error("AI error:", error);
+      setAiMessages((prev) => [
+        ...prev,
+        {
+          role: "assistant",
+          content: "Sorry, I encountered an error. Please try again.",
+        },
+      ]);
+    }
   };
 
   // Group notes by unit
@@ -682,59 +703,12 @@ const SubjectPage = () => {
             </Tabs>
           </div>
 
-          {/* Right Sidebar */}
-          <div className="lg:col-span-1 space-y-6">
-            {/* Unit Weightage */}
-            <Card className="sticky top-24">
-              <CardHeader className="pb-4">
-                <CardTitle className="text-base">Unit Weightage</CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-3">
-                {units.length === 0 ? (
-                  <div className="text-sm text-muted-foreground">No units available</div>
-                ) : (
-                  units.map((unit) => (
-                    <div key={unit.id}>
-                      <div className="flex justify-between text-sm mb-1">
-                        <span className="text-muted-foreground truncate pr-2">
-                          Unit {unit.number}: {unit.name}
-                        </span>
-                        <span className="font-medium shrink-0">{unit.weight}%</span>
-                      </div>
-                      <Progress value={unit.weight} className="h-1.5" />
-                    </div>
-                  ))
-                )}
-              </CardContent>
-            </Card>
-
-            {/* Quick Stats */}
-            <Card>
-              <CardHeader className="pb-4">
-                <CardTitle className="text-base flex items-center gap-2">
-                  <Target className="h-4 w-4" />
-                  Quick Stats
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-3">
-                <div className="flex justify-between text-sm">
-                  <span className="text-muted-foreground">Important Questions</span>
-                  <span className="font-medium">{importantQuestions.length}</span>
-                </div>
-                <div className="flex justify-between text-sm">
-                  <span className="text-muted-foreground">Notes Chapters</span>
-                  <span className="font-medium">{notes.length}</span>
-                </div>
-                <div className="flex justify-between text-sm">
-                  <span className="text-muted-foreground">Past Papers</span>
-                  <span className="font-medium">{pyqPapers.length}</span>
-                </div>
-                <div className="flex justify-between text-sm">
-                  <span className="text-muted-foreground">Units</span>
-                  <span className="font-medium">{units.length}</span>
-                </div>
-              </CardContent>
-            </Card>
+          {/* Right Sidebar - AI Chat */}
+          <div className="lg:col-span-1">
+            <SubjectAIChat 
+              subject={subject}
+              universityName={university?.name}
+            />
           </div>
         </div>
       </main>
