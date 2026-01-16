@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect, useCallback } from "react";
+import { useState, useRef, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
@@ -15,31 +15,35 @@ import {
   Bot,
   User,
   Code,
-  BarChart3
+  BarChart3,
+  Globe,
+  Zap
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
 import { parseAIResponse, Segment } from "@/lib/responseParser";
-import { MathRenderer, MixedMathContent } from "@/components/ai/MathRenderer";
+import { MathRenderer } from "@/components/ai/MathRenderer";
 import { CodeBlock } from "@/components/ai/CodeBlock";
 import { CitationBadge, CitationDrawer, Citation } from "@/components/ai/CitationDrawer";
 import { GraphViewer } from "@/components/ai/GraphViewer";
+import { Progress } from "@/components/ui/progress";
+
+// Strict response types matching backend schema
+type AIResponseType = 
+  | { type: "math"; python: string; explanation: string; latex?: string; steps?: string[] }
+  | { type: "graph"; python: string; description: string }
+  | { type: "code"; language: string; source: string; explanation: string; executable: boolean }
+  | { type: "answer"; text: string; citations: Citation[] };
 
 interface Message {
   role: "user" | "assistant";
   content: string;
-  citations?: Citation[];
-  code?: {
-    language: string;
-    source: string;
-    executable: boolean;
-  };
-  graph?: {
-    pythonCode?: string;
-    data?: string;
-  };
+  response?: AIResponseType;
   intent?: string;
+  confidence?: number;
+  modelUsed?: string;
+  processingTime?: number;
 }
 
 interface SubjectAIChatProps {
@@ -57,7 +61,8 @@ export const SubjectAIChat = ({ subject, universityName }: SubjectAIChatProps) =
   const [messages, setMessages] = useState<Message[]>([
     {
       role: "assistant",
-      content: `Hi! I'm your ${subject.name} study assistant. Ask me anything about concepts, exam preparation, practice questions, or request code examples and visualizations.`
+      content: `Hi! I'm your ${subject.name} study assistant. Ask me anything about concepts, exam preparation, practice questions, or request code examples and visualizations.`,
+      confidence: 1
     }
   ]);
   const [input, setInput] = useState("");
@@ -110,13 +115,35 @@ export const SubjectAIChat = ({ subject, universityName }: SubjectAIChatProps) =
 
       if (error) throw error;
 
+      // Handle new structured response format
+      const response = data.response as AIResponseType;
+      let displayContent = "";
+      
+      if (response) {
+        switch (response.type) {
+          case "math":
+            displayContent = response.explanation;
+            break;
+          case "graph":
+            displayContent = response.description;
+            break;
+          case "code":
+            displayContent = response.explanation;
+            break;
+          case "answer":
+            displayContent = response.text;
+            break;
+        }
+      }
+
       const assistantMessage: Message = {
         role: "assistant",
-        content: data.content || "I couldn't generate a response. Please try again.",
-        citations: data.citations || [],
-        code: data.code,
-        graph: data.graph,
-        intent: data.intent
+        content: displayContent || "I couldn't generate a response. Please try again.",
+        response,
+        intent: data.intent,
+        confidence: data.confidence,
+        modelUsed: data.modelUsed,
+        processingTime: data.processingTime
       };
       setMessages(prev => [...prev, assistantMessage]);
     } catch (error) {
@@ -232,37 +259,64 @@ export const SubjectAIChat = ({ subject, universityName }: SubjectAIChatProps) =
                 )}
                 
                 {msg.role === "assistant" && (
-                  <div className="flex items-center gap-2 mt-2 pt-2 border-t border-border/50">
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      className="h-6 px-2 text-xs opacity-60 hover:opacity-100"
-                      onClick={() => handleCopy(msg.content, idx)}
-                    >
-                      {copiedIndex === idx ? (
-                        <><Check className="h-3 w-3 mr-1" /> Copied</>
-                      ) : (
-                        <><Copy className="h-3 w-3 mr-1" /> Copy</>
-                      )}
-                    </Button>
-                    
-                    {msg.citations && msg.citations.length > 0 && (
-                      <CitationDrawer 
-                        citations={msg.citations}
-                        trigger={
-                          <Button variant="ghost" size="sm" className="h-6 px-2 text-xs opacity-60 hover:opacity-100 gap-1">
-                            <BookOpen className="h-3 w-3" />
-                            {msg.citations.length} sources
-                          </Button>
-                        }
+                  <div className="flex flex-col gap-2 mt-2 pt-2 border-t border-border/50">
+                    {/* Confidence indicator */}
+                    {msg.confidence !== undefined && msg.confidence < 1 && (
+                      <ConfidenceIndicator 
+                        confidence={msg.confidence} 
+                        processingTime={msg.processingTime}
                       />
                     )}
                     
-                    {msg.intent && (
-                      <Badge variant="outline" className="text-[10px] h-5 opacity-60">
-                        {msg.intent}
-                      </Badge>
-                    )}
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="h-6 px-2 text-xs opacity-60 hover:opacity-100"
+                        onClick={() => handleCopy(msg.content, idx)}
+                      >
+                        {copiedIndex === idx ? (
+                          <><Check className="h-3 w-3 mr-1" /> Copied</>
+                        ) : (
+                          <><Copy className="h-3 w-3 mr-1" /> Copy</>
+                        )}
+                      </Button>
+                      
+                      {/* Citations from response */}
+                      {msg.response?.type === "answer" && msg.response.citations.length > 0 && (
+                        <CitationDrawer 
+                          citations={msg.response.citations}
+                          trigger={
+                            <Button variant="ghost" size="sm" className="h-6 px-2 text-xs opacity-60 hover:opacity-100 gap-1">
+                              <BookOpen className="h-3 w-3" />
+                              {msg.response.citations.length} sources
+                            </Button>
+                          }
+                        />
+                      )}
+                      
+                      {/* Web source indicator */}
+                      {msg.response?.type === "answer" && 
+                       msg.response.citations.some(c => (c as any).source === "web") && (
+                        <Badge variant="outline" className="text-[10px] h-5 opacity-60 gap-1">
+                          <Globe className="h-2.5 w-2.5" />
+                          Web
+                        </Badge>
+                      )}
+                      
+                      {/* Response type badge */}
+                      {msg.response && (
+                        <Badge variant="outline" className="text-[10px] h-5 opacity-60">
+                          {msg.response.type.toUpperCase()}
+                        </Badge>
+                      )}
+                      
+                      {msg.intent && (
+                        <Badge variant="outline" className="text-[10px] h-5 opacity-60">
+                          {msg.intent}
+                        </Badge>
+                      )}
+                    </div>
                   </div>
                 )}
               </div>
@@ -334,10 +388,56 @@ export const SubjectAIChat = ({ subject, universityName }: SubjectAIChatProps) =
   );
 };
 
+// Confidence indicator component
+function ConfidenceIndicator({ 
+  confidence, 
+  processingTime 
+}: { 
+  confidence: number;
+  processingTime?: number;
+}) {
+  const percentage = Math.round(confidence * 100);
+  const getConfidenceColor = () => {
+    if (percentage >= 85) return "text-green-600 dark:text-green-400";
+    if (percentage >= 70) return "text-yellow-600 dark:text-yellow-400";
+    return "text-orange-600 dark:text-orange-400";
+  };
+
+  const getConfidenceLabel = () => {
+    if (percentage >= 85) return "High confidence";
+    if (percentage >= 70) return "Moderate confidence";
+    return "Lower confidence";
+  };
+
+  return (
+    <div className="flex items-center gap-2 text-[10px]">
+      <div className="flex items-center gap-1.5 flex-1">
+        <Zap className={`h-2.5 w-2.5 ${getConfidenceColor()}`} />
+        <span className={`font-medium ${getConfidenceColor()}`}>{percentage}%</span>
+        <Progress value={percentage} className="h-1 w-16" />
+        <span className="text-muted-foreground">{getConfidenceLabel()}</span>
+      </div>
+      {processingTime && (
+        <span className="text-muted-foreground opacity-60">
+          {processingTime}ms
+        </span>
+      )}
+    </div>
+  );
+}
+
 // Component to render message content with math, code, citations, and graphs
 function MessageContent({ message }: { message: Message }) {
-  const { content, citations = [], code, graph } = message;
+  const { content, response } = message;
   const parsed = parseAIResponse(content);
+
+  // Get citations from structured response
+  const citations = response?.type === "answer" ? response.citations : [];
+
+  // Determine if we should show code/graph from response
+  const showMathCode = response?.type === "math" && response.python;
+  const showGraphCode = response?.type === "graph" && response.python;
+  const showCode = response?.type === "code" && response.source;
 
   return (
     <div className="space-y-3">
@@ -352,21 +452,42 @@ function MessageContent({ message }: { message: Message }) {
         ))}
       </div>
 
-      {/* Render standalone code block if provided */}
-      {code && code.source && !parsed.hasExecutableCode && (
+      {/* Render math steps if available */}
+      {response?.type === "math" && response.steps && response.steps.length > 0 && (
+        <div className="space-y-1 p-2 rounded-md bg-background/50 border">
+          <span className="text-xs font-medium text-muted-foreground">Steps:</span>
+          <ol className="text-xs space-y-1 ml-4 list-decimal">
+            {response.steps.map((step, idx) => (
+              <li key={idx}>{step}</li>
+            ))}
+          </ol>
+        </div>
+      )}
+
+      {/* Render math code block */}
+      {showMathCode && !parsed.hasExecutableCode && (
         <CodeBlock
-          code={code.source}
-          language={code.language}
-          executable={code.executable}
+          code={response.python}
+          language="python"
+          executable={true}
           className="mt-3"
         />
       )}
 
-      {/* Render graph if provided */}
-      {graph && (graph.pythonCode || graph.data) && (
+      {/* Render standalone code block */}
+      {showCode && !parsed.hasExecutableCode && (
+        <CodeBlock
+          code={response.source}
+          language={response.language}
+          executable={response.executable}
+          className="mt-3"
+        />
+      )}
+
+      {/* Render graph */}
+      {showGraphCode && (
         <GraphViewer
-          pythonCode={graph.pythonCode}
-          imageData={graph.data}
+          pythonCode={response.python}
           className="mt-3"
         />
       )}

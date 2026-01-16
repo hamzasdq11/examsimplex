@@ -3,6 +3,18 @@ project_id = "mlpnahzamlnfzeckxqaf"
 [functions.ai-assistant]
 verify_jwt = false
 
+[functions.ai-intent-classifier]
+verify_jwt = false
+
+[functions.ai-internal-retrieval]
+verify_jwt = false
+
+[functions.ai-orchestrator]
+verify_jwt = false
+
+[functions.ai-web-search]
+verify_jwt = false
+
 [functions.send-email-otp]
 verify_jwt = false
 
@@ -13,4 +25,10 @@ verify_jwt = false
 verify_jwt = false
 
 [functions.sitemap]
+verify_jwt = false
+
+[functions.send-password-reset-otp]
+verify_jwt = false
+
+[functions.reset-password-with-otp]
 verify_jwt = false

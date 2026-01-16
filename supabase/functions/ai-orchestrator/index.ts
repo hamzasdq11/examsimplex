@@ -7,48 +7,47 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
 
-// Types
+// ============== STRICT TYPE DEFINITIONS ==============
 type Intent = "FACTUAL" | "CONCEPTUAL" | "MATH" | "CODE" | "GRAPH" | "MIXED";
+
+// Strict output schema - ALL responses MUST conform to one of these
+type AIResponseType = 
+  | { type: "math"; python: string; explanation: string; latex?: string; steps?: string[] }
+  | { type: "graph"; python: string; description: string }
+  | { type: "code"; language: string; source: string; explanation: string; executable: boolean }
+  | { type: "answer"; text: string; citations: Citation[] };
 
 interface Citation {
   id: number;
   title: string;
   url: string;
   snippet: string;
-  type: "internal" | "external";
+  source: "internal" | "web";
 }
 
 interface OrchestratorResponse {
-  content: string;
-  citations: Citation[];
-  math?: {
-    latex: string;
-    steps?: string[];
-  };
-  code?: {
-    language: string;
-    source: string;
-    output?: string;
-    executable: boolean;
-  };
-  graph?: {
-    type: "image" | "interactive";
-    data: string;
-    pythonCode?: string;
-  };
+  success: boolean;
+  response: AIResponseType;
   intent: Intent;
+  confidence: number;
   modelUsed: string;
+  processingTime: number;
 }
 
-// Model routing configuration
+// ============== MODEL ROUTING CONFIGURATION ==============
 const MODEL_ROUTING = {
-  classifier: "google/gemini-2.5-flash-lite",
-  fast: "google/gemini-2.5-flash",
-  default: "google/gemini-3-flash-preview",
-  complex: "google/gemini-2.5-pro",
+  // Task-specific model selection
+  intent_classifier: "google/gemini-2.5-flash-lite",  // Fast, cheap for classification
+  query_rewriter: "google/gemini-2.5-flash-lite",     // Fast for rewrites
+  reasoning: "google/gemini-2.5-pro",                  // Flagship for complex reasoning
+  generation: "google/gemini-3-flash-preview",         // Default balanced model
+  math_solver: "google/gemini-2.5-pro",                // Complex math needs flagship
+  code_generator: "google/gemini-2.5-pro",             // Code needs precision
 };
 
 serve(async (req) => {
+  const startTime = Date.now();
+  
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
   }
@@ -59,7 +58,15 @@ serve(async (req) => {
     
     if (!authHeader?.startsWith("Bearer ")) {
       return new Response(
-        JSON.stringify({ error: "Please sign in to use the AI assistant." }),
+        JSON.stringify({ 
+          success: false,
+          error: "Please sign in to use the AI assistant.",
+          response: { type: "answer", text: "Please sign in to continue.", citations: [] },
+          intent: "CONCEPTUAL",
+          confidence: 0,
+          modelUsed: "none",
+          processingTime: 0
+        }),
         { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
@@ -75,7 +82,15 @@ serve(async (req) => {
     
     if (authError || !user) {
       return new Response(
-        JSON.stringify({ error: "Please sign in to use the AI assistant." }),
+        JSON.stringify({ 
+          success: false,
+          error: "Please sign in to use the AI assistant.",
+          response: { type: "answer", text: "Please sign in to continue.", citations: [] },
+          intent: "CONCEPTUAL",
+          confidence: 0,
+          modelUsed: "none",
+          processingTime: 0
+        }),
         { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
@@ -91,7 +106,15 @@ serve(async (req) => {
 
     if (!query) {
       return new Response(
-        JSON.stringify({ error: "Query is required" }),
+        JSON.stringify({ 
+          success: false,
+          error: "Query is required",
+          response: { type: "answer", text: "Please provide a question.", citations: [] },
+          intent: "CONCEPTUAL",
+          confidence: 0,
+          modelUsed: "none",
+          processingTime: 0
+        }),
         { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
@@ -101,52 +124,64 @@ serve(async (req) => {
       throw new Error("LOVABLE_API_KEY is not configured");
     }
 
-    console.log(`Processing query from user ${user.id}: "${query.slice(0, 50)}..."`);
+    console.log(`[${user.id}] Processing: "${query.slice(0, 50)}..."`);
 
-    // Step 1: Classify intent
-    const classificationResponse = await classifyIntent(query, subject, LOVABLE_API_KEY);
-    const { intent, needsRetrieval, needsComputation, needsVisualization, suggestedModel } = classificationResponse;
+    // ============== STEP 1: CLASSIFY INTENT (Fast model) ==============
+    const classification = await classifyIntent(query, subject, LOVABLE_API_KEY);
+    const { intent, confidence, needsRetrieval, needsWebSearch, needsComputation, needsVisualization } = classification;
 
-    console.log(`Intent: ${intent}, Model: ${suggestedModel}`);
+    console.log(`Intent: ${intent} (${(confidence * 100).toFixed(0)}%), Web: ${needsWebSearch}, Retrieval: ${needsRetrieval}`);
 
-    // Step 2: Retrieve relevant sources if needed
-    let retrievedSources: any[] = [];
-    if (needsRetrieval) {
-      try {
-        const retrievalResponse = await fetch(
-          `${Deno.env.get("SUPABASE_URL")}/functions/v1/ai-internal-retrieval`,
-          {
-            method: "POST",
-            headers: {
-              "Authorization": `Bearer ${Deno.env.get("SUPABASE_ANON_KEY")}`,
-              "Content-Type": "application/json",
-            },
-            body: JSON.stringify({ query, subjectId, limit: 5 }),
-          }
-        );
-        
-        if (retrievalResponse.ok) {
-          const retrievalData = await retrievalResponse.json();
-          retrievedSources = retrievalData.sources || [];
-        }
-      } catch (e) {
-        console.error("Retrieval failed:", e);
-      }
+    // ============== STEP 2: PARALLEL RETRIEVAL ==============
+    const retrievalPromises: Promise<any>[] = [];
+    
+    // Internal knowledge base retrieval
+    if (needsRetrieval && subjectId) {
+      retrievalPromises.push(
+        fetchInternalSources(subjectId, query).catch(e => {
+          console.error("Internal retrieval failed:", e);
+          return [];
+        })
+      );
+    } else {
+      retrievalPromises.push(Promise.resolve([]));
+    }
+    
+    // Web search for factual/current information
+    if (needsWebSearch) {
+      retrievalPromises.push(
+        fetchWebSources(query, subject).catch(e => {
+          console.error("Web search failed:", e);
+          return { sources: [], summary: "" };
+        })
+      );
+    } else {
+      retrievalPromises.push(Promise.resolve({ sources: [], summary: "" }));
     }
 
-    // Step 3: Build the system prompt based on intent and type
-    const systemPrompt = buildSystemPrompt(type, intent, subject, context, retrievedSources);
+    const [internalSources, webResult] = await Promise.all(retrievalPromises);
 
-    // Step 4: Select model based on classification
-    const modelToUse = MODEL_ROUTING[suggestedModel] || MODEL_ROUTING.default;
+    // ============== STEP 3: SELECT MODEL BASED ON TASK ==============
+    const modelToUse = selectModelForTask(intent, confidence, needsComputation);
 
-    // Step 5: Generate response
+    // ============== STEP 4: GENERATE RESPONSE WITH STRICT SCHEMA ==============
+    const systemPrompt = buildSystemPrompt(
+      type, 
+      intent, 
+      subject, 
+      context, 
+      internalSources, 
+      webResult.sources || [],
+      webResult.summary || ""
+    );
+
     const messages = [
       { role: "system", content: systemPrompt },
-      ...conversationHistory.slice(-4), // Keep last 4 messages for context
+      ...conversationHistory.slice(-4),
       { role: "user", content: buildUserPrompt(query, type, intent) }
     ];
 
+    // Use tool calling to enforce strict JSON output
     const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
       method: "POST",
       headers: {
@@ -157,60 +192,137 @@ serve(async (req) => {
         model: modelToUse,
         messages,
         max_tokens: 4000,
-        temperature: intent === "MATH" || intent === "CODE" ? 0.3 : 0.7,
+        temperature: intent === "MATH" || intent === "CODE" ? 0.2 : 0.6,
+        tools: [
+          {
+            type: "function",
+            function: {
+              name: "submit_response",
+              description: "Submit a structured response to the user query",
+              parameters: {
+                type: "object",
+                properties: {
+                  response_type: {
+                    type: "string",
+                    enum: ["math", "graph", "code", "answer"],
+                    description: "Type of response"
+                  },
+                  content: {
+                    type: "object",
+                    description: "Response content based on type"
+                  },
+                  confidence: {
+                    type: "number",
+                    minimum: 0,
+                    maximum: 1,
+                    description: "Confidence in the answer (0-1)"
+                  }
+                },
+                required: ["response_type", "content", "confidence"]
+              }
+            }
+          }
+        ],
+        tool_choice: { type: "function", function: { name: "submit_response" } }
       }),
     });
 
     if (!response.ok) {
       const errorText = await response.text();
       console.error("LLM API error:", response.status, errorText);
+      
+      if (response.status === 429) {
+        throw new Error("Rate limit exceeded. Please try again later.");
+      }
+      if (response.status === 402) {
+        throw new Error("AI credits exhausted. Please add funds to continue.");
+      }
       throw new Error(`LLM API error: ${response.status}`);
     }
 
     const data = await response.json();
-    const rawContent = data.choices?.[0]?.message?.content || "I couldn't generate a response.";
+    
+    // Parse tool call response
+    const toolCall = data.choices?.[0]?.message?.tool_calls?.[0];
+    let structuredResponse: AIResponseType;
+    let responseConfidence = confidence;
 
-    // Step 6: Parse and structure the response
-    const parsedResponse = parseResponse(rawContent, intent, retrievedSources);
+    if (toolCall?.function?.arguments) {
+      try {
+        const args = JSON.parse(toolCall.function.arguments);
+        structuredResponse = parseToolResponse(args, internalSources, webResult.sources || []);
+        responseConfidence = args.confidence || confidence;
+      } catch (e) {
+        console.error("Failed to parse tool response:", e);
+        // Fallback to raw content parsing
+        const rawContent = data.choices?.[0]?.message?.content || "";
+        structuredResponse = parseFallbackResponse(rawContent, intent, internalSources, webResult.sources || []);
+      }
+    } else {
+      // Fallback if no tool call
+      const rawContent = data.choices?.[0]?.message?.content || "";
+      structuredResponse = parseFallbackResponse(rawContent, intent, internalSources, webResult.sources || []);
+    }
 
-    console.log(`Generated response using ${modelToUse}`);
+    const processingTime = Date.now() - startTime;
+    console.log(`Generated response using ${modelToUse} in ${processingTime}ms`);
+
+    const result: OrchestratorResponse = {
+      success: true,
+      response: structuredResponse,
+      intent,
+      confidence: responseConfidence,
+      modelUsed: modelToUse,
+      processingTime
+    };
 
     return new Response(
-      JSON.stringify({
-        ...parsedResponse,
-        intent,
-        modelUsed: modelToUse,
-      } as OrchestratorResponse),
+      JSON.stringify(result),
       { headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
 
   } catch (error) {
+    const processingTime = Date.now() - startTime;
     console.error("Error in ai-orchestrator:", error);
+    
+    const errorResponse: OrchestratorResponse = {
+      success: false,
+      response: { 
+        type: "answer", 
+        text: error instanceof Error ? error.message : "An unexpected error occurred. Please try again.",
+        citations: [] 
+      },
+      intent: "CONCEPTUAL",
+      confidence: 0,
+      modelUsed: "error",
+      processingTime
+    };
+    
     return new Response(
-      JSON.stringify({ 
-        error: error instanceof Error ? error.message : "An unexpected error occurred",
-        content: "I apologize, but I encountered an error. Please try again.",
-        citations: [],
-        intent: "CONCEPTUAL",
-        modelUsed: "error",
-      }),
+      JSON.stringify(errorResponse),
       { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
   }
 });
 
-// Helper function to classify intent
+// ============== INTENT CLASSIFICATION ==============
 async function classifyIntent(query: string, subject: string, apiKey: string) {
   try {
-    const classificationPrompt = `Classify this query. Respond ONLY with JSON.
+    const classificationPrompt = `Classify this query. Respond ONLY with valid JSON, no markdown.
 
-Categories: FACTUAL, CONCEPTUAL, MATH, CODE, GRAPH, MIXED
+Categories:
+- FACTUAL: Needs external/web search for facts, current events, definitions
+- CONCEPTUAL: Explanation from knowledge, understanding concepts
+- MATH: Mathematical computation, equations, proofs, derivations
+- CODE: Programming, algorithms, code generation
+- GRAPH: Visualization, plots, charts, diagrams
+- MIXED: Combination requiring multiple approaches
 
 Query: "${query}"
 Subject: ${subject || "General"}
 
-JSON format:
-{"intent":"CATEGORY","confidence":0.9,"needsRetrieval":true,"needsComputation":false,"needsVisualization":false}`;
+JSON format (no markdown):
+{"intent":"CATEGORY","confidence":0.9,"needsRetrieval":true,"needsWebSearch":false,"needsComputation":false,"needsVisualization":false}`;
 
     const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
       method: "POST",
@@ -219,16 +331,14 @@ JSON format:
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        model: MODEL_ROUTING.classifier,
+        model: MODEL_ROUTING.intent_classifier,
         messages: [{ role: "user", content: classificationPrompt }],
         max_tokens: 150,
         temperature: 0.1,
       }),
     });
 
-    if (!response.ok) {
-      throw new Error("Classification failed");
-    }
+    if (!response.ok) throw new Error("Classification failed");
 
     const data = await response.json();
     const content = data.choices?.[0]?.message?.content || "";
@@ -237,12 +347,12 @@ JSON format:
     if (jsonMatch) {
       const parsed = JSON.parse(jsonMatch[0]);
       return {
-        intent: parsed.intent || "CONCEPTUAL",
+        intent: parsed.intent || "CONCEPTUAL" as Intent,
         confidence: parsed.confidence || 0.7,
         needsRetrieval: parsed.needsRetrieval ?? true,
+        needsWebSearch: parsed.needsWebSearch ?? (parsed.intent === "FACTUAL"),
         needsComputation: parsed.needsComputation ?? false,
         needsVisualization: parsed.needsVisualization ?? false,
-        suggestedModel: determineModel(parsed.intent, parsed.confidence) as "fast" | "default" | "complex",
       };
     }
   } catch (e) {
@@ -253,162 +363,280 @@ JSON format:
     intent: "CONCEPTUAL" as Intent,
     confidence: 0.5,
     needsRetrieval: true,
+    needsWebSearch: false,
     needsComputation: false,
     needsVisualization: false,
-    suggestedModel: "default" as const,
   };
 }
 
-function determineModel(intent: string, confidence: number): string {
-  if (intent === "MATH" || intent === "MIXED" || intent === "CODE") {
-    return "complex";
+// ============== RETRIEVAL FUNCTIONS ==============
+async function fetchInternalSources(subjectId: string, query: string) {
+  try {
+    const response = await fetch(
+      `${Deno.env.get("SUPABASE_URL")}/functions/v1/ai-internal-retrieval`,
+      {
+        method: "POST",
+        headers: {
+          "Authorization": `Bearer ${Deno.env.get("SUPABASE_ANON_KEY")}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ query, subjectId, limit: 5 }),
+      }
+    );
+    
+    if (response.ok) {
+      const data = await response.json();
+      return data.sources || [];
+    }
+  } catch (e) {
+    console.error("Internal retrieval error:", e);
   }
-  if (confidence > 0.9) {
-    return "fast";
-  }
-  return "default";
+  return [];
 }
 
+async function fetchWebSources(query: string, subject: string) {
+  try {
+    const response = await fetch(
+      `${Deno.env.get("SUPABASE_URL")}/functions/v1/ai-web-search`,
+      {
+        method: "POST",
+        headers: {
+          "Authorization": `Bearer ${Deno.env.get("SUPABASE_ANON_KEY")}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ query, subject, limit: 5 }),
+      }
+    );
+    
+    if (response.ok) {
+      return await response.json();
+    }
+  } catch (e) {
+    console.error("Web search error:", e);
+  }
+  return { sources: [], summary: "" };
+}
+
+// ============== MODEL SELECTION ==============
+function selectModelForTask(intent: Intent, confidence: number, needsComputation: boolean): string {
+  // Complex reasoning tasks → flagship model
+  if (intent === "MATH" || needsComputation) {
+    return MODEL_ROUTING.math_solver;
+  }
+  
+  // Code generation → needs precision
+  if (intent === "CODE") {
+    return MODEL_ROUTING.code_generator;
+  }
+  
+  // Mixed/complex queries → reasoning model
+  if (intent === "MIXED" || confidence < 0.7) {
+    return MODEL_ROUTING.reasoning;
+  }
+  
+  // Standard queries → balanced model
+  return MODEL_ROUTING.generation;
+}
+
+// ============== PROMPT BUILDING ==============
 function buildSystemPrompt(
   type: string, 
   intent: Intent, 
   subject: string, 
   context: string,
-  sources: any[]
+  internalSources: any[],
+  webSources: any[],
+  webSummary: string
 ): string {
-  let basePrompt = `You are an expert AI study assistant helping university students.
+  let prompt = `You are an expert AI study assistant for university students.
 Subject: ${subject || "General"}
 Context: ${context || "University curriculum"}
 
-CRITICAL RULES:
-1. Use LaTeX for ALL mathematical expressions: inline $x^2$ or block $$\\int f(x)dx$$
-2. When citing sources, use [1], [2] etc. in your text
-3. For code, use proper markdown code blocks with language specified
-4. Be concise but thorough
-5. If you include code that can be executed, mark it with \`\`\`python:executable
+CRITICAL: You MUST respond using the submit_response tool with structured JSON.
+
+RESPONSE TYPES:
+1. For math problems → type: "math", include python code for computation and step-by-step explanation
+2. For visualizations → type: "graph", include matplotlib/plotly python code
+3. For programming → type: "code", include working code with explanation
+4. For explanations → type: "answer", include clear text with citations
+
+FORMATTING RULES:
+- Use LaTeX for math: inline $x^2$ or block $$\\int f(x)dx$$
+- Cite sources using [1], [2] format
+- Provide confidence score (0-1) based on certainty
+- Be concise but thorough
 
 `;
 
-  // Add retrieved sources as context
-  if (sources.length > 0) {
-    basePrompt += "\n## Retrieved Knowledge Base Sources:\n";
-    sources.forEach((src, idx) => {
-      basePrompt += `\n[${idx + 1}] ${src.title}\n${src.content}\nURL: ${src.url}\n`;
+  // Add retrieved sources
+  if (internalSources.length > 0) {
+    prompt += "\n## Internal Knowledge Base:\n";
+    internalSources.forEach((src, idx) => {
+      prompt += `[${idx + 1}] ${src.title}: ${src.content?.slice(0, 300)}...\n`;
     });
-    basePrompt += "\nCite these sources when relevant using [1], [2], etc.\n";
   }
 
-  // Add intent-specific instructions
+  if (webSources.length > 0) {
+    prompt += "\n## Web Sources:\n";
+    webSources.forEach((src: any, idx: number) => {
+      const sourceNum = internalSources.length + idx + 1;
+      prompt += `[${sourceNum}] ${src.title} (${src.url})\n`;
+    });
+    if (webSummary) {
+      prompt += `\nWeb Search Summary: ${webSummary.slice(0, 500)}...\n`;
+    }
+  }
+
+  // Intent-specific instructions
   switch (intent) {
     case "MATH":
-      basePrompt += `
-## Math Instructions:
-- Show step-by-step derivations
+      prompt += `
+## Math Response Requirements:
+- Show complete step-by-step derivation
+- Include Python code for verification when applicable
 - Use LaTeX for all equations
-- Verify calculations mentally
-- Include the final answer clearly
-- If a graph would help, provide Python matplotlib code marked as executable
+- Clearly state the final answer
 `;
       break;
     case "CODE":
-      basePrompt += `
-## Code Instructions:
-- Provide working, executable Python code
-- Include comments explaining each step
+      prompt += `
+## Code Response Requirements:
+- Provide complete, executable code
+- Include detailed comments
 - Show expected output
-- Mark executable code blocks with \`\`\`python:executable
+- Explain the algorithm/approach
 `;
       break;
     case "GRAPH":
-      basePrompt += `
-## Visualization Instructions:
-- Provide Python matplotlib/plotly code for graphs
-- Mark visualization code with \`\`\`python:executable
-- Explain what the graph shows
+      prompt += `
+## Visualization Requirements:
+- Provide complete matplotlib/plotly code
+- Include axis labels and title
+- Explain what the visualization shows
 `;
       break;
   }
 
-  // Add type-specific instructions
-  switch (type) {
-    case "notes":
-      basePrompt += `
-## Note Generation:
-- Create structured, exam-ready notes
-- Use headings, bullet points, and key highlights
-- Include important formulas and definitions
-- Add memory aids where helpful
-`;
-      break;
-    case "quiz":
-      basePrompt += `
-## Quiz Generation:
-- Create 5 MCQ questions with 4 options each
-- Vary difficulty levels
-- After questions, provide ANSWER KEY with explanations
-- Mark correct answers clearly
-`;
-      break;
-  }
-
-  return basePrompt;
+  return prompt;
 }
 
 function buildUserPrompt(query: string, type: string, intent: Intent): string {
   switch (type) {
     case "notes":
-      return `Create detailed study notes on: ${query}`;
+      return `Create detailed, exam-ready study notes on: ${query}`;
     case "quiz":
-      return `Create practice MCQ questions on: ${query}`;
+      return `Create 5 MCQ practice questions with explanations on: ${query}`;
     default:
       return query;
   }
 }
 
-function parseResponse(content: string, intent: Intent, sources: any[]): Partial<OrchestratorResponse> {
-  const citations: Citation[] = sources.map((src, idx) => ({
-    id: idx + 1,
-    title: src.title,
-    url: src.url,
-    snippet: src.content.slice(0, 150) + "...",
-    type: "internal" as const,
-  }));
+// ============== RESPONSE PARSING ==============
+function parseToolResponse(args: any, internalSources: any[], webSources: any[]): AIResponseType {
+  const allCitations: Citation[] = [
+    ...internalSources.map((src, idx) => ({
+      id: idx + 1,
+      title: src.title || "Note",
+      url: src.url || "#",
+      snippet: src.content?.slice(0, 150) || "",
+      source: "internal" as const
+    })),
+    ...webSources.map((src: any, idx: number) => ({
+      id: internalSources.length + idx + 1,
+      title: src.title || "Web Source",
+      url: src.url || "#",
+      snippet: src.snippet || "",
+      source: "web" as const
+    }))
+  ];
+
+  const responseType = args.response_type;
+  const content = args.content;
+
+  switch (responseType) {
+    case "math":
+      return {
+        type: "math",
+        python: content.python || content.code || "",
+        explanation: content.explanation || content.text || "",
+        latex: content.latex,
+        steps: content.steps
+      };
+    case "graph":
+      return {
+        type: "graph",
+        python: content.python || content.code || "",
+        description: content.description || content.explanation || ""
+      };
+    case "code":
+      return {
+        type: "code",
+        language: content.language || "python",
+        source: content.source || content.code || "",
+        explanation: content.explanation || "",
+        executable: content.executable ?? true
+      };
+    case "answer":
+    default:
+      return {
+        type: "answer",
+        text: content.text || content.explanation || JSON.stringify(content),
+        citations: allCitations
+      };
+  }
+}
+
+function parseFallbackResponse(content: string, intent: Intent, internalSources: any[], webSources: any[]): AIResponseType {
+  const allCitations: Citation[] = [
+    ...internalSources.map((src, idx) => ({
+      id: idx + 1,
+      title: src.title || "Note",
+      url: src.url || "#",
+      snippet: src.content?.slice(0, 150) || "",
+      source: "internal" as const
+    })),
+    ...webSources.map((src: any, idx: number) => ({
+      id: internalSources.length + idx + 1,
+      title: src.title || "Web Source",
+      url: src.url || "#",
+      snippet: src.snippet || "",
+      source: "web" as const
+    }))
+  ];
 
   // Extract code blocks
   const codeMatch = content.match(/```(python(?::executable)?)\n([\s\S]*?)```/);
-  let code: OrchestratorResponse["code"] | undefined;
-  if (codeMatch) {
-    code = {
+  
+  if (codeMatch && (intent === "MATH" || intent === "MIXED")) {
+    return {
+      type: "math",
+      python: codeMatch[2].trim(),
+      explanation: content.replace(codeMatch[0], "").trim()
+    };
+  }
+
+  if (codeMatch && intent === "GRAPH") {
+    return {
+      type: "graph",
+      python: codeMatch[2].trim(),
+      description: content.replace(codeMatch[0], "").trim()
+    };
+  }
+
+  if (codeMatch && intent === "CODE") {
+    return {
+      type: "code",
       language: "python",
       source: codeMatch[2].trim(),
-      executable: codeMatch[1].includes(":executable"),
+      explanation: content.replace(codeMatch[0], "").trim(),
+      executable: codeMatch[1].includes(":executable")
     };
   }
 
-  // Extract LaTeX blocks for math
-  let math: OrchestratorResponse["math"] | undefined;
-  const latexMatch = content.match(/\$\$([\s\S]*?)\$\$/);
-  if (latexMatch && (intent === "MATH" || intent === "MIXED")) {
-    math = {
-      latex: latexMatch[1].trim(),
-    };
-  }
-
-  // Check if there's graph-generating code
-  let graph: OrchestratorResponse["graph"] | undefined;
-  if (code?.executable && (code.source.includes("plt.") || code.source.includes("plotly"))) {
-    graph = {
-      type: "image",
-      data: "", // Will be populated by frontend execution
-      pythonCode: code.source,
-    };
-  }
-
+  // Default to answer type
   return {
-    content,
-    citations,
-    math,
-    code,
-    graph,
+    type: "answer",
+    text: content,
+    citations: allCitations
   };
 }
