@@ -15,6 +15,11 @@ import {
   CollapsibleTrigger,
 } from "@/components/ui/collapsible";
 import {
+  ResizableHandle,
+  ResizablePanel,
+  ResizablePanelGroup,
+} from "@/components/ui/resizable";
+import {
   BookOpen,
   FileQuestion,
   FileText,
@@ -27,6 +32,8 @@ import {
   Printer,
   Send,
   Loader2,
+  PanelRightClose,
+  PanelRightOpen,
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import type { Subject, Unit, Note, ImportantQuestion, PYQPaper, PYQQuestion, University, Course, Semester } from "@/types/database";
@@ -56,6 +63,7 @@ const SubjectPage = () => {
   const [openPyqYears, setOpenPyqYears] = useState<string[]>([]);
   const [aiMessage, setAiMessage] = useState("");
   const [aiMessages, setAiMessages] = useState<Array<{ role: string; content: string }>>([]);
+  const [isAIPanelCollapsed, setIsAIPanelCollapsed] = useState(false);
 
   // Database state
   const [loading, setLoading] = useState(true);
@@ -317,399 +325,478 @@ const SubjectPage = () => {
           <span>{semester?.name}</span>
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
-          {/* Main Content */}
-          <div className="lg:col-span-3 space-y-6">
-            {/* Subject Header */}
-            <div className="bg-card border rounded-lg p-6">
-              <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-4">
-                <div className="space-y-2">
-                  <div className="flex items-center gap-3">
-                    <h1 className="text-2xl font-bold text-foreground">
-                      {subject.name}
-                    </h1>
-                    <Badge variant="secondary" className="text-xs">
-                      {subject.code}
-                    </Badge>
-                  </div>
-                  <p className="text-muted-foreground">
-                    {university?.name} · {course?.name} · {semester?.name}
-                  </p>
-                </div>
-                <div className="flex flex-wrap gap-2">
-                  <Badge variant="outline" className="gap-1 py-1.5 px-3">
-                    <Award className="h-3.5 w-3.5" />
-                    {subject.total_marks} Marks
-                  </Badge>
-                  <Badge variant="outline" className="gap-1 py-1.5 px-3">
-                    <Clock className="h-3.5 w-3.5" />
-                    {subject.duration}
-                  </Badge>
-                  <Badge variant="outline" className="gap-1 py-1.5 px-3">
-                    {subject.pattern}
-                  </Badge>
-                </div>
-                <div className="flex gap-2 mt-2 md:mt-0">
-                  <AddToLibraryButton itemType="subject" itemId={subject.id} />
-                  <AddToStudylistButton itemType="subject" itemId={subject.id} />
-                </div>
-              </div>
-
-              {/* Exam Info */}
-              <div className="mt-4 pt-4 border-t grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
-                <div>
-                  <span className="text-muted-foreground">Exam Type</span>
-                  <p className="font-medium text-foreground">{subject.exam_type}</p>
-                </div>
-                <div>
-                  <span className="text-muted-foreground">Theory Marks</span>
-                  <p className="font-medium text-foreground">{subject.theory_marks}</p>
-                </div>
-                <div>
-                  <span className="text-muted-foreground">Internal Marks</span>
-                  <p className="font-medium text-foreground">{subject.internal_marks}</p>
-                </div>
-                <div>
-                  <span className="text-muted-foreground">Duration</span>
-                  <p className="font-medium text-foreground">{subject.duration}</p>
-                </div>
-              </div>
-            </div>
-
-            {/* Content Tabs */}
-            <Tabs value={activeTab} onValueChange={setActiveTab}>
-              <TabsList className="grid grid-cols-4 h-auto">
-                <TabsTrigger value="questions" className="gap-2 py-3">
-                  <FileQuestion className="h-4 w-4" />
-                  <span className="hidden sm:inline">Questions</span>
-                </TabsTrigger>
-                <TabsTrigger value="notes" className="gap-2 py-3">
-                  <BookOpen className="h-4 w-4" />
-                  <span className="hidden sm:inline">Notes</span>
-                </TabsTrigger>
-                <TabsTrigger value="pyqs" className="gap-2 py-3">
-                  <FileText className="h-4 w-4" />
-                  <span className="hidden sm:inline">PYQs</span>
-                </TabsTrigger>
-                <TabsTrigger value="ai" className="gap-2 py-3">
-                  <MessageSquare className="h-4 w-4" />
-                  <span className="hidden sm:inline">Ask AI</span>
-                </TabsTrigger>
-              </TabsList>
-
-              {/* Important Questions Tab */}
-              <TabsContent value="questions" className="mt-0">
-                <Card>
-                  <CardHeader className="pb-4">
-                    <CardTitle className="text-lg">Important Questions</CardTitle>
-                    <p className="text-sm text-muted-foreground">
-                      Frequently asked questions based on previous year patterns
-                    </p>
-                  </CardHeader>
-                  <CardContent className="space-y-4">
-                    {importantQuestions.length === 0 ? (
-                      <div className="text-center py-8 text-muted-foreground">
-                        No important questions available yet
+        {/* Desktop: Resizable layout, Mobile: Stack */}
+        <div className="hidden lg:block">
+          <ResizablePanelGroup direction="horizontal" className="min-h-[calc(100vh-12rem)]">
+            {/* Main Content Panel */}
+            <ResizablePanel defaultSize={75} minSize={50}>
+              <div className="space-y-6 pr-4">
+                {/* Subject Header */}
+                <div className="bg-card border rounded-lg p-6">
+                  <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-4">
+                    <div className="space-y-2">
+                      <div className="flex items-center gap-3">
+                        <h1 className="text-2xl font-bold text-foreground">
+                          {subject.name}
+                        </h1>
+                        <Badge variant="secondary">{subject.code}</Badge>
                       </div>
-                    ) : (
-                      importantQuestions.map((q, idx) => (
-                        <div
-                          key={q.id}
-                          className="p-4 border rounded-lg hover:bg-muted/30 transition-colors group"
-                        >
-                          <div className="flex items-start gap-4">
-                            <span className="flex items-center justify-center w-8 h-8 rounded-full bg-primary/10 text-primary text-sm font-semibold shrink-0">
-                              {idx + 1}
-                            </span>
-                            <div className="flex-1 space-y-2">
-                              <p className="text-foreground font-medium">{q.question}</p>
-                              <div className="flex flex-wrap items-center gap-2">
-                                <Badge
-                                  variant="outline"
-                                  className={getFrequencyColor(q.frequency)}
-                                >
-                                  {q.frequency}
-                                </Badge>
-                                <Badge variant="outline" className="bg-muted/50">
-                                  {q.marks} marks
-                                </Badge>
-                                {q.units && (
-                                  <Badge variant="secondary" className="text-xs">
-                                    Unit {q.units.number}: {q.units.name}
-                                  </Badge>
-                                )}
-                                <div className="ml-auto opacity-0 group-hover:opacity-100 transition-opacity">
-                                  <AddToStudylistButton 
-                                    itemType="question" 
-                                    itemId={q.id} 
-                                    size="sm"
-                                    showText={false}
-                                  />
-                                </div>
-                              </div>
-                            </div>
-                          </div>
-                        </div>
-                      ))
-                    )}
-                  </CardContent>
-                </Card>
-              </TabsContent>
-
-              {/* Notes Tab */}
-              <TabsContent value="notes" className="mt-0">
-                <Card>
-                  <CardHeader className="pb-4">
-                    <div className="flex items-center justify-between">
-                      <CardTitle className="text-lg">Chapter-wise Notes</CardTitle>
-                      <div className="flex gap-2">
-                        <Button variant="outline" size="sm" className="gap-2">
-                          <Printer className="h-4 w-4" />
-                          Print
-                        </Button>
-                        <Button variant="outline" size="sm" className="gap-2">
-                          <Download className="h-4 w-4" />
-                          Download
-                        </Button>
-                      </div>
+                      <p className="text-muted-foreground">
+                        {university?.name} · {course?.name} · {semester?.name}
+                      </p>
                     </div>
-                  </CardHeader>
-                  <CardContent className="space-y-3">
-                    {notesByUnit.length === 0 || notes.length === 0 ? (
-                      <div className="text-center py-8 text-muted-foreground">
-                        No notes available for this subject yet
-                      </div>
-                    ) : (
-                      notesByUnit.map(({ unit, notes: unitNotes }) => (
-                        <Collapsible
-                          key={unit.id}
-                          open={openUnits.includes(unit.id)}
-                          onOpenChange={() => toggleUnit(unit.id)}
-                        >
-                          <CollapsibleTrigger className="w-full">
-                            <div className="flex items-center justify-between p-4 border rounded-lg bg-muted/30 hover:bg-muted/50">
-                              <span className="font-medium text-foreground">
-                                Unit {unit.number}: {unit.name}
-                              </span>
-                              {openUnits.includes(unit.id) ? (
-                                <ChevronDown className="h-4 w-4 text-muted-foreground" />
-                              ) : (
-                                <ChevronRight className="h-4 w-4 text-muted-foreground" />
-                              )}
-                            </div>
-                          </CollapsibleTrigger>
-                          <CollapsibleContent className="mt-2 space-y-3">
-                            {unitNotes.length === 0 ? (
-                              <div className="ml-4 p-4 text-sm text-muted-foreground">
-                                No notes for this unit yet
-                              </div>
-                            ) : (
-                              unitNotes.map((note) => (
-                                <div key={note.id} className="ml-4 p-4 border-l-2 border-primary/20 bg-background group">
-                                  <div className="flex items-start justify-between gap-2 mb-3">
-                                    <h4 className="font-medium text-foreground">{note.chapter_title}</h4>
-                                    <div className="opacity-0 group-hover:opacity-100 transition-opacity shrink-0">
-                                      <AddToStudylistButton 
-                                        itemType="note" 
-                                        itemId={note.id} 
-                                        size="sm"
-                                        showText={false}
-                                      />
-                                    </div>
-                                  </div>
-                                  <ul className="space-y-2">
-                                    {(note.points as string[]).map((point, pidx) => (
-                                      <li
-                                        key={pidx}
-                                        className="text-sm text-muted-foreground"
-                                        dangerouslySetInnerHTML={{
-                                          __html: DOMPurify.sanitize(
-                                            point.replace(/\*\*(.*?)\*\*/g, '<strong class="text-foreground">$1</strong>'),
-                                            { ALLOWED_TAGS: ['strong', 'em', 'b', 'i', 'br'], ALLOWED_ATTR: ['class'] }
-                                          ),
-                                        }}
-                                      />
-                                    ))}
-                                  </ul>
-                                </div>
-                              ))
-                            )}
-                          </CollapsibleContent>
-                        </Collapsible>
-                      ))
-                    )}
-                  </CardContent>
-                </Card>
-              </TabsContent>
+                    <div className="flex flex-wrap items-center gap-2">
+                      <Badge variant="outline" className="gap-1">
+                        <Award className="h-3 w-3" />
+                        {subject.total_marks} Marks
+                      </Badge>
+                      <Badge variant="outline" className="gap-1">
+                        <Clock className="h-3 w-3" />
+                        {subject.duration}
+                      </Badge>
+                      <Badge variant="outline">
+                        {subject.exam_type}
+                      </Badge>
+                      <AddToLibraryButton itemId={subject.id} itemType="subject" />
+                      <AddToStudylistButton itemId={subject.id} itemType="subject" />
+                    </div>
+                  </div>
 
-              {/* PYQs Tab */}
-              <TabsContent value="pyqs" className="mt-0">
-                <Card>
-                  <CardHeader className="pb-4">
-                    <CardTitle className="text-lg">Previous Year Questions</CardTitle>
-                    <p className="text-sm text-muted-foreground">
-                      Actual questions from end semester examinations
-                    </p>
-                  </CardHeader>
-                  <CardContent className="space-y-3">
-                    {pyqPapers.length === 0 ? (
-                      <div className="text-center py-8 text-muted-foreground">
-                        No past papers available yet
-                      </div>
-                    ) : (
-                      pyqPapers.map((paper) => (
-                        <Collapsible
-                          key={paper.id}
-                          open={openPyqYears.includes(paper.year)}
-                          onOpenChange={() => togglePyqYear(paper.year)}
-                        >
-                          <CollapsibleTrigger className="w-full">
-                            <div className="flex items-center justify-between p-4 border rounded-lg bg-muted/30 hover:bg-muted/50">
-                              <div className="flex items-center gap-3">
-                                <span className="font-medium text-foreground">{paper.year}</span>
-                                {paper.paper_code && (
-                                  <Badge variant="outline" className="text-xs">{paper.paper_code}</Badge>
-                                )}
-                              </div>
-                              <div className="flex items-center gap-3">
-                                <span className="text-sm text-muted-foreground">
-                                  {paper.pyq_questions.length} questions
-                                </span>
-                                {paper.pdf_url && (
-                                  <a
-                                    href={paper.pdf_url}
-                                    download
-                                    onClick={(e) => e.stopPropagation()}
-                                    className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium bg-primary text-primary-foreground rounded-md hover:bg-primary/90 transition-colors"
-                                  >
-                                    <Download className="h-3.5 w-3.5" />
-                                    Download PDF
-                                  </a>
-                                )}
-                                {openPyqYears.includes(paper.year) ? (
-                                  <ChevronDown className="h-4 w-4 text-muted-foreground" />
-                                ) : (
-                                  <ChevronRight className="h-4 w-4 text-muted-foreground" />
-                                )}
-                              </div>
-                            </div>
-                          </CollapsibleTrigger>
-                          <CollapsibleContent className="mt-2 space-y-4">
-                            {paper.pyq_questions.length === 0 ? (
-                              <div className="ml-4 p-4 text-sm text-muted-foreground">
-                                No questions recorded for this paper
-                              </div>
-                            ) : (
-                              paper.pyq_questions
-                                .sort((a, b) => a.order_index - b.order_index)
-                                .map((q, idx) => (
-                                  <div key={q.id} className="ml-4 border rounded-lg bg-background overflow-hidden">
-                                    <div className="p-4 bg-muted/40 border-b">
-                                      <div className="flex items-start justify-between gap-4">
-                                        <div className="flex items-start gap-3">
-                                          <span className="flex items-center justify-center w-7 h-7 rounded-full bg-primary/10 text-primary text-sm font-semibold shrink-0">
-                                            {idx + 1}
-                                          </span>
-                                          <p className="text-foreground font-medium pt-0.5">{q.question}</p>
-                                        </div>
-                                        <div className="flex gap-2 shrink-0">
-                                          <Badge variant="outline" className="bg-background">{q.marks} marks</Badge>
-                                        </div>
-                                      </div>
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-6 pt-6 border-t">
+                    <div>
+                      <p className="text-xs text-muted-foreground">Exam Type</p>
+                      <p className="font-medium">{subject.exam_type}</p>
+                    </div>
+                    <div>
+                      <p className="text-xs text-muted-foreground">Theory Marks</p>
+                      <p className="font-medium">{subject.theory_marks}</p>
+                    </div>
+                    <div>
+                      <p className="text-xs text-muted-foreground">Internal Marks</p>
+                      <p className="font-medium">{subject.internal_marks}</p>
+                    </div>
+                    <div>
+                      <p className="text-xs text-muted-foreground">Duration</p>
+                      <p className="font-medium">{subject.duration}</p>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Tabs */}
+                <Tabs value={activeTab} onValueChange={setActiveTab}>
+                  <TabsList className="grid grid-cols-4 w-full">
+                    <TabsTrigger value="questions" className="gap-2">
+                      <FileQuestion className="h-4 w-4" />
+                      Questions
+                    </TabsTrigger>
+                    <TabsTrigger value="notes" className="gap-2">
+                      <BookOpen className="h-4 w-4" />
+                      Notes
+                    </TabsTrigger>
+                    <TabsTrigger value="pyq" className="gap-2">
+                      <FileText className="h-4 w-4" />
+                      PYQs
+                    </TabsTrigger>
+                    <TabsTrigger value="ai" className="gap-2">
+                      <MessageSquare className="h-4 w-4" />
+                      Ask AI
+                    </TabsTrigger>
+                  </TabsList>
+
+                  {/* Important Questions Tab */}
+                  <TabsContent value="questions" className="mt-6">
+                    <Card>
+                      <CardHeader>
+                        <CardTitle className="text-lg text-primary">Important Questions</CardTitle>
+                        <p className="text-sm text-muted-foreground">
+                          Frequently asked questions based on previous year patterns
+                        </p>
+                      </CardHeader>
+                      <CardContent>
+                        {importantQuestions.length === 0 ? (
+                          <p className="text-center text-muted-foreground py-8">
+                            No important questions available yet
+                          </p>
+                        ) : (
+                          <div className="space-y-4">
+                            {units.map((unit) => {
+                              const unitQuestions = importantQuestions.filter(
+                                (q) => q.unit_id === unit.id
+                              );
+                              if (unitQuestions.length === 0) return null;
+                              
+                              return (
+                                <Collapsible
+                                  key={unit.id}
+                                  open={openUnits.includes(unit.id)}
+                                  onOpenChange={() => toggleUnit(unit.id)}
+                                >
+                                  <CollapsibleTrigger className="flex items-center justify-between w-full p-3 bg-muted/50 rounded-lg hover:bg-muted transition-colors">
+                                    <span className="font-medium">
+                                      Unit {unit.number}: {unit.name}
+                                    </span>
+                                    <div className="flex items-center gap-2">
+                                      <Badge variant="secondary">
+                                        {unitQuestions.length} questions
+                                      </Badge>
+                                      {openUnits.includes(unit.id) ? (
+                                        <ChevronDown className="h-4 w-4" />
+                                      ) : (
+                                        <ChevronRight className="h-4 w-4" />
+                                      )}
                                     </div>
-                                    
-                                    {q.answer && (
-                                      <div className="p-4">
-                                        <div className="flex items-center gap-2 mb-3">
-                                          <div className="w-1 h-4 bg-primary rounded-full" />
-                                          <span className="text-sm font-semibold text-primary">Model Answer</span>
+                                  </CollapsibleTrigger>
+                                  <CollapsibleContent className="mt-2 space-y-2">
+                                    {unitQuestions.map((q, idx) => (
+                                      <div
+                                        key={q.id}
+                                        className="p-3 border rounded-lg"
+                                      >
+                                        <div className="flex items-start justify-between gap-2">
+                                          <p className="text-sm">
+                                            <span className="font-medium text-muted-foreground">
+                                              Q{idx + 1}.{" "}
+                                            </span>
+                                            {q.question}
+                                          </p>
+                                          <div className="flex items-center gap-2 shrink-0">
+                                            <Badge
+                                              variant="outline"
+                                              className={getFrequencyColor(q.frequency)}
+                                            >
+                                              {q.frequency}
+                                            </Badge>
+                                            <Badge variant="secondary">
+                                              {q.marks}M
+                                            </Badge>
+                                          </div>
                                         </div>
-                                        <div 
-                                          className="text-sm text-muted-foreground leading-relaxed prose prose-sm max-w-none dark:prose-invert"
-                                          dangerouslySetInnerHTML={{
-                                            __html: DOMPurify.sanitize(
-                                              q.answer
-                                                .replace(/\*\*(.*?)\*\*/g, '<strong class="text-foreground font-semibold">$1</strong>')
-                                                .replace(/```sql([\s\S]*?)```/g, '<pre class="bg-muted p-3 rounded-md text-xs overflow-x-auto my-2"><code class="text-foreground">$1</code></pre>')
-                                                .replace(/```([\s\S]*?)```/g, '<pre class="bg-muted p-3 rounded-md text-xs overflow-x-auto my-2"><code class="text-foreground">$1</code></pre>')
-                                                .replace(/\n\n/g, '</p><p class="mt-2">')
-                                                .replace(/\n- /g, '</p><p class="mt-1 pl-4">• ')
-                                                .replace(/\n\d\. /g, (match) => `</p><p class="mt-1 pl-4">${match.trim()} `),
-                                              { ALLOWED_TAGS: ['strong', 'em', 'b', 'i', 'br', 'p', 'pre', 'code'], ALLOWED_ATTR: ['class'] }
-                                            ),
-                                          }}
-                                        />
                                       </div>
+                                    ))}
+                                  </CollapsibleContent>
+                                </Collapsible>
+                              );
+                            })}
+                          </div>
+                        )}
+                      </CardContent>
+                    </Card>
+                  </TabsContent>
+
+                  {/* Notes Tab */}
+                  <TabsContent value="notes" className="mt-6">
+                    <Card>
+                      <CardHeader>
+                        <CardTitle className="text-lg text-primary">Chapter-wise Notes</CardTitle>
+                        <p className="text-sm text-muted-foreground">
+                          Comprehensive notes organized by units and chapters
+                        </p>
+                      </CardHeader>
+                      <CardContent>
+                        {notes.length === 0 ? (
+                          <p className="text-center text-muted-foreground py-8">
+                            No notes available yet
+                          </p>
+                        ) : (
+                          <div className="space-y-4">
+                            {units.map((unit) => {
+                              const unitNotes = notes.filter(
+                                (n) => n.unit_id === unit.id
+                              );
+                              if (unitNotes.length === 0) return null;
+                              
+                              return (
+                                <Collapsible
+                                  key={unit.id}
+                                  open={openUnits.includes(unit.id)}
+                                  onOpenChange={() => toggleUnit(unit.id)}
+                                >
+                                  <CollapsibleTrigger className="flex items-center justify-between w-full p-3 bg-muted/50 rounded-lg hover:bg-muted transition-colors">
+                                    <span className="font-medium">
+                                      Unit {unit.number}: {unit.name}
+                                    </span>
+                                    <div className="flex items-center gap-2">
+                                      <Badge variant="secondary">
+                                        {unitNotes.length} chapters
+                                      </Badge>
+                                      {openUnits.includes(unit.id) ? (
+                                        <ChevronDown className="h-4 w-4" />
+                                      ) : (
+                                        <ChevronRight className="h-4 w-4" />
+                                      )}
+                                    </div>
+                                  </CollapsibleTrigger>
+                                  <CollapsibleContent className="mt-2 space-y-3">
+                                    {unitNotes.map((note) => (
+                                      <Card key={note.id} className="border-l-4 border-l-primary/50">
+                                        <CardHeader className="pb-2">
+                                          <CardTitle className="text-base">
+                                            {note.chapter_title}
+                                          </CardTitle>
+                                        </CardHeader>
+                                        <CardContent>
+                                          <ul className="space-y-2">
+                                            {(note.points as string[]).map((point, idx) => (
+                                              <li
+                                                key={idx}
+                                                className="flex items-start gap-2 text-sm text-muted-foreground"
+                                              >
+                                                <span className="h-1.5 w-1.5 rounded-full bg-primary/50 mt-1.5 shrink-0" />
+                                                <span 
+                                                  dangerouslySetInnerHTML={{ 
+                                                    __html: DOMPurify.sanitize(point) 
+                                                  }} 
+                                                />
+                                              </li>
+                                            ))}
+                                          </ul>
+                                        </CardContent>
+                                      </Card>
+                                    ))}
+                                  </CollapsibleContent>
+                                </Collapsible>
+                              );
+                            })}
+                          </div>
+                        )}
+                      </CardContent>
+                    </Card>
+                  </TabsContent>
+
+                  {/* PYQ Tab */}
+                  <TabsContent value="pyq" className="mt-6">
+                    <Card>
+                      <CardHeader>
+                        <CardTitle className="text-lg text-primary">
+                          Previous Year Question Papers
+                        </CardTitle>
+                        <p className="text-sm text-muted-foreground">
+                          Download and practice with actual exam papers
+                        </p>
+                      </CardHeader>
+                      <CardContent>
+                        {pyqPapers.length === 0 ? (
+                          <p className="text-center text-muted-foreground py-8">
+                            No previous year papers available yet
+                          </p>
+                        ) : (
+                          <div className="space-y-4">
+                            {pyqPapers.map((paper) => (
+                              <Collapsible
+                                key={paper.id}
+                                open={openPyqYears.includes(paper.id)}
+                                onOpenChange={() => togglePyqYear(paper.id)}
+                              >
+                                <div className="flex items-center justify-between p-3 bg-muted/50 rounded-lg">
+                                  <CollapsibleTrigger className="flex items-center gap-2 flex-1">
+                                    <span className="font-medium">
+                                      {paper.year} Exam
+                                    </span>
+                                    {paper.paper_code && (
+                                      <Badge variant="outline" className="text-xs">
+                                        {paper.paper_code}
+                                      </Badge>
+                                    )}
+                                    {openPyqYears.includes(paper.id) ? (
+                                      <ChevronDown className="h-4 w-4 ml-auto" />
+                                    ) : (
+                                      <ChevronRight className="h-4 w-4 ml-auto" />
+                                    )}
+                                  </CollapsibleTrigger>
+                                  <div className="flex items-center gap-2 ml-4">
+                                    {paper.pdf_url && (
+                                      <>
+                                        <Button
+                                          variant="outline"
+                                          size="sm"
+                                          className="gap-1"
+                                          asChild
+                                        >
+                                          <a
+                                            href={paper.pdf_url}
+                                            target="_blank"
+                                            rel="noopener noreferrer"
+                                          >
+                                            <Download className="h-3 w-3" />
+                                            PDF
+                                          </a>
+                                        </Button>
+                                        <Button
+                                          variant="ghost"
+                                          size="icon"
+                                          onClick={() => {
+                                            const printWindow = window.open(paper.pdf_url!, '_blank');
+                                            if (printWindow) {
+                                              printWindow.onload = () => printWindow.print();
+                                            }
+                                          }}
+                                        >
+                                          <Printer className="h-4 w-4" />
+                                        </Button>
+                                      </>
                                     )}
                                   </div>
-                                ))
-                            )}
-                          </CollapsibleContent>
-                        </Collapsible>
-                      ))
-                    )}
-                  </CardContent>
-                </Card>
-              </TabsContent>
-
-              {/* Ask AI Tab */}
-              <TabsContent value="ai" className="mt-0">
-                <Card className="h-[600px] flex flex-col">
-                  <CardHeader className="pb-4 border-b">
-                    <CardTitle className="text-lg">Ask AI</CardTitle>
-                    <p className="text-sm text-muted-foreground">
-                      Context: {subject.name} ({subject.code}) - {university?.name}
-                    </p>
-                  </CardHeader>
-                  <CardContent className="flex-1 flex flex-col p-0">
-                    <ScrollArea className="flex-1 p-4">
-                      <div className="space-y-4">
-                        {aiMessages.map((msg, idx) => (
-                          <div
-                            key={idx}
-                            className={`p-4 rounded-lg ${
-                              msg.role === "assistant"
-                                ? "bg-muted/50 mr-8"
-                                : "bg-primary/10 ml-8"
-                            }`}
-                          >
-                            <p className="text-sm text-foreground whitespace-pre-line">{msg.content}</p>
+                                </div>
+                                <CollapsibleContent className="mt-2 space-y-2">
+                                  {paper.pyq_questions.length === 0 ? (
+                                    <p className="text-sm text-muted-foreground p-3">
+                                      Questions not digitized yet. Download the PDF to view.
+                                    </p>
+                                  ) : (
+                                    paper.pyq_questions.map((q, idx) => (
+                                      <div
+                                        key={q.id}
+                                        className="p-3 border rounded-lg"
+                                      >
+                                        <div className="flex items-start justify-between gap-2">
+                                          <p className="text-sm">
+                                            <span className="font-medium text-muted-foreground">
+                                              {idx + 1}.{" "}
+                                            </span>
+                                            {q.question}
+                                          </p>
+                                          <Badge variant="secondary" className="shrink-0">
+                                            {q.marks}M
+                                          </Badge>
+                                        </div>
+                                      </div>
+                                    ))
+                                  )}
+                                </CollapsibleContent>
+                              </Collapsible>
+                            ))}
                           </div>
-                        ))}
-                      </div>
-                    </ScrollArea>
-                    <div className="border-t p-4">
-                      <div className="flex gap-2">
-                        <Textarea
-                          placeholder="Ask about any concept, question, or exam tip..."
-                          value={aiMessage}
-                          onChange={(e) => setAiMessage(e.target.value)}
-                          className="min-h-[60px] resize-none"
-                          onKeyDown={(e) => {
-                            if (e.key === "Enter" && !e.shiftKey) {
-                              e.preventDefault();
-                              handleAiSubmit();
-                            }
-                          }}
-                        />
-                        <Button onClick={handleAiSubmit} size="icon" className="shrink-0">
-                          <Send className="h-4 w-4" />
-                        </Button>
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
-              </TabsContent>
-            </Tabs>
+                        )}
+                      </CardContent>
+                    </Card>
+                  </TabsContent>
+
+                  {/* AI Tab */}
+                  <TabsContent value="ai" className="mt-6">
+                    <Card>
+                      <CardHeader>
+                        <CardTitle className="text-lg text-primary flex items-center gap-2">
+                          <MessageSquare className="h-5 w-5" />
+                          AI Study Assistant
+                        </CardTitle>
+                        <p className="text-sm text-muted-foreground">
+                          Ask questions about {subject.name} and get instant explanations
+                        </p>
+                      </CardHeader>
+                      <CardContent className="p-0">
+                        <ScrollArea className="h-[400px] p-4">
+                          {aiMessages.length === 0 ? (
+                            <div className="text-center py-12">
+                              <MessageSquare className="h-12 w-12 mx-auto text-muted-foreground/50 mb-4" />
+                              <p className="text-muted-foreground">
+                                Ask anything about {subject.name}
+                              </p>
+                              <p className="text-sm text-muted-foreground mt-1">
+                                Get explanations, practice questions, or study tips
+                              </p>
+                            </div>
+                          ) : (
+                            <div className="space-y-4">
+                              {aiMessages.map((msg, idx) => (
+                                <div
+                                  key={idx}
+                                  className={`flex ${
+                                    msg.role === "user" ? "justify-end" : "justify-start"
+                                  }`}
+                                >
+                                  <div
+                                    className={`max-w-[80%] rounded-lg px-4 py-2 ${
+                                      msg.role === "user"
+                                        ? "bg-primary text-primary-foreground"
+                                        : "bg-muted"
+                                    }`}
+                                  >
+                                    <p className="text-sm whitespace-pre-wrap">{msg.content}</p>
+                                  </div>
+                                </div>
+                              ))}
+                            </div>
+                          )}
+                        </ScrollArea>
+                        <div className="border-t p-4">
+                          <div className="flex gap-2">
+                            <Textarea
+                              placeholder="Ask about any concept, question, or exam tip..."
+                              value={aiMessage}
+                              onChange={(e) => setAiMessage(e.target.value)}
+                              className="min-h-[60px] resize-none"
+                              onKeyDown={(e) => {
+                                if (e.key === "Enter" && !e.shiftKey) {
+                                  e.preventDefault();
+                                  handleAiSubmit();
+                                }
+                              }}
+                            />
+                            <Button onClick={handleAiSubmit} size="icon" className="shrink-0">
+                              <Send className="h-4 w-4" />
+                            </Button>
+                          </div>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  </TabsContent>
+                </Tabs>
+              </div>
+            </ResizablePanel>
+
+            {/* Resizable Handle */}
+            <ResizableHandle withHandle className="mx-2" />
+
+            {/* AI Chat Panel */}
+            <ResizablePanel 
+              defaultSize={25} 
+              minSize={15} 
+              maxSize={45}
+              collapsible
+              collapsedSize={0}
+              onCollapse={() => setIsAIPanelCollapsed(true)}
+              onExpand={() => setIsAIPanelCollapsed(false)}
+            >
+              <SubjectAIChat 
+                subject={subject}
+                universityName={university?.name}
+              />
+            </ResizablePanel>
+          </ResizablePanelGroup>
+        </div>
+
+        {/* Mobile Layout - Stack */}
+        <div className="lg:hidden space-y-6">
+          {/* Subject Header - Mobile */}
+          <div className="bg-card border rounded-lg p-4">
+            <div className="space-y-3">
+              <div className="flex items-center gap-2 flex-wrap">
+                <h1 className="text-xl font-bold text-foreground">
+                  {subject.name}
+                </h1>
+                <Badge variant="secondary">{subject.code}</Badge>
+              </div>
+              <p className="text-sm text-muted-foreground">
+                {university?.name} · {course?.name} · {semester?.name}
+              </p>
+              <div className="flex flex-wrap items-center gap-2">
+                <Badge variant="outline" className="gap-1">
+                  <Award className="h-3 w-3" />
+                  {subject.total_marks} Marks
+                </Badge>
+                <Badge variant="outline" className="gap-1">
+                  <Clock className="h-3 w-3" />
+                  {subject.duration}
+                </Badge>
+              </div>
+            </div>
           </div>
 
-          {/* Right Sidebar - AI Chat */}
-          <div className="lg:col-span-1">
-            <SubjectAIChat 
-              subject={subject}
-              universityName={university?.name}
-            />
-          </div>
+          {/* AI Chat - Mobile (Full width card) */}
+          <SubjectAIChat 
+            subject={subject}
+            universityName={university?.name}
+          />
         </div>
       </main>
 
