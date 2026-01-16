@@ -1,5 +1,5 @@
-import { useState, useEffect } from "react";
-import { useParams, Link } from "react-router-dom";
+import { useState, useEffect, useMemo } from "react";
+import { useParams, Link, useNavigate } from "react-router-dom";
 import { 
   MapPin,
   FileText,
@@ -14,9 +14,14 @@ import {
   Loader2,
   ChevronDown,
   ChevronRight,
-  Plus,
-  User
+  BookOpen,
+  Zap,
+  Settings,
+  User,
+  X
 } from "lucide-react";
+import { useProfile } from "@/hooks/useProfile";
+import { useAuth } from "@/hooks/useAuth";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -79,13 +84,20 @@ interface CourseWithSemesters extends Course {
 
 const UniversityPage = () => {
   const { universityId } = useParams<{ universityId: string }>();
+  const navigate = useNavigate();
+  const { user } = useAuth();
+  const { profile, loading: profileLoading } = useProfile();
+  
   const [expandedSemester, setExpandedSemester] = useState<string | null>(null);
   const [selectedDegree, setSelectedDegree] = useState<string>("all");
   const [selectedSemester, setSelectedSemester] = useState<string>("all");
+  const [activeTab, setActiveTab] = useState<string>("courses");
   
   // Data states
   const [university, setUniversity] = useState<University | null>(null);
   const [courses, setCourses] = useState<CourseWithSemesters[]>([]);
+  const [pyqCount, setPyqCount] = useState<number>(0);
+  const [notesCount, setNotesCount] = useState<number>(0);
   const [loading, setLoading] = useState(true);
   
   // AI Tool dialog states (for AI Tools tab)
@@ -124,7 +136,44 @@ const UniversityPage = () => {
             .order('name');
 
           if (coursesError) throw coursesError;
-          setCourses(coursesData as CourseWithSemesters[] || []);
+          const fetchedCourses = coursesData as CourseWithSemesters[] || [];
+          setCourses(fetchedCourses);
+
+          // Fetch PYQ count for this university
+          const subjectIds = fetchedCourses.flatMap(c => 
+            c.semesters?.flatMap(s => s.subjects?.map(sub => sub.id) || []) || []
+          );
+          
+          if (subjectIds.length > 0) {
+            const { count: pyqsCount } = await supabase
+              .from('pyq_papers')
+              .select('*', { count: 'exact', head: true })
+              .in('subject_id', subjectIds);
+            
+            setPyqCount(pyqsCount || 0);
+
+            // Fetch Notes count
+            const unitIds: string[] = [];
+            for (const course of fetchedCourses) {
+              for (const semester of course.semesters || []) {
+                for (const subject of semester.subjects || []) {
+                  const { data: units } = await supabase
+                    .from('units')
+                    .select('id')
+                    .eq('subject_id', subject.id);
+                  if (units) unitIds.push(...units.map(u => u.id));
+                }
+              }
+            }
+            
+            if (unitIds.length > 0) {
+              const { count: notesC } = await supabase
+                .from('notes')
+                .select('*', { count: 'exact', head: true })
+                .in('unit_id', unitIds);
+              setNotesCount(notesC || 0);
+            }
+          }
         }
       } catch (error) {
         console.error('Error fetching university data:', error);
@@ -153,12 +202,41 @@ const UniversityPage = () => {
     stats: { 
       courses: courses.length, 
       subjects: courses.reduce((acc, c) => acc + (c.semesters?.reduce((a, s) => a + (s.subjects?.length || 0), 0) || 0), 0),
-      pastPapers: 0 
+      pastPapers: pyqCount,
+      notes: notesCount
     }
-  } : fallbackUni;
+  } : { ...fallbackUni, stats: { ...fallbackUni.stats, notes: 0 } };
 
   const toggleSemester = (key: string) => {
     setExpandedSemester(expandedSemester === key ? null : key);
+  };
+
+  // Filter courses based on selected degree
+  const filteredCourses = useMemo(() => {
+    if (selectedDegree === "all") return courses;
+    return courses.filter(c => c.id === selectedDegree);
+  }, [courses, selectedDegree]);
+
+  // Get dynamic semester options based on selected course
+  const semesterOptions = useMemo(() => {
+    const targetCourses = selectedDegree === "all" ? courses : courses.filter(c => c.id === selectedDegree);
+    const semesters = targetCourses.flatMap(c => c.semesters || []);
+    const uniqueSemesters = [...new Map(semesters.map(s => [s.number, s])).values()];
+    return uniqueSemesters.sort((a, b) => a.number - b.number);
+  }, [courses, selectedDegree]);
+
+  // Filter semesters within courses based on selected semester
+  const getFilteredSemesters = (courseSemesters: (Semester & { subjects: Subject[] })[]) => {
+    if (selectedSemester === "all") return courseSemesters;
+    return courseSemesters.filter(s => s.number.toString() === selectedSemester);
+  };
+
+  // Check if filters are active
+  const hasActiveFilters = selectedDegree !== "all" || selectedSemester !== "all";
+
+  const clearFilters = () => {
+    setSelectedDegree("all");
+    setSelectedSemester("all");
   };
 
   if (loading) {
@@ -241,7 +319,7 @@ const UniversityPage = () => {
 
             {/* Tabs Navigation */}
             <div className="px-8 py-4">
-              <Tabs defaultValue="courses" className="w-full">
+              <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
                 <TabsList className="bg-muted/50 p-1 h-auto">
                   <TabsTrigger value="courses" className="px-4 py-2 data-[state=active]:bg-background">
                     Courses
@@ -263,9 +341,9 @@ const UniversityPage = () => {
                     Courses at {displayUniversity.name}
                   </h2>
 
-                  {courses.length > 0 ? (
+                  {filteredCourses.length > 0 ? (
                     <Accordion type="multiple" className="space-y-3">
-                      {courses.map((course) => (
+                      {filteredCourses.map((course) => (
                         <AccordionItem 
                           key={course.id} 
                           value={course.id}
@@ -280,7 +358,7 @@ const UniversityPage = () => {
                           </AccordionTrigger>
                           <AccordionContent className="pb-4">
                             <div className="grid gap-3">
-                              {course.semesters?.sort((a, b) => a.number - b.number).map((semester) => (
+                              {getFilteredSemesters(course.semesters || []).sort((a, b) => a.number - b.number).map((semester) => (
                                 <div key={semester.id}>
                                   <div 
                                     className="flex items-center justify-between p-3 bg-muted/50 rounded-lg cursor-pointer hover:bg-muted transition-colors"
@@ -449,90 +527,204 @@ const UniversityPage = () => {
 
           {/* Right Sidebar - Sticky */}
           <aside className="w-72 border-l border-border bg-background p-6 sticky top-0 h-screen overflow-y-auto hidden lg:block">
-            {/* University Stats */}
-            <div className="mb-8">
-              <h3 className="text-sm font-semibold text-foreground mb-4 flex items-center gap-2">
+            {/* University Stats - Clickable */}
+            <div className="mb-6">
+              <h3 className="text-sm font-semibold text-foreground mb-3 flex items-center gap-2">
                 <BarChart3 className="h-4 w-4" />
                 University Stats
               </h3>
-              <div className="space-y-3">
-                <div className="flex justify-between items-center">
-                  <span className="text-sm text-muted-foreground">Courses</span>
+              <div className="space-y-1">
+                <button 
+                  onClick={() => setActiveTab("courses")}
+                  className="flex justify-between items-center w-full p-2 rounded-lg hover:bg-muted/50 transition-colors text-left"
+                >
+                  <span className="text-sm text-muted-foreground flex items-center gap-2">
+                    <GraduationCap className="h-3.5 w-3.5" />
+                    Courses
+                  </span>
                   <span className="font-medium text-foreground">{displayUniversity.stats.courses}</span>
-                </div>
-                <div className="flex justify-between items-center">
-                  <span className="text-sm text-muted-foreground">Subjects</span>
+                </button>
+                <button 
+                  onClick={() => setActiveTab("courses")}
+                  className="flex justify-between items-center w-full p-2 rounded-lg hover:bg-muted/50 transition-colors text-left"
+                >
+                  <span className="text-sm text-muted-foreground flex items-center gap-2">
+                    <BookOpen className="h-3.5 w-3.5" />
+                    Subjects
+                  </span>
                   <span className="font-medium text-foreground">{displayUniversity.stats.subjects}</span>
-                </div>
-                <div className="flex justify-between items-center">
-                  <span className="text-sm text-muted-foreground">Past Papers</span>
+                </button>
+                <button 
+                  onClick={() => setActiveTab("notes")}
+                  className="flex justify-between items-center w-full p-2 rounded-lg hover:bg-muted/50 transition-colors text-left"
+                >
+                  <span className="text-sm text-muted-foreground flex items-center gap-2">
+                    <FileText className="h-3.5 w-3.5" />
+                    Notes
+                  </span>
+                  <span className="font-medium text-foreground">{displayUniversity.stats.notes}</span>
+                </button>
+                <button 
+                  onClick={() => setActiveTab("past-papers")}
+                  className="flex justify-between items-center w-full p-2 rounded-lg hover:bg-muted/50 transition-colors text-left"
+                >
+                  <span className="text-sm text-muted-foreground flex items-center gap-2">
+                    <Download className="h-3.5 w-3.5" />
+                    Past Papers
+                  </span>
                   <span className="font-medium text-foreground">{displayUniversity.stats.pastPapers}</span>
-                </div>
+                </button>
               </div>
             </div>
 
-            <Separator className="my-6" />
+            <Separator className="my-5" />
 
-            {/* Quick Filters */}
-            <div className="mb-8">
-              <h3 className="text-sm font-semibold text-foreground mb-4 flex items-center gap-2">
-                <Filter className="h-4 w-4" />
-                Quick Filters
-              </h3>
+            {/* Quick Filters - Functional */}
+            <div className="mb-6">
+              <div className="flex items-center justify-between mb-3">
+                <h3 className="text-sm font-semibold text-foreground flex items-center gap-2">
+                  <Filter className="h-4 w-4" />
+                  Quick Filters
+                </h3>
+                {hasActiveFilters && (
+                  <button
+                    onClick={clearFilters}
+                    className="text-xs text-muted-foreground hover:text-foreground flex items-center gap-1 transition-colors"
+                  >
+                    <X className="h-3 w-3" />
+                    Clear
+                  </button>
+                )}
+              </div>
               <div className="space-y-3">
                 <div>
-                  <label className="text-xs text-muted-foreground mb-1.5 block">Degree</label>
-                  <Select value={selectedDegree} onValueChange={setSelectedDegree}>
-                    <SelectTrigger className="w-full">
-                      <SelectValue placeholder="All Degrees" />
+                  <label className="text-xs text-muted-foreground mb-1.5 block">Course</label>
+                  <Select value={selectedDegree} onValueChange={(value) => {
+                    setSelectedDegree(value);
+                    setSelectedSemester("all"); // Reset semester when course changes
+                  }}>
+                    <SelectTrigger className="w-full h-9">
+                      <SelectValue placeholder="All Courses" />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="all">All Degrees</SelectItem>
+                      <SelectItem value="all">All Courses</SelectItem>
                       {courses.map(c => (
-                        <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>
+                        <SelectItem key={c.id} value={c.id}>{c.code}</SelectItem>
                       ))}
                     </SelectContent>
                   </Select>
                 </div>
                 <div>
                   <label className="text-xs text-muted-foreground mb-1.5 block">Semester</label>
-                  <Select value={selectedSemester} onValueChange={setSelectedSemester}>
-                    <SelectTrigger className="w-full">
+                  <Select 
+                    value={selectedSemester} 
+                    onValueChange={setSelectedSemester}
+                    disabled={semesterOptions.length === 0}
+                  >
+                    <SelectTrigger className="w-full h-9">
                       <SelectValue placeholder="All Semesters" />
                     </SelectTrigger>
                     <SelectContent>
                       <SelectItem value="all">All Semesters</SelectItem>
-                      <SelectItem value="sem1">Semester 1</SelectItem>
-                      <SelectItem value="sem2">Semester 2</SelectItem>
-                      <SelectItem value="sem3">Semester 3</SelectItem>
-                      <SelectItem value="sem4">Semester 4</SelectItem>
-                      <SelectItem value="sem5">Semester 5</SelectItem>
-                      <SelectItem value="sem6">Semester 6</SelectItem>
+                      {semesterOptions.map(s => (
+                        <SelectItem key={s.id} value={s.number.toString()}>
+                          {s.name}
+                        </SelectItem>
+                      ))}
                     </SelectContent>
                   </Select>
                 </div>
               </div>
             </div>
 
-            <Separator className="my-6" />
+            <Separator className="my-5" />
 
-            {/* Your Context */}
-            <div>
-              <h3 className="text-sm font-semibold text-foreground mb-4 flex items-center gap-2">
+            {/* Your Context - Functional */}
+            <div className="mb-6">
+              <h3 className="text-sm font-semibold text-foreground mb-3 flex items-center gap-2">
                 <User className="h-4 w-4" />
                 Your Context
               </h3>
-              <Card className="bg-muted/50 border-dashed">
-                <CardContent className="p-4">
-                  <p className="text-sm text-muted-foreground mb-3">
-                    Add your course to personalize content
-                  </p>
-                  <Button variant="outline" size="sm" className="w-full">
-                    <Plus className="h-4 w-4 mr-2" />
-                    Set Your Course
-                  </Button>
+              <Card className="bg-muted/30 border-border">
+                <CardContent className="p-3">
+                  {profileLoading ? (
+                    <div className="flex items-center justify-center py-2">
+                      <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
+                    </div>
+                  ) : profile?.course ? (
+                    <div className="space-y-2">
+                      <div className="text-sm">
+                        <p className="font-medium text-foreground">{profile.course.name}</p>
+                        <p className="text-muted-foreground text-xs">
+                          {profile.semester?.name} • {profile.university?.name}
+                        </p>
+                      </div>
+                      <Button 
+                        variant="ghost" 
+                        size="sm" 
+                        className="w-full h-8 text-xs"
+                        onClick={() => navigate('/onboarding?edit=true')}
+                      >
+                        <Settings className="h-3 w-3 mr-1.5" />
+                        Change Course
+                      </Button>
+                    </div>
+                  ) : (
+                    <div className="space-y-2">
+                      <p className="text-xs text-muted-foreground">
+                        {user ? "Set your course to personalize content" : "Sign in to personalize your experience"}
+                      </p>
+                      <Button 
+                        variant="outline" 
+                        size="sm" 
+                        className="w-full h-8 text-xs"
+                        onClick={() => navigate(user ? '/onboarding?edit=true' : '/auth')}
+                      >
+                        {user ? "Set Your Course" : "Sign In"}
+                      </Button>
+                    </div>
+                  )}
                 </CardContent>
               </Card>
+            </div>
+
+            <Separator className="my-5" />
+
+            {/* Quick Actions */}
+            <div>
+              <h3 className="text-sm font-semibold text-foreground mb-3 flex items-center gap-2">
+                <Zap className="h-4 w-4" />
+                Quick Actions
+              </h3>
+              <div className="space-y-2">
+                <Button 
+                  variant="outline" 
+                  size="sm" 
+                  className="w-full justify-start h-9 text-xs"
+                  onClick={() => setAskAIOpen(true)}
+                >
+                  <MessageSquare className="h-3.5 w-3.5 mr-2" />
+                  Ask AI About Syllabus
+                </Button>
+                <Button 
+                  variant="outline" 
+                  size="sm" 
+                  className="w-full justify-start h-9 text-xs"
+                  onClick={() => setQuizAIOpen(true)}
+                >
+                  <ClipboardList className="h-3.5 w-3.5 mr-2" />
+                  Start Practice Quiz
+                </Button>
+                <Button 
+                  variant="outline" 
+                  size="sm" 
+                  className="w-full justify-start h-9 text-xs"
+                  onClick={() => setActiveTab("past-papers")}
+                >
+                  <Download className="h-3.5 w-3.5 mr-2" />
+                  Browse Past Papers
+                </Button>
+              </div>
             </div>
           </aside>
         </main>
