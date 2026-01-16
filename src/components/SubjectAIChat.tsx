@@ -145,7 +145,7 @@ export const SubjectAIChat = ({ subject, universityName }: SubjectAIChatProps) =
   ];
 
   return (
-    <Card className="sticky top-24 h-[calc(100vh-8rem)] flex flex-col">
+    <Card className="h-full flex flex-col lg:sticky lg:top-24 lg:h-[calc(100vh-8rem)]">
       <CardHeader className="pb-3 border-b shrink-0">
         <div className="flex items-center gap-2">
           <div className="p-1.5 rounded-lg bg-primary/10">
