@@ -1,10 +1,18 @@
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { SidebarProvider, SidebarTrigger } from '@/components/ui/sidebar';
 import { AppSidebar } from '@/components/AppSidebar';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 import { useAuth } from '@/hooks/useAuth';
 import { useLibrary } from '@/hooks/useLibrary';
 import { SEO } from '@/components/SEO';
@@ -16,18 +24,54 @@ import {
   ExternalLink,
   Library as LibraryIcon,
   Loader2,
+  Search,
+  SortAsc,
 } from 'lucide-react';
 import { toast } from 'sonner';
+
+type SortOption = 'recent' | 'alphabetical' | 'type';
 
 export default function Library() {
   const navigate = useNavigate();
   const { user, loading: authLoading } = useAuth();
   const { libraryItems, loading, removeFromLibrary } = useLibrary();
   const [removingId, setRemovingId] = useState<string | null>(null);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [sortBy, setSortBy] = useState<SortOption>('recent');
 
-  const courseItems = libraryItems.filter(item => item.item_type === 'course');
-  const subjectItems = libraryItems.filter(item => item.item_type === 'subject');
-  const noteItems = libraryItems.filter(item => item.item_type === 'note');
+  const filteredAndSortedItems = useMemo(() => {
+    let items = [...libraryItems];
+
+    // Filter by search query
+    if (searchQuery.trim()) {
+      const query = searchQuery.toLowerCase();
+      items = items.filter(item => 
+        (item.name?.toLowerCase().includes(query)) ||
+        (item.code?.toLowerCase().includes(query)) ||
+        item.item_type.toLowerCase().includes(query)
+      );
+    }
+
+    // Sort items
+    switch (sortBy) {
+      case 'alphabetical':
+        items.sort((a, b) => (a.name || '').localeCompare(b.name || ''));
+        break;
+      case 'type':
+        items.sort((a, b) => a.item_type.localeCompare(b.item_type));
+        break;
+      case 'recent':
+      default:
+        // Already sorted by created_at desc from the hook
+        break;
+    }
+
+    return items;
+  }, [libraryItems, searchQuery, sortBy]);
+
+  const courseItems = filteredAndSortedItems.filter(item => item.item_type === 'course');
+  const subjectItems = filteredAndSortedItems.filter(item => item.item_type === 'subject');
+  const noteItems = filteredAndSortedItems.filter(item => item.item_type === 'note');
 
   const handleRemove = async (item: typeof libraryItems[0]) => {
     setRemovingId(item.id);
@@ -153,10 +197,34 @@ export default function Library() {
           </header>
           
           <div className="p-6">
+            {/* Search and Sort Controls */}
+            <div className="flex flex-col sm:flex-row gap-4 mb-6">
+              <div className="relative flex-1">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                <Input
+                  placeholder="Search by name, code, or type..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  className="pl-9"
+                />
+              </div>
+              <Select value={sortBy} onValueChange={(v) => setSortBy(v as SortOption)}>
+                <SelectTrigger className="w-full sm:w-[180px]">
+                  <SortAsc className="h-4 w-4 mr-2" />
+                  <SelectValue placeholder="Sort by" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="recent">Recently Added</SelectItem>
+                  <SelectItem value="alphabetical">Alphabetical</SelectItem>
+                  <SelectItem value="type">By Type</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
             <Tabs defaultValue="all" className="w-full">
               <TabsList className="mb-6">
                 <TabsTrigger value="all">
-                  All ({libraryItems.length})
+                  All ({filteredAndSortedItems.length})
                 </TabsTrigger>
                 <TabsTrigger value="courses">
                   Courses ({courseItems.length})
@@ -170,16 +238,16 @@ export default function Library() {
               </TabsList>
 
               <TabsContent value="all">
-                {renderItems(libraryItems, 'Your library is empty. Browse universities to save items.')}
+                {renderItems(filteredAndSortedItems, searchQuery ? 'No items match your search.' : 'Your library is empty. Browse universities to save items.')}
               </TabsContent>
               <TabsContent value="courses">
-                {renderItems(courseItems, 'No courses saved yet.')}
+                {renderItems(courseItems, searchQuery ? 'No courses match your search.' : 'No courses saved yet.')}
               </TabsContent>
               <TabsContent value="subjects">
-                {renderItems(subjectItems, 'No subjects saved yet.')}
+                {renderItems(subjectItems, searchQuery ? 'No subjects match your search.' : 'No subjects saved yet.')}
               </TabsContent>
               <TabsContent value="notes">
-                {renderItems(noteItems, 'No notes saved yet.')}
+                {renderItems(noteItems, searchQuery ? 'No notes match your search.' : 'No notes saved yet.')}
               </TabsContent>
             </Tabs>
           </div>

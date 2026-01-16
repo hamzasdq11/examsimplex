@@ -45,13 +45,14 @@ export function useLibrary() {
         if (item.item_type === 'course') {
           const { data: course } = await supabase
             .from('courses')
-            .select('name, code, university_id')
+            .select('name, code, universities!inner(slug)')
             .eq('id', item.item_id)
             .single();
           if (course) {
             enriched.name = course.name;
             enriched.code = course.code;
-            enriched.url = `/university/${course.university_id}`;
+            const uni = (course as any).universities;
+            enriched.url = `/university/${uni.slug}`;
           }
         } else if (item.item_type === 'subject') {
           const { data: subject } = await supabase
@@ -67,6 +68,27 @@ export function useLibrary() {
             enriched.code = subject.code;
             const sem = (subject as any).semesters;
             enriched.url = `/university/${sem.courses.universities.slug}/${sem.courses.code}/sem${sem.number}/${subject.slug}`;
+          }
+        } else if (item.item_type === 'note') {
+          const { data: note } = await supabase
+            .from('notes')
+            .select(`
+              chapter_title,
+              units!inner(
+                subjects!inner(
+                  slug,
+                  semesters!inner(number, courses!inner(code, universities!inner(slug)))
+                )
+              )
+            `)
+            .eq('id', item.item_id)
+            .single();
+          if (note) {
+            enriched.name = note.chapter_title;
+            const unit = (note as any).units;
+            const subject = unit.subjects;
+            const sem = subject.semesters;
+            enriched.url = `/university/${sem.courses.universities.slug}/${sem.courses.code}/sem${sem.number}/${subject.slug}?tab=notes`;
           }
         }
         

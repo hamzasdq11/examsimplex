@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams, useNavigate, Link } from 'react-router-dom';
 import { SidebarProvider, SidebarTrigger } from '@/components/ui/sidebar';
 import { AppSidebar } from '@/components/AppSidebar';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -20,12 +20,14 @@ import {
   Pencil,
   Check,
   X,
+  ExternalLink,
 } from 'lucide-react';
 import { toast } from 'sonner';
 
 interface EnrichedItem extends StudylistItem {
   name?: string;
   details?: string;
+  url?: string;
 }
 
 export default function StudylistDetail() {
@@ -58,39 +60,65 @@ export default function StudylistDetail() {
       setLoading(true);
       const rawItems = await getStudylistItems(id);
       
-      // Enrich items with names
+      // Enrich items with names and URLs
       const enriched: EnrichedItem[] = [];
       
       for (const item of rawItems) {
-        let enrichedItem: EnrichedItem = { ...item };
+        let enrichedItem: EnrichedItem = { ...item, url: undefined };
         
         if (item.item_type === 'subject') {
           const { data } = await supabase
             .from('subjects')
-            .select('name, code')
+            .select(`
+              name, code, slug,
+              semesters!inner(number, courses!inner(code, universities!inner(slug)))
+            `)
             .eq('id', item.item_id)
             .single();
           if (data) {
             enrichedItem.name = data.name;
             enrichedItem.details = data.code;
+            const sem = (data as any).semesters;
+            enrichedItem.url = `/university/${sem.courses.universities.slug}/${sem.courses.code}/sem${sem.number}/${data.slug}`;
           }
         } else if (item.item_type === 'note') {
           const { data } = await supabase
             .from('notes')
-            .select('chapter_title')
+            .select(`
+              chapter_title,
+              units!inner(
+                subjects!inner(
+                  slug,
+                  semesters!inner(number, courses!inner(code, universities!inner(slug)))
+                )
+              )
+            `)
             .eq('id', item.item_id)
             .single();
           if (data) {
             enrichedItem.name = data.chapter_title;
+            const unit = (data as any).units;
+            const subject = unit.subjects;
+            const sem = subject.semesters;
+            enrichedItem.url = `/university/${sem.courses.universities.slug}/${sem.courses.code}/sem${sem.number}/${subject.slug}?tab=notes`;
           }
         } else if (item.item_type === 'question') {
           const { data } = await supabase
             .from('important_questions')
-            .select('question')
+            .select(`
+              question,
+              subjects!inner(
+                slug,
+                semesters!inner(number, courses!inner(code, universities!inner(slug)))
+              )
+            `)
             .eq('id', item.item_id)
             .single();
           if (data) {
             enrichedItem.name = data.question.slice(0, 100) + (data.question.length > 100 ? '...' : '');
+            const subject = (data as any).subjects;
+            const sem = subject.semesters;
+            enrichedItem.url = `/university/${sem.courses.universities.slug}/${sem.courses.code}/sem${sem.number}/${subject.slug}?tab=questions`;
           }
         }
         
@@ -275,33 +303,47 @@ export default function StudylistDetail() {
             ) : (
               <div className="space-y-3">
                 {items.map((item) => (
-                  <Card key={item.id} className="group">
+                  <Card key={item.id} className="group hover:shadow-md transition-shadow">
                     <CardContent className="flex items-center justify-between p-4">
-                      <div className="flex items-center gap-3">
-                        <div className="p-2 rounded-lg bg-primary/10 text-primary">
+                      <div className="flex items-center gap-3 flex-1 min-w-0">
+                        <div className="p-2 rounded-lg bg-primary/10 text-primary shrink-0">
                           {getItemIcon(item.item_type)}
                         </div>
-                        <div>
-                          <p className="font-medium">{item.name || 'Unknown item'}</p>
+                        <div className="min-w-0 flex-1">
+                          <p className="font-medium truncate">{item.name || 'Unknown item'}</p>
                           <p className="text-xs text-muted-foreground capitalize">
                             {item.item_type}
                             {item.details && ` • ${item.details}`}
                           </p>
                         </div>
                       </div>
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        className="opacity-0 group-hover:opacity-100 transition-opacity"
-                        onClick={() => handleRemoveItem(item)}
-                        disabled={removingId === item.id}
-                      >
-                        {removingId === item.id ? (
-                          <Loader2 className="h-4 w-4 animate-spin" />
-                        ) : (
-                          <Trash2 className="h-4 w-4 text-destructive" />
+                      <div className="flex items-center gap-2 shrink-0">
+                        {item.url && (
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            asChild
+                          >
+                            <Link to={item.url}>
+                              <ExternalLink className="h-4 w-4 mr-1" />
+                              Open
+                            </Link>
+                          </Button>
                         )}
-                      </Button>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="opacity-0 group-hover:opacity-100 transition-opacity"
+                          onClick={() => handleRemoveItem(item)}
+                          disabled={removingId === item.id}
+                        >
+                          {removingId === item.id ? (
+                            <Loader2 className="h-4 w-4 animate-spin" />
+                          ) : (
+                            <Trash2 className="h-4 w-4 text-destructive" />
+                          )}
+                        </Button>
+                      </div>
                     </CardContent>
                   </Card>
                 ))}
