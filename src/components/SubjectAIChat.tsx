@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect, useCallback } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
@@ -13,15 +13,33 @@ import {
   FileQuestion, 
   Loader2,
   Bot,
-  User
+  User,
+  Code,
+  BarChart3
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
+import { parseAIResponse, Segment } from "@/lib/responseParser";
+import { MathRenderer, MixedMathContent } from "@/components/ai/MathRenderer";
+import { CodeBlock } from "@/components/ai/CodeBlock";
+import { CitationBadge, CitationDrawer, Citation } from "@/components/ai/CitationDrawer";
+import { GraphViewer } from "@/components/ai/GraphViewer";
 
 interface Message {
   role: "user" | "assistant";
   content: string;
+  citations?: Citation[];
+  code?: {
+    language: string;
+    source: string;
+    executable: boolean;
+  };
+  graph?: {
+    pythonCode?: string;
+    data?: string;
+  };
+  intent?: string;
 }
 
 interface SubjectAIChatProps {
@@ -39,7 +57,7 @@ export const SubjectAIChat = ({ subject, universityName }: SubjectAIChatProps) =
   const [messages, setMessages] = useState<Message[]>([
     {
       role: "assistant",
-      content: `Hi! I'm your ${subject.name} study assistant. Ask me anything about concepts, exam preparation, or practice questions.`
+      content: `Hi! I'm your ${subject.name} study assistant. Ask me anything about concepts, exam preparation, practice questions, or request code examples and visualizations.`
     }
   ]);
   const [input, setInput] = useState("");
@@ -54,7 +72,7 @@ export const SubjectAIChat = ({ subject, universityName }: SubjectAIChatProps) =
     }
   }, [messages]);
 
-  const handleSubmit = async (type: "ask" | "notes" | "quiz" = "ask", customMessage?: string) => {
+  const handleSubmit = async (type: "ask" | "notes" | "quiz" | "code" = "ask", customMessage?: string) => {
     const messageText = customMessage || input.trim();
     if (!messageText) return;
 
@@ -73,12 +91,20 @@ export const SubjectAIChat = ({ subject, universityName }: SubjectAIChatProps) =
     setIsLoading(true);
 
     try {
-      const { data, error } = await supabase.functions.invoke("ai-assistant", {
+      // Build conversation history for context
+      const conversationHistory = messages.slice(-6).map(m => ({
+        role: m.role,
+        content: m.content
+      }));
+
+      const { data, error } = await supabase.functions.invoke("ai-orchestrator", {
         body: {
+          query: messageText,
           type,
-          message: messageText,
           subject: subject.name,
-          context: universityName ? `${universityName} - ${subject.code}` : subject.code
+          subjectId: subject.id,
+          context: universityName ? `${universityName} - ${subject.code}` : subject.code,
+          conversationHistory
         }
       });
 
@@ -86,7 +112,11 @@ export const SubjectAIChat = ({ subject, universityName }: SubjectAIChatProps) =
 
       const assistantMessage: Message = {
         role: "assistant",
-        content: data.content || "I couldn't generate a response. Please try again."
+        content: data.content || "I couldn't generate a response. Please try again.",
+        citations: data.citations || [],
+        code: data.code,
+        graph: data.graph,
+        intent: data.intent
       };
       setMessages(prev => [...prev, assistantMessage]);
     } catch (error) {
@@ -141,6 +171,22 @@ export const SubjectAIChat = ({ subject, universityName }: SubjectAIChatProps) =
         const topic = input.trim() || subject.name;
         handleSubmit("quiz", topic);
       }
+    },
+    { 
+      label: "Code", 
+      icon: Code, 
+      action: () => {
+        const topic = input.trim() || subject.name;
+        handleSubmit("code", `Generate an executable Python example demonstrating: ${topic}`);
+      }
+    },
+    { 
+      label: "Graph", 
+      icon: BarChart3, 
+      action: () => {
+        const topic = input.trim() || subject.name;
+        handleSubmit("ask", `Create a Python visualization/graph for: ${topic}. Use matplotlib and make it executable.`);
+      }
     }
   ];
 
@@ -173,26 +219,51 @@ export const SubjectAIChat = ({ subject, universityName }: SubjectAIChatProps) =
                 </div>
               )}
               <div
-                className={`max-w-[85%] rounded-lg px-3 py-2 text-sm ${
+                className={`max-w-[90%] rounded-lg px-3 py-2 text-sm ${
                   msg.role === "user"
                     ? "bg-primary text-primary-foreground"
                     : "bg-muted"
                 }`}
               >
-                <div className="whitespace-pre-wrap">{msg.content}</div>
+                {msg.role === "assistant" ? (
+                  <MessageContent message={msg} />
+                ) : (
+                  <div className="whitespace-pre-wrap">{msg.content}</div>
+                )}
+                
                 {msg.role === "assistant" && (
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    className="h-6 px-2 mt-2 text-xs opacity-60 hover:opacity-100"
-                    onClick={() => handleCopy(msg.content, idx)}
-                  >
-                    {copiedIndex === idx ? (
-                      <><Check className="h-3 w-3 mr-1" /> Copied</>
-                    ) : (
-                      <><Copy className="h-3 w-3 mr-1" /> Copy</>
+                  <div className="flex items-center gap-2 mt-2 pt-2 border-t border-border/50">
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="h-6 px-2 text-xs opacity-60 hover:opacity-100"
+                      onClick={() => handleCopy(msg.content, idx)}
+                    >
+                      {copiedIndex === idx ? (
+                        <><Check className="h-3 w-3 mr-1" /> Copied</>
+                      ) : (
+                        <><Copy className="h-3 w-3 mr-1" /> Copy</>
+                      )}
+                    </Button>
+                    
+                    {msg.citations && msg.citations.length > 0 && (
+                      <CitationDrawer 
+                        citations={msg.citations}
+                        trigger={
+                          <Button variant="ghost" size="sm" className="h-6 px-2 text-xs opacity-60 hover:opacity-100 gap-1">
+                            <BookOpen className="h-3 w-3" />
+                            {msg.citations.length} sources
+                          </Button>
+                        }
+                      />
                     )}
-                  </Button>
+                    
+                    {msg.intent && (
+                      <Badge variant="outline" className="text-[10px] h-5 opacity-60">
+                        {msg.intent}
+                      </Badge>
+                    )}
+                  </div>
                 )}
               </div>
               {msg.role === "user" && (
@@ -220,7 +291,7 @@ export const SubjectAIChat = ({ subject, universityName }: SubjectAIChatProps) =
 
       <CardContent className="p-3 pt-2 border-t shrink-0 space-y-2">
         {/* Quick Actions */}
-        <div className="flex gap-1.5">
+        <div className="flex gap-1.5 flex-wrap">
           {quickActions.map((action) => (
             <Badge
               key={action.label}
@@ -262,3 +333,97 @@ export const SubjectAIChat = ({ subject, universityName }: SubjectAIChatProps) =
     </Card>
   );
 };
+
+// Component to render message content with math, code, citations, and graphs
+function MessageContent({ message }: { message: Message }) {
+  const { content, citations = [], code, graph } = message;
+  const parsed = parseAIResponse(content);
+
+  return (
+    <div className="space-y-3">
+      {/* Render parsed segments */}
+      <div className="whitespace-pre-wrap">
+        {parsed.segments.map((segment, idx) => (
+          <SegmentRenderer 
+            key={idx} 
+            segment={segment} 
+            citations={citations} 
+          />
+        ))}
+      </div>
+
+      {/* Render standalone code block if provided */}
+      {code && code.source && !parsed.hasExecutableCode && (
+        <CodeBlock
+          code={code.source}
+          language={code.language}
+          executable={code.executable}
+          className="mt-3"
+        />
+      )}
+
+      {/* Render graph if provided */}
+      {graph && (graph.pythonCode || graph.data) && (
+        <GraphViewer
+          pythonCode={graph.pythonCode}
+          imageData={graph.data}
+          className="mt-3"
+        />
+      )}
+    </div>
+  );
+}
+
+// Render individual segments
+function SegmentRenderer({ 
+  segment, 
+  citations 
+}: { 
+  segment: Segment; 
+  citations: Citation[];
+}) {
+  switch (segment.type) {
+    case "text":
+      return <span>{segment.content}</span>;
+    
+    case "math":
+      return (
+        <MathRenderer 
+          latex={segment.latex} 
+          display={segment.display} 
+        />
+      );
+    
+    case "code":
+      return (
+        <CodeBlock
+          code={segment.content}
+          language={segment.language}
+          executable={segment.executable}
+          className="my-3"
+        />
+      );
+    
+    case "citation":
+      const citation = citations.find(c => c.id === segment.id);
+      if (citation) {
+        return <CitationBadge citation={citation} />;
+      }
+      return (
+        <span className="inline-flex items-center justify-center w-4 h-4 text-[10px] font-medium rounded bg-muted text-muted-foreground">
+          {segment.id}
+        </span>
+      );
+    
+    case "graph":
+      return (
+        <GraphViewer
+          pythonCode={segment.pythonCode}
+          className="my-3"
+        />
+      );
+    
+    default:
+      return null;
+  }
+}
