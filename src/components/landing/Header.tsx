@@ -11,6 +11,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { ThemeToggle } from "@/components/ThemeToggle";
 
 const Header = () => {
   const { user, signOut } = useAuth();
@@ -59,7 +60,8 @@ const Header = () => {
           </nav>
         </div>
 
-        <div className="flex items-center gap-4">
+        <div className="flex items-center gap-2">
+          <ThemeToggle />
           {user ? (
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
@@ -114,6 +116,7 @@ const Header = () => {
       <div className="md:hidden py-3 px-4">
         {/* Auth row - centered */}
         <div className="flex items-center justify-center gap-3 mb-3">
+          <ThemeToggle />
           {user ? (
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
