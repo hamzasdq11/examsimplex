@@ -1,73 +1,190 @@
-# Welcome to your Lovable project
+<p align="center">
+  <img src="public/favicon.svg" alt="EXAM Simplex Logo" width="80" height="80">
+</p>
 
-## Project info
+<h1 align="center">EXAM Simplex</h1>
 
-**URL**: https://lovable.dev/projects/REPLACE_WITH_PROJECT_ID
+<p align="center">
+  <strong>AI-powered exam preparation for university students in India</strong>
+</p>
 
-## How can I edit this code?
+<p align="center">
+  <img src="https://img.shields.io/badge/React-18.3-61DAFB?logo=react" alt="React">
+  <img src="https://img.shields.io/badge/TypeScript-5.0-3178C6?logo=typescript" alt="TypeScript">
+  <img src="https://img.shields.io/badge/Vite-5.0-646CFF?logo=vite" alt="Vite">
+  <img src="https://img.shields.io/badge/Tailwind-3.4-06B6D4?logo=tailwindcss" alt="Tailwind">
+</p>
 
-There are several ways of editing your application.
+---
 
-**Use Lovable**
+## About
 
-Simply visit the [Lovable Project](https://lovable.dev/projects/REPLACE_WITH_PROJECT_ID) and start prompting.
+**EXAM Simplex** is a free, AI-powered study platform designed to help university students in India prepare for their exams more effectively. Currently supporting **AKTU (Abdul Kalam Technical University)** with an expandable architecture for other universities.
 
-Changes made via Lovable will be committed automatically to this repo.
+The platform provides organized study materials, previous year question papers (PYQs), and an intelligent AI assistant that can answer questions, solve problems, and provide explanations with proper citations.
 
-**Use your preferred IDE**
+## Key Features
 
-If you want to work locally using your own IDE, you can clone this repo and push changes. Pushed changes will also be reflected in Lovable.
+### 📚 Smart Study Notes
+- Organized hierarchically: University → Course → Semester → Subject → Unit
+- Point-wise notes for quick revision
+- Easy navigation with breadcrumb trails
 
-The only requirement is having Node.js & npm installed - [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating)
+### 📝 Previous Year Questions (PYQs)
+- Downloadable past exam papers
+- Organized by subject and year
+- Understand exam patterns and important topics
 
-Follow these steps:
+### 🤖 AI Study Assistant
+A sophisticated multi-model AI system featuring:
+- **Math Rendering** - Beautiful equation display using KaTeX
+- **Code Execution** - Run Python code directly in browser (Pyodide)
+- **Web Search** - Real-time information with citations (Perplexity integration)
+- **Graph Visualization** - Render mathematical graphs and diagrams
+- **Confidence Scoring** - AI indicates how confident it is in answers
+- **Smart Model Routing** - Uses different AI models based on task complexity:
+  - Flash-lite for intent classification
+  - Gemini Pro for complex reasoning
+  - Flash for fast generation
 
-```sh
-# Step 1: Clone the repository using the project's Git URL.
-git clone <YOUR_GIT_URL>
+### 📖 Personal Library
+- Save favorite subjects, notes, and papers
+- Quick access to your study materials
 
-# Step 2: Navigate to the project directory.
-cd <YOUR_PROJECT_NAME>
+### 📋 Studylists
+- Create custom collections of study materials
+- Organize resources by exam or topic
 
-# Step 3: Install the necessary dependencies.
-npm i
+### 🎓 University Support
+- Currently: AKTU (B.Tech CSE, and more)
+- Expandable architecture for additional universities
 
-# Step 4: Start the development server with auto-reloading and an instant preview.
+## Tech Stack
+
+| Category | Technology |
+|----------|------------|
+| **Frontend** | React 18, TypeScript, Vite |
+| **Styling** | Tailwind CSS, shadcn/ui |
+| **Backend** | Lovable Cloud (Supabase) |
+| **AI** | Lovable AI Gateway (Gemini 2.5/3, GPT-5 models) |
+| **Auth** | Email OTP Authentication |
+| **Database** | PostgreSQL with Row Level Security |
+
+## Architecture
+
+### Content Hierarchy
+```
+Universities
+└── Courses (B.Tech CSE, ECE, etc.)
+    └── Semesters (1-8)
+        └── Subjects (DBMS, OS, etc.)
+            └── Units (1-5)
+                ├── Notes (chapter-wise points)
+                ├── PYQ Papers (yearly)
+                └── Important Questions
+```
+
+### AI Pipeline
+```
+User Query
+    ↓
+Intent Classification (gemini-flash-lite)
+    ↓
+┌───────────────────┐
+│ Needs Web Search? │──Yes──→ Perplexity API
+└───────────────────┘              ↓
+    │ No                    Web Sources
+    ↓                           ↓
+Internal Retrieval ←────────────┘
+    ↓
+Model Routing (based on intent)
+    ↓
+Response Generation (with confidence score)
+    ↓
+Structured Output (math/code/graph/answer)
+```
+
+## Getting Started
+
+### Prerequisites
+- Node.js (v18+)
+- npm or bun
+
+### Local Development
+
+```bash
+# Clone the repository
+git clone <repository-url>
+cd exam-simplex
+
+# Install dependencies
+npm install
+
+# Start development server
 npm run dev
 ```
 
-**Edit a file directly in GitHub**
+The app will be available at `http://localhost:5173`
 
-- Navigate to the desired file(s).
-- Click the "Edit" button (pencil icon) at the top right of the file view.
-- Make your changes and commit the changes.
+### No-Code Editing
+Visit the [Lovable Project](https://lovable.dev/projects/REPLACE_WITH_PROJECT_ID) to make changes using the AI editor.
 
-**Use GitHub Codespaces**
+## Project Structure
 
-- Navigate to the main page of your repository.
-- Click on the "Code" button (green button) near the top right.
-- Select the "Codespaces" tab.
-- Click on "New codespace" to launch a new Codespace environment.
-- Edit files directly within the Codespace and commit and push your changes once you're done.
+```
+src/
+├── components/
+│   ├── landing/      # Landing page sections
+│   ├── admin/        # Admin dashboard components
+│   ├── ai/           # AI chat components (citations, code, math)
+│   └── ui/           # shadcn/ui components
+├── pages/
+│   ├── SubjectPage   # Subject detail with AI chat
+│   ├── UniversityPage# University overview
+│   ├── Dashboard     # User dashboard
+│   └── admin/        # Admin pages
+├── hooks/            # Custom React hooks
+└── lib/              # Utilities and helpers
 
-## What technologies are used for this project?
+supabase/
+└── functions/
+    ├── ai-orchestrator/      # Main AI routing logic
+    ├── ai-intent-classifier/ # Query intent detection
+    ├── ai-internal-retrieval/# Database content search
+    └── ai-web-search/        # Perplexity web search
+```
 
-This project is built with:
+## Database Schema
 
-- Vite
-- TypeScript
-- React
-- shadcn-ui
-- Tailwind CSS
+| Table | Purpose |
+|-------|---------|
+| `universities` | University information |
+| `courses` | Degree programs |
+| `semesters` | Academic semesters |
+| `subjects` | Course subjects |
+| `units` | Subject units/chapters |
+| `notes` | Study notes content |
+| `pyq_papers` | Past exam papers |
+| `important_questions` | Frequently asked questions |
+| `profiles` | User profiles |
+| `studylists` | User-created collections |
 
-## How can I deploy this project?
+## Contributing
 
-Simply open [Lovable](https://lovable.dev/projects/REPLACE_WITH_PROJECT_ID) and click on Share -> Publish.
+Contributions are welcome! Please feel free to submit issues and pull requests.
 
-## Can I connect a custom domain to my Lovable project?
+1. Fork the repository
+2. Create your feature branch (`git checkout -b feature/amazing-feature`)
+3. Commit your changes (`git commit -m 'Add some amazing feature'`)
+4. Push to the branch (`git push origin feature/amazing-feature`)
+5. Open a Pull Request
 
-Yes, you can!
+## License
 
-To connect a domain, navigate to Project > Settings > Domains and click Connect Domain.
+This project is open source and available under the [MIT License](LICENSE).
 
-Read more here: [Setting up a custom domain](https://docs.lovable.dev/features/custom-domain#custom-domain)
+---
+
+<p align="center">
+  Built with ❤️ for students preparing for their exams
+</p>
