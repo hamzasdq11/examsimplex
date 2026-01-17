@@ -205,26 +205,11 @@ serve(async (req) => {
                   response_type: {
                     type: "string",
                     enum: ["math", "graph", "code", "answer"],
-                    description: "Type of response: use 'graph' for visualizations/charts/plots, 'code' for programming, 'math' for calculations, 'answer' for explanations"
+                    description: "Type of response"
                   },
                   content: {
                     type: "object",
-                    description: "Response content - must include type-specific fields",
-                    properties: {
-                      // For code and graph types
-                      python: { type: "string", description: "Python code (for math/graph/code types)" },
-                      code: { type: "string", description: "Code content (alternative to python)" },
-                      source: { type: "string", description: "Source code (alternative to python/code)" },
-                      language: { type: "string", description: "Programming language (default: python)" },
-                      executable: { type: "boolean", description: "Whether code is executable" },
-                      // For explanations
-                      explanation: { type: "string", description: "Explanation of the code/solution" },
-                      description: { type: "string", description: "Description (for graphs)" },
-                      text: { type: "string", description: "Text content (for answers)" },
-                      // For math
-                      latex: { type: "string", description: "LaTeX formatted math" },
-                      steps: { type: "array", items: { type: "string" }, description: "Step-by-step solution" }
-                    }
+                    description: "Response content based on type"
                   },
                   confidence: {
                     type: "number",
@@ -265,7 +250,6 @@ serve(async (req) => {
     if (toolCall?.function?.arguments) {
       try {
         const args = JSON.parse(toolCall.function.arguments);
-        console.log("Tool response:", JSON.stringify({ response_type: args.response_type, contentKeys: Object.keys(args.content || {}) }));
         structuredResponse = parseToolResponse(args, internalSources, webResult.sources || []);
         responseConfidence = args.confidence || confidence;
       } catch (e) {
@@ -326,12 +310,12 @@ async function classifyIntent(query: string, subject: string, apiKey: string) {
   try {
     const classificationPrompt = `Classify this query. Respond ONLY with valid JSON, no markdown.
 
-Categories (choose the BEST match):
+Categories:
 - FACTUAL: Needs external/web search for facts, current events, definitions
 - CONCEPTUAL: Explanation from knowledge, understanding concepts
-- MATH: Mathematical computation, equations, proofs, derivations (may include verification code)
-- CODE: Programming, algorithms, code implementation (NOT visualization)
-- GRAPH: Charts, plots, visualizations, matplotlib, diagrams, visual representations of data - choose this when user asks to "visualize", "plot", "graph", "chart", "show diagram"
+- MATH: Mathematical computation, equations, proofs, derivations
+- CODE: Programming, algorithms, code generation
+- GRAPH: Visualization, plots, charts, diagrams
 - MIXED: Combination requiring multiple approaches
 
 Query: "${query}"
@@ -362,23 +346,13 @@ JSON format (no markdown):
     const jsonMatch = content.match(/\{[\s\S]*\}/);
     if (jsonMatch) {
       const parsed = JSON.parse(jsonMatch[0]);
-      let intent = parsed.intent || "CONCEPTUAL" as Intent;
-      
-      // Override to GRAPH if query contains visualization keywords but was classified as CODE
-      const queryLower = query.toLowerCase();
-      const graphKeywords = ["graph", "plot", "chart", "visualiz", "diagram", "matplotlib", "draw", "show me"];
-      if (intent === "CODE" && graphKeywords.some(kw => queryLower.includes(kw))) {
-        console.log("Overriding CODE to GRAPH based on keywords");
-        intent = "GRAPH" as Intent;
-      }
-      
       return {
-        intent,
+        intent: parsed.intent || "CONCEPTUAL" as Intent,
         confidence: parsed.confidence || 0.7,
         needsRetrieval: parsed.needsRetrieval ?? true,
-        needsWebSearch: parsed.needsWebSearch ?? (intent === "FACTUAL"),
+        needsWebSearch: parsed.needsWebSearch ?? (parsed.intent === "FACTUAL"),
         needsComputation: parsed.needsComputation ?? false,
-        needsVisualization: parsed.needsVisualization ?? (intent === "GRAPH"),
+        needsVisualization: parsed.needsVisualization ?? false,
       };
     }
   } catch (e) {
@@ -583,33 +557,30 @@ function parseToolResponse(args: any, internalSources: any[], webSources: any[])
     case "math":
       return {
         type: "math",
-        python: content.python || content.code || content.source || "",
-        explanation: content.explanation || content.text || content.description || "",
+        python: content.python || content.code || "",
+        explanation: content.explanation || content.text || "",
         latex: content.latex,
         steps: content.steps
       };
     case "graph":
       return {
         type: "graph",
-        python: content.python || content.code || content.source || "",
-        description: content.description || content.explanation || content.text || ""
+        python: content.python || content.code || "",
+        description: content.description || content.explanation || ""
       };
     case "code":
       return {
         type: "code",
         language: content.language || "python",
-        source: content.source || content.code || content.python || "",
-        explanation: content.explanation || content.description || content.text || "",
+        source: content.source || content.code || "",
+        explanation: content.explanation || "",
         executable: content.executable ?? true
       };
     case "answer":
     default:
-      // Extract meaningful text from any field
-      const text = content.text || content.explanation || content.description || 
-                   (typeof content === "string" ? content : JSON.stringify(content));
       return {
         type: "answer",
-        text,
+        text: content.text || content.explanation || JSON.stringify(content),
         citations: allCitations
       };
   }
