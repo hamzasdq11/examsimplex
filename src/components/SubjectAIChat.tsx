@@ -122,13 +122,13 @@ export const SubjectAIChat = ({ subject, universityName }: SubjectAIChatProps) =
       if (response) {
         switch (response.type) {
           case "math":
-            displayContent = response.explanation;
+            displayContent = response.explanation || (response.python ? "Mathematical solution generated." : "");
             break;
           case "graph":
-            displayContent = response.description;
+            displayContent = response.description || (response.python ? "Visualization generated." : "");
             break;
           case "code":
-            displayContent = response.explanation;
+            displayContent = response.explanation || (response.source ? "Code generated successfully." : "");
             break;
           case "answer":
             displayContent = response.text;
