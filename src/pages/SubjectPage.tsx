@@ -34,6 +34,8 @@ import {
   Loader2,
   PanelRightClose,
   PanelRightOpen,
+  X,
+  Sparkles,
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import type { Subject, Unit, Note, ImportantQuestion, PYQPaper, PYQQuestion, University, Course, Semester } from "@/types/database";
@@ -64,6 +66,7 @@ const SubjectPage = () => {
   const [aiMessage, setAiMessage] = useState("");
   const [aiMessages, setAiMessages] = useState<Array<{ role: string; content: string }>>([]);
   const [isAIPanelCollapsed, setIsAIPanelCollapsed] = useState(false);
+  const [isAIFullscreen, setIsAIFullscreen] = useState(false);
 
   // Database state
   const [loading, setLoading] = useState(true);
@@ -303,6 +306,44 @@ const SubjectPage = () => {
     description: seoDescription,
   });
 
+  // Fullscreen AI Mode
+  if (isAIFullscreen) {
+    return (
+      <div className="fixed inset-0 z-50 bg-background flex flex-col">
+        {/* Fullscreen Header */}
+        <div className="border-b bg-card px-4 py-3 flex items-center justify-between shrink-0">
+          <div className="flex items-center gap-3">
+            <div className="p-2 rounded-lg bg-primary/10">
+              <Sparkles className="h-5 w-5 text-primary" />
+            </div>
+            <div>
+              <h1 className="font-semibold text-lg">AI Study Mode</h1>
+              <p className="text-sm text-muted-foreground">
+                {subject.name} • {university?.name || subject.code}
+              </p>
+            </div>
+          </div>
+          <Button 
+            variant="ghost" 
+            size="icon"
+            onClick={() => setIsAIFullscreen(false)}
+            className="hover:bg-muted"
+          >
+            <X className="h-5 w-5" />
+          </Button>
+        </div>
+        
+        {/* Fullscreen AI Chat */}
+        <div className="flex-1 overflow-hidden">
+          <SubjectAIChat 
+            subject={subject}
+            universityName={university?.name}
+          />
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-background">
       <SEO
@@ -397,9 +438,16 @@ const SubjectPage = () => {
                       <FileText className="h-4 w-4" />
                       PYQs
                     </TabsTrigger>
-                    <TabsTrigger value="ai" className="gap-2">
-                      <MessageSquare className="h-4 w-4" />
-                      Ask AI
+                    <TabsTrigger 
+                      value="ai" 
+                      className="gap-2"
+                      onClick={(e) => {
+                        e.preventDefault();
+                        setIsAIFullscreen(true);
+                      }}
+                    >
+                      <Sparkles className="h-4 w-4" />
+                      AI Study Mode
                     </TabsTrigger>
                   </TabsList>
 
