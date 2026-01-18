@@ -205,11 +205,23 @@ serve(async (req) => {
                   response_type: {
                     type: "string",
                     enum: ["math", "graph", "code", "answer"],
-                    description: "Type of response"
+                    description: "Type of response: math for equations, graph for visualizations, code for programming, answer for text"
                   },
                   content: {
                     type: "object",
-                    description: "Response content based on type"
+                    properties: {
+                      text: { type: "string", description: "Main text explanation or answer" },
+                      explanation: { type: "string", description: "Detailed explanation" },
+                      description: { type: "string", description: "Description of visualization/output" },
+                      python: { type: "string", description: "Python code for math or graph" },
+                      code: { type: "string", description: "Code content (alias for python/source)" },
+                      source: { type: "string", description: "Source code" },
+                      language: { type: "string", description: "Programming language" },
+                      latex: { type: "string", description: "LaTeX formula" },
+                      steps: { type: "array", items: { type: "string" }, description: "Step-by-step solution" },
+                      executable: { type: "boolean", description: "Whether code is executable" }
+                    },
+                    description: "Response content - include relevant fields based on response_type"
                   },
                   confidence: {
                     type: "number",
@@ -533,6 +545,9 @@ function buildUserPrompt(query: string, type: string, intent: Intent): string {
 
 // ============== RESPONSE PARSING ==============
 function parseToolResponse(args: any, internalSources: any[], webSources: any[]): AIResponseType {
+  // Debug logging for tool response
+  console.log("[DEBUG] Tool response args:", JSON.stringify(args, null, 2));
+  
   const allCitations: Citation[] = [
     ...internalSources.map((src, idx) => ({
       id: idx + 1,
@@ -551,42 +566,50 @@ function parseToolResponse(args: any, internalSources: any[], webSources: any[])
   ];
 
   const responseType = args.response_type;
-  const content = args.content;
+  const content = args.content || {};
+
+  // Debug: log what fields are being extracted
+  console.log(`[DEBUG] Parsing response_type: ${responseType}, content keys: ${Object.keys(content).join(", ")}`);
 
   switch (responseType) {
     case "math":
       return {
         type: "math",
-        python: content.python || content.code || "",
-        explanation: content.explanation || content.text || "",
-        latex: content.latex,
-        steps: content.steps
+        python: content.python || content.code || content.source || "",
+        explanation: content.explanation || content.text || content.description || "",
+        latex: content.latex || content.formula || "",
+        steps: Array.isArray(content.steps) ? content.steps : []
       };
     case "graph":
       return {
         type: "graph",
-        python: content.python || content.code || "",
-        description: content.description || content.explanation || ""
+        python: content.python || content.code || content.source || content.plot_code || "",
+        description: content.description || content.explanation || content.text || ""
       };
     case "code":
       return {
         type: "code",
         language: content.language || "python",
-        source: content.source || content.code || "",
-        explanation: content.explanation || "",
+        source: content.source || content.code || content.python || "",
+        explanation: content.explanation || content.text || content.description || "",
         executable: content.executable ?? true
       };
     case "answer":
     default:
       return {
         type: "answer",
-        text: content.text || content.explanation || JSON.stringify(content),
+        text: content.text || content.explanation || content.description || 
+              (typeof content === "string" ? content : JSON.stringify(content)),
         citations: allCitations
       };
   }
 }
 
 function parseFallbackResponse(content: string, intent: Intent, internalSources: any[], webSources: any[]): AIResponseType {
+  // Debug logging for fallback parsing
+  console.log("[DEBUG] Fallback parsing triggered, intent:", intent);
+  console.log("[DEBUG] Content preview:", content.slice(0, 200));
+  
   const allCitations: Citation[] = [
     ...internalSources.map((src, idx) => ({
       id: idx + 1,
@@ -604,8 +627,11 @@ function parseFallbackResponse(content: string, intent: Intent, internalSources:
     }))
   ];
 
-  // Extract code blocks
-  const codeMatch = content.match(/```(python(?::executable)?)\n([\s\S]*?)```/);
+  // Extract code blocks - more flexible regex
+  const codeMatch = content.match(/```(python(?::executable)?|py)\n([\s\S]*?)```/);
+  
+  // Check for graph-related keywords in content
+  const hasGraphKeywords = /\b(plot|graph|chart|visuali[sz]e|matplotlib|pyplot|plt\.)\b/i.test(content);
   
   if (codeMatch && (intent === "MATH" || intent === "MIXED")) {
     return {
@@ -615,7 +641,8 @@ function parseFallbackResponse(content: string, intent: Intent, internalSources:
     };
   }
 
-  if (codeMatch && intent === "GRAPH") {
+  // GRAPH intent OR content has graph keywords with code
+  if (codeMatch && (intent === "GRAPH" || hasGraphKeywords)) {
     return {
       type: "graph",
       python: codeMatch[2].trim(),
@@ -629,7 +656,19 @@ function parseFallbackResponse(content: string, intent: Intent, internalSources:
       language: "python",
       source: codeMatch[2].trim(),
       explanation: content.replace(codeMatch[0], "").trim(),
-      executable: codeMatch[1].includes(":executable")
+      executable: codeMatch[1].includes(":executable") || true
+    };
+  }
+
+  // If there's code but intent wasn't matched, still extract as code
+  if (codeMatch) {
+    console.log("[DEBUG] Found code block but intent was:", intent, "- treating as code");
+    return {
+      type: "code",
+      language: "python",
+      source: codeMatch[2].trim(),
+      explanation: content.replace(codeMatch[0], "").trim(),
+      executable: true
     };
   }
 

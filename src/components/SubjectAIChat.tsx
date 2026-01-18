@@ -122,17 +122,31 @@ export const SubjectAIChat = ({ subject, universityName }: SubjectAIChatProps) =
       if (response) {
         switch (response.type) {
           case "math":
-            displayContent = response.explanation;
+            displayContent = response.explanation || 
+              (response.python ? "Math computation generated. See code below." : "");
             break;
           case "graph":
-            displayContent = response.description;
+            displayContent = response.description || 
+              (response.python ? "Visualization generated. See graph below." : "");
             break;
           case "code":
-            displayContent = response.explanation;
+            displayContent = response.explanation || 
+              (response.source ? `Here's the ${response.language} code:` : "");
             break;
           case "answer":
             displayContent = response.text;
             break;
+        }
+      }
+
+      // Additional fallback: if displayContent is still empty but we have code/data
+      if (!displayContent && response) {
+        if (response.type === "code" && response.source) {
+          displayContent = "Code generated successfully:";
+        } else if (response.type === "graph" && response.python) {
+          displayContent = "Here's the visualization:";
+        } else if (response.type === "math" && response.python) {
+          displayContent = "Here's the mathematical computation:";
         }
       }
 
@@ -426,6 +440,12 @@ function ConfidenceIndicator({
   );
 }
 
+// Helper to extract code from markdown content
+function extractCodeFromContent(content: string): string {
+  const match = content.match(/```(?:python|py)?(?::executable)?\n([\s\S]*?)```/);
+  return match ? match[1].trim() : "";
+}
+
 // Component to render message content with math, code, citations, and graphs
 function MessageContent({ message }: { message: Message }) {
   const { content, response } = message;
@@ -438,6 +458,13 @@ function MessageContent({ message }: { message: Message }) {
   const showMathCode = response?.type === "math" && response.python;
   const showGraphCode = response?.type === "graph" && response.python;
   const showCode = response?.type === "code" && response.source;
+
+  // Fallback detection: check if content has code even if response type is "answer"
+  const hasCodeInParsed = parsed.segments.some(s => s.type === "code");
+  const showFallbackCode = 
+    !showMathCode && !showGraphCode && !showCode && 
+    !hasCodeInParsed && 
+    content.includes("```python");
 
   return (
     <div className="space-y-3">
@@ -488,6 +515,16 @@ function MessageContent({ message }: { message: Message }) {
       {showGraphCode && (
         <GraphViewer
           pythonCode={response.python}
+          className="mt-3"
+        />
+      )}
+
+      {/* Fallback code rendering for answer-type responses with embedded code */}
+      {showFallbackCode && (
+        <CodeBlock
+          code={extractCodeFromContent(content)}
+          language="python"
+          executable={content.includes(":executable") || content.includes("plt.")}
           className="mt-3"
         />
       )}
