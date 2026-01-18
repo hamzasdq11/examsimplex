@@ -52,9 +52,18 @@ Categories:
 - FACTUAL: Questions about facts, definitions, history, or information that needs external sources
 - CONCEPTUAL: Questions asking for explanations, understanding concepts, how things work
 - MATH: Questions requiring mathematical computation, derivations, equations, proofs
-- CODE: Questions about programming, code generation, debugging, algorithms
-- GRAPH: Questions explicitly asking for visualizations, plots, charts, or diagrams
+- CODE: Questions about programming, code generation, debugging, algorithms (NOT visualization/plotting)
+- GRAPH: Questions asking for visualizations, plots, charts, diagrams, or graphical representation of data
 - MIXED: Complex questions combining multiple categories (e.g., "solve this equation and plot it")
+
+IMPORTANT DISTINCTION between CODE and GRAPH:
+- "Write code to sort an array" → CODE (focus is on the algorithm)
+- "Plot a sine wave" → GRAPH (focus is on visualization)
+- "Create a graph showing..." → GRAPH
+- "Implement quicksort" → CODE
+- "Visualize the data" → GRAPH
+- "Generate matplotlib code" → GRAPH (goal is visualization)
+- "Create a Python visualization" → GRAPH
 
 Query: "${query}"
 Subject context: ${subject || "General"}
@@ -105,11 +114,21 @@ Respond with this exact JSON format:
       
       // Validate and set defaults
       const validIntents: Intent[] = ["FACTUAL", "CONCEPTUAL", "MATH", "CODE", "GRAPH", "MIXED"];
-      const intent = validIntents.includes(parsed.intent) ? parsed.intent : "CONCEPTUAL";
+      let intent: Intent = validIntents.includes(parsed.intent) ? parsed.intent : "CONCEPTUAL";
+      
+      // Pattern-based refinement for GRAPH vs CODE ambiguity
+      const graphPatterns = /\b(plot|graph|chart|diagram|visuali[sz]e|draw|show.*curve|display.*data|matplotlib|pyplot|visualization)\b/i;
+      const codePatterns = /\b(implement|write.*function|debug|algorithm|function.*to|class.*that|module|compile|build|refactor)\b/i;
+      
+      if (intent === "CODE" && graphPatterns.test(query) && !codePatterns.test(query)) {
+        console.log("[DEBUG] Overriding CODE → GRAPH based on pattern match");
+        intent = "GRAPH";
+        parsed.needsVisualization = true;
+      }
       
       // Determine suggested model based on intent
       let suggestedModel: "fast" | "default" | "complex" = "default";
-      if (intent === "MATH" || intent === "MIXED" || intent === "CODE") {
+      if (intent === "MATH" || intent === "MIXED" || intent === "CODE" || intent === "GRAPH") {
         suggestedModel = "complex";
       } else if (parsed.confidence > 0.9 && !parsed.needsRetrieval) {
         suggestedModel = "fast";
