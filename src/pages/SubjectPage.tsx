@@ -45,6 +45,7 @@ import { SEO, createBreadcrumbSchema, createCourseSchema } from "@/components/SE
 import { AddToLibraryButton } from "@/components/AddToLibraryButton";
 import { AddToStudylistButton } from "@/components/AddToStudylistButton";
 import { SubjectAIChat } from "@/components/SubjectAIChat";
+import { MCQPractice } from "@/components/MCQPractice";
 
 interface NoteWithUnit extends Note {
   units: Unit;
@@ -433,14 +434,7 @@ const SubjectPage = () => {
                       <FileText className="h-4 w-4" />
                       PYQs
                     </TabsTrigger>
-                    <TabsTrigger
-                      value="ai"
-                      className="gap-2"
-                      onClick={(e) => {
-                        e.preventDefault();
-                        setIsAIFullscreen(true);
-                      }}
-                    >
+                    <TabsTrigger value="ai" className="gap-2">
                       <Sparkles className="h-4 w-4" />
                       Practice Mode
                     </TabsTrigger>
@@ -670,68 +664,13 @@ const SubjectPage = () => {
                     </Card>
                   </TabsContent>
 
-                  {/* AI Tab */}
+                  {/* Practice Mode Tab - MCQ */}
                   <TabsContent value="ai" className="mt-6">
-                    <Card>
-                      <CardHeader>
-                        <CardTitle className="text-lg text-primary flex items-center gap-2">
-                          <MessageSquare className="h-5 w-5" />
-                          AI Study Assistant
-                        </CardTitle>
-                        <p className="text-sm text-muted-foreground">
-                          Ask questions about {subject.name} and get instant explanations
-                        </p>
-                      </CardHeader>
-                      <CardContent className="p-0">
-                        <ScrollArea className="h-[400px] p-4">
-                          {aiMessages.length === 0 ? (
-                            <div className="text-center py-12">
-                              <MessageSquare className="h-12 w-12 mx-auto text-muted-foreground/50 mb-4" />
-                              <p className="text-muted-foreground">Ask anything about {subject.name}</p>
-                              <p className="text-sm text-muted-foreground mt-1">
-                                Get explanations, practice questions, or study tips
-                              </p>
-                            </div>
-                          ) : (
-                            <div className="space-y-4">
-                              {aiMessages.map((msg, idx) => (
-                                <div
-                                  key={idx}
-                                  className={`flex ${msg.role === "user" ? "justify-end" : "justify-start"}`}
-                                >
-                                  <div
-                                    className={`max-w-[80%] rounded-lg px-4 py-2 ${
-                                      msg.role === "user" ? "bg-primary text-primary-foreground" : "bg-muted"
-                                    }`}
-                                  >
-                                    <p className="text-sm whitespace-pre-wrap">{msg.content}</p>
-                                  </div>
-                                </div>
-                              ))}
-                            </div>
-                          )}
-                        </ScrollArea>
-                        <div className="border-t p-4">
-                          <div className="flex gap-2">
-                            <Textarea
-                              placeholder="Ask about any concept, question, or exam tip..."
-                              value={aiMessage}
-                              onChange={(e) => setAiMessage(e.target.value)}
-                              className="min-h-[60px] resize-none"
-                              onKeyDown={(e) => {
-                                if (e.key === "Enter" && !e.shiftKey) {
-                                  e.preventDefault();
-                                  handleAiSubmit();
-                                }
-                              }}
-                            />
-                            <Button onClick={handleAiSubmit} size="icon" className="shrink-0">
-                              <Send className="h-4 w-4" />
-                            </Button>
-                          </div>
-                        </div>
-                      </CardContent>
-                    </Card>
+                    <MCQPractice 
+                      subjectId={subject.id} 
+                      subjectName={subject.name} 
+                      units={units} 
+                    />
                   </TabsContent>
                 </Tabs>
               </div>
