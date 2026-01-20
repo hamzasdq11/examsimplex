@@ -1,4 +1,5 @@
 import { Star } from "lucide-react";
+import { AnimatedSection } from "@/hooks/useScrollAnimation";
 
 const testimonials = [
   {
@@ -43,33 +44,33 @@ const Testimonials = () => {
   return (
     <section id="testimonials" className="py-16 md:py-24 bg-background overflow-hidden">
       <div className="container">
-        <div className="text-center mb-12">
+        <AnimatedSection animation="fade-up" className="text-center mb-12">
           <h2 className="text-3xl md:text-4xl font-display font-semibold text-foreground mb-4">
             Student Success Stories
           </h2>
           <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
             See how our students achieved their dream scores with our comprehensive prep programs.
           </p>
-        </div>
+        </AnimatedSection>
       </div>
 
       <div className="relative">
-        <div className="flex animate-scroll gap-6 w-max">
+        <div className="flex animate-scroll gap-6 w-max hover:[animation-play-state:paused]">
           {[...testimonials, ...testimonials].map((testimonial, index) => (
             <div
               key={index}
-              className="bg-card rounded-2xl p-8 shadow-sm border border-border/50 min-w-[350px] max-w-[350px]"
+              className="bg-card rounded-2xl p-8 shadow-sm border border-border/50 min-w-[350px] max-w-[350px] transition-all duration-500 hover:shadow-xl hover:-translate-y-2 hover:border-primary/20"
             >
               <div className="flex items-center gap-1 mb-4">
                 {[...Array(5)].map((_, i) => (
-                  <Star key={i} className="h-4 w-4 fill-yellow-400 text-yellow-400" />
+                  <Star key={i} className="h-4 w-4 fill-yellow-400 text-yellow-400 transition-transform duration-300 hover:scale-125" />
                 ))}
               </div>
               
               <p className="text-foreground mb-6 leading-relaxed">"{testimonial.quote}"</p>
               
               <div className="flex items-center gap-4">
-                <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center">
+                <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center transition-all duration-300 hover:scale-110 hover:bg-primary/20">
                   <span className="text-lg font-semibold text-primary">
                     {testimonial.name.split(' ').map(n => n[0]).join('')}
                   </span>

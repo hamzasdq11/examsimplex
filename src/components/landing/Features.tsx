@@ -4,6 +4,7 @@ import { Link } from "react-router-dom";
 import { useState, useEffect, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import type { University } from "@/types/database";
+import { AnimatedSection } from "@/hooks/useScrollAnimation";
 
 const fallbackUniversities = [
   {
@@ -129,19 +130,21 @@ const Features = () => {
     <section id="features" className="py-8 md:py-10 bg-background">
       <div className="container max-w-6xl mx-auto px-6 md:px-8">
         {/* Search Bar - Moved to top */}
-        <div className="max-w-2xl mx-auto mb-6">
-          <div className="relative">
-            <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
-            <Input
-              type="text"
-              placeholder="Search your college"
-              className="pl-12 h-12 text-base rounded-xl bg-background border-border"
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              onFocus={handleSearchFocus}
-            />
+        <AnimatedSection animation="fade-down" delay={0}>
+          <div className="max-w-2xl mx-auto mb-6">
+            <div className="relative group">
+              <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground transition-colors group-focus-within:text-primary" />
+              <Input
+                type="text"
+                placeholder="Search your college"
+                className="pl-12 h-12 text-base rounded-xl bg-background border-border transition-all duration-300 focus:ring-2 focus:ring-primary/20 focus:border-primary"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                onFocus={handleSearchFocus}
+              />
+            </div>
           </div>
-        </div>
+        </AnimatedSection>
 
         {/* University Cards Grid */}
         {isLoading ? (
@@ -155,18 +158,19 @@ const Features = () => {
         ) : (
           <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-3">
             {filteredUniversities.map((uni, index) => (
-              <Link
-                key={index}
-                to={`/university/${uni.slug}`}
-                className={`group block ${uni.bgColor} rounded-xl border-t-4 ${uni.borderColor} border border-border p-4 hover:shadow-lg transition-all duration-300 hover:-translate-y-1`}
-              >
-                <h3 className="text-lg font-bold text-foreground mb-2 group-hover:text-primary transition-colors">
-                  {uni.name}
-                </h3>
-                <p className="text-sm text-muted-foreground">
-                  {uni.type} • {uni.location}
-                </p>
-              </Link>
+              <AnimatedSection key={index} animation="fade-up" delay={index * 50}>
+                <Link
+                  to={`/university/${uni.slug}`}
+                  className={`group block ${uni.bgColor} rounded-xl border-t-4 ${uni.borderColor} border border-border p-4 card-hover`}
+                >
+                  <h3 className="text-lg font-bold text-foreground mb-2 group-hover:text-primary transition-colors duration-300">
+                    {uni.name}
+                  </h3>
+                  <p className="text-sm text-muted-foreground">
+                    {uni.type} • {uni.location}
+                  </p>
+                </Link>
+              </AnimatedSection>
             ))}
           </div>
         )}
