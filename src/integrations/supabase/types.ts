@@ -677,6 +677,33 @@ export type Database = {
         }
         Relationships: []
       }
+      user_exam_settings: {
+        Row: {
+          created_at: string
+          exam_date: string | null
+          exam_type: string | null
+          id: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          exam_date?: string | null
+          exam_type?: string | null
+          id?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          exam_date?: string | null
+          exam_type?: string | null
+          id?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       user_library_items: {
         Row: {
           created_at: string
@@ -721,6 +748,72 @@ export type Database = {
           user_id?: string
         }
         Relationships: []
+      }
+      user_study_progress: {
+        Row: {
+          ai_sessions: number | null
+          created_at: string
+          id: string
+          last_activity_at: string | null
+          last_unit_id: string | null
+          notes_viewed: number | null
+          pyqs_practiced: number | null
+          questions_attempted: number | null
+          subject_id: string
+          total_notes: number | null
+          total_pyqs: number | null
+          total_questions: number | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          ai_sessions?: number | null
+          created_at?: string
+          id?: string
+          last_activity_at?: string | null
+          last_unit_id?: string | null
+          notes_viewed?: number | null
+          pyqs_practiced?: number | null
+          questions_attempted?: number | null
+          subject_id: string
+          total_notes?: number | null
+          total_pyqs?: number | null
+          total_questions?: number | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          ai_sessions?: number | null
+          created_at?: string
+          id?: string
+          last_activity_at?: string | null
+          last_unit_id?: string | null
+          notes_viewed?: number | null
+          pyqs_practiced?: number | null
+          questions_attempted?: number | null
+          subject_id?: string
+          total_notes?: number | null
+          total_pyqs?: number | null
+          total_questions?: number | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_study_progress_last_unit_id_fkey"
+            columns: ["last_unit_id"]
+            isOneToOne: false
+            referencedRelation: "units"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "user_study_progress_subject_id_fkey"
+            columns: ["subject_id"]
+            isOneToOne: false
+            referencedRelation: "subjects"
+            referencedColumns: ["id"]
+          },
+        ]
       }
     }
     Views: {
