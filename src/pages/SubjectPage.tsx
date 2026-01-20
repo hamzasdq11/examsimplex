@@ -9,16 +9,8 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Textarea } from "@/components/ui/textarea";
-import {
-  Collapsible,
-  CollapsibleContent,
-  CollapsibleTrigger,
-} from "@/components/ui/collapsible";
-import {
-  ResizableHandle,
-  ResizablePanel,
-  ResizablePanelGroup,
-} from "@/components/ui/resizable";
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
+import { ResizableHandle, ResizablePanel, ResizablePanelGroup } from "@/components/ui/resizable";
 import {
   BookOpen,
   FileQuestion,
@@ -39,7 +31,17 @@ import {
   Maximize2,
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
-import type { Subject, Unit, Note, ImportantQuestion, PYQPaper, PYQQuestion, University, Course, Semester } from "@/types/database";
+import type {
+  Subject,
+  Unit,
+  Note,
+  ImportantQuestion,
+  PYQPaper,
+  PYQQuestion,
+  University,
+  Course,
+  Semester,
+} from "@/types/database";
 import { SEO, createBreadcrumbSchema, createCourseSchema } from "@/components/SEO";
 import { AddToLibraryButton } from "@/components/AddToLibraryButton";
 import { AddToStudylistButton } from "@/components/AddToStudylistButton";
@@ -60,7 +62,7 @@ interface ImportantQuestionWithUnit extends ImportantQuestion {
 const SubjectPage = () => {
   const { universityId, courseId, semesterId, subjectId } = useParams();
   const [searchParams] = useSearchParams();
-  const initialTab = searchParams.get('tab') || 'questions';
+  const initialTab = searchParams.get("tab") || "questions";
   const [activeTab, setActiveTab] = useState(initialTab);
   const [openUnits, setOpenUnits] = useState<string[]>([]);
   const [openPyqYears, setOpenPyqYears] = useState<string[]>([]);
@@ -88,8 +90,9 @@ const SubjectPage = () => {
       try {
         // Fetch subject with nested semester, course, university
         const { data: subjectData, error: subjectError } = await supabase
-          .from('subjects')
-          .select(`
+          .from("subjects")
+          .select(
+            `
             *,
             semesters!inner (
               *,
@@ -98,37 +101,42 @@ const SubjectPage = () => {
                 universities!inner (*)
               )
             )
-          `)
-          .eq('slug', subjectId)
+          `,
+          )
+          .eq("slug", subjectId)
           .maybeSingle();
 
         if (subjectError || !subjectData) {
-          console.error('Error fetching subject:', subjectError);
+          console.error("Error fetching subject:", subjectError);
           setLoading(false);
           return;
         }
 
         setSubject(subjectData);
-        const semesterData = subjectData.semesters as unknown as Semester & { courses: Course & { universities: University } };
+        const semesterData = subjectData.semesters as unknown as Semester & {
+          courses: Course & { universities: University };
+        };
         setSemester(semesterData);
         setCourse(semesterData.courses);
         setUniversity(semesterData.courses.universities);
 
         // Set AI initial message with subject context
-        setAiMessages([{
-          role: "assistant",
-          content: `Hello! I'm your ${subjectData.name} exam assistant. Ask me anything about ${subjectData.name} - concepts, questions, or exam preparation tips.`,
-        }]);
+        setAiMessages([
+          {
+            role: "assistant",
+            content: `Hello! I'm your ${subjectData.name} exam assistant. Ask me anything about ${subjectData.name} - concepts, questions, or exam preparation tips.`,
+          },
+        ]);
 
         // Fetch units
         const { data: unitsData, error: unitsError } = await supabase
-          .from('units')
-          .select('*')
-          .eq('subject_id', subjectData.id)
-          .order('number');
+          .from("units")
+          .select("*")
+          .eq("subject_id", subjectData.id)
+          .order("number");
 
         if (unitsError) {
-          console.error('Error fetching units:', unitsError);
+          console.error("Error fetching units:", unitsError);
         } else {
           setUnits(unitsData || []);
           if (unitsData && unitsData.length > 0) {
@@ -138,15 +146,15 @@ const SubjectPage = () => {
 
         // Fetch notes with unit info
         if (unitsData && unitsData.length > 0) {
-          const unitIds = unitsData.map(u => u.id);
+          const unitIds = unitsData.map((u) => u.id);
           const { data: notesData, error: notesError } = await supabase
-            .from('notes')
-            .select('*, units!inner(*)')
-            .in('unit_id', unitIds)
-            .order('order_index');
+            .from("notes")
+            .select("*, units!inner(*)")
+            .in("unit_id", unitIds)
+            .order("order_index");
 
           if (notesError) {
-            console.error('Error fetching notes:', notesError);
+            console.error("Error fetching notes:", notesError);
           } else {
             setNotes((notesData as NoteWithUnit[]) || []);
           }
@@ -154,34 +162,33 @@ const SubjectPage = () => {
 
         // Fetch important questions
         const { data: questionsData, error: questionsError } = await supabase
-          .from('important_questions')
-          .select('*, units(*)')
-          .eq('subject_id', subjectData.id);
+          .from("important_questions")
+          .select("*, units(*)")
+          .eq("subject_id", subjectData.id);
 
         if (questionsError) {
-          console.error('Error fetching questions:', questionsError);
+          console.error("Error fetching questions:", questionsError);
         } else {
           setImportantQuestions((questionsData as ImportantQuestionWithUnit[]) || []);
         }
 
         // Fetch PYQ papers with questions
         const { data: pyqData, error: pyqError } = await supabase
-          .from('pyq_papers')
-          .select('*, pyq_questions(*)')
-          .eq('subject_id', subjectData.id)
-          .order('year', { ascending: false });
+          .from("pyq_papers")
+          .select("*, pyq_questions(*)")
+          .eq("subject_id", subjectData.id)
+          .order("year", { ascending: false });
 
         if (pyqError) {
-          console.error('Error fetching PYQ papers:', pyqError);
+          console.error("Error fetching PYQ papers:", pyqError);
         } else {
           setPyqPapers((pyqData as PYQPaperWithQuestions[]) || []);
           if (pyqData && pyqData.length > 0) {
             setOpenPyqYears([pyqData[0].year]);
           }
         }
-
       } catch (error) {
-        console.error('Error fetching subject data:', error);
+        console.error("Error fetching subject data:", error);
       } finally {
         setLoading(false);
       }
@@ -191,15 +198,11 @@ const SubjectPage = () => {
   }, [subjectId]);
 
   const toggleUnit = (unitId: string) => {
-    setOpenUnits((prev) =>
-      prev.includes(unitId) ? prev.filter((u) => u !== unitId) : [...prev, unitId]
-    );
+    setOpenUnits((prev) => (prev.includes(unitId) ? prev.filter((u) => u !== unitId) : [...prev, unitId]));
   };
 
   const togglePyqYear = (year: string) => {
-    setOpenPyqYears((prev) =>
-      prev.includes(year) ? prev.filter((y) => y !== year) : [...prev, year]
-    );
+    setOpenPyqYears((prev) => (prev.includes(year) ? prev.filter((y) => y !== year) : [...prev, year]));
   };
 
   const getFrequencyColor = (frequency: string) => {
@@ -220,15 +223,15 @@ const SubjectPage = () => {
     const messageText = aiMessage;
     setAiMessages((prev) => [...prev, { role: "user", content: messageText }]);
     setAiMessage("");
-    
+
     try {
       const { data, error } = await supabase.functions.invoke("ai-assistant", {
         body: {
           type: "ask",
           message: messageText,
           subject: subject?.name,
-          context: university?.name ? `${university.name} - ${subject?.code}` : subject?.code
-        }
+          context: university?.name ? `${university.name} - ${subject?.code}` : subject?.code,
+        },
       });
 
       if (error) throw error;
@@ -253,9 +256,9 @@ const SubjectPage = () => {
   };
 
   // Group notes by unit
-  const notesByUnit = units.map(unit => ({
+  const notesByUnit = units.map((unit) => ({
     unit,
-    notes: notes.filter(note => note.unit_id === unit.id)
+    notes: notes.filter((note) => note.unit_id === unit.id),
   }));
 
   if (loading) {
@@ -277,7 +280,7 @@ const SubjectPage = () => {
         <div className="container mx-auto px-4 py-16 text-center">
           <h1 className="text-2xl font-bold text-foreground mb-4">Subject not found</h1>
           <p className="text-muted-foreground mb-6">The subject you're looking for doesn't exist.</p>
-          <Link to={universityId ? `/university/${universityId}` : '/'}>
+          <Link to={universityId ? `/university/${universityId}` : "/"}>
             <Button>Go Back</Button>
           </Link>
         </div>
@@ -287,23 +290,23 @@ const SubjectPage = () => {
   }
 
   // SEO data
-  const origin = typeof window !== 'undefined' ? window.location.origin : '';
+  const origin = typeof window !== "undefined" ? window.location.origin : "";
   const canonicalUrl = `/university/${universityId}/${courseId}/${semesterId}/${subjectId}`;
-  const seoTitle = `${subject.name} - ${course?.name || 'Course'} | ${university?.name || 'University'}`;
-  const seoDescription = `${subject.name} (${subject.code}) study materials for ${course?.name || ''} at ${university?.name || ''}. Get important questions, chapter-wise notes, and previous year question papers.`;
-  
+  const seoTitle = `${subject.name} - ${course?.name || "Course"} | ${university?.name || "University"}`;
+  const seoDescription = `${subject.name} (${subject.code}) study materials for ${course?.name || ""} at ${university?.name || ""}. Get important questions, chapter-wise notes, and previous year question papers.`;
+
   const breadcrumbSchema = createBreadcrumbSchema([
-    { name: 'Home', url: origin },
-    { name: university?.name || 'University', url: `${origin}/university/${universityId}` },
-    { name: course?.name || 'Course', url: `${origin}/university/${universityId}` },
-    { name: semester?.name || 'Semester', url: `${origin}/university/${universityId}` },
+    { name: "Home", url: origin },
+    { name: university?.name || "University", url: `${origin}/university/${universityId}` },
+    { name: course?.name || "Course", url: `${origin}/university/${universityId}` },
+    { name: semester?.name || "Semester", url: `${origin}/university/${universityId}` },
     { name: subject.name, url: `${origin}${canonicalUrl}` },
   ]);
-  
+
   const courseSchema = createCourseSchema({
     name: subject.name,
     code: subject.code,
-    university: university?.name || '',
+    university: university?.name || "",
     description: seoDescription,
   });
 
@@ -324,22 +327,14 @@ const SubjectPage = () => {
               </p>
             </div>
           </div>
-          <Button 
-            variant="ghost" 
-            size="icon"
-            onClick={() => setIsAIFullscreen(false)}
-            className="hover:bg-muted"
-          >
+          <Button variant="ghost" size="icon" onClick={() => setIsAIFullscreen(false)} className="hover:bg-muted">
             <X className="h-5 w-5" />
           </Button>
         </div>
-        
+
         {/* Fullscreen AI Chat */}
         <div className="flex-1 overflow-hidden">
-          <SubjectAIChat 
-            subject={subject}
-            universityName={university?.name}
-          />
+          <SubjectAIChat subject={subject} universityName={university?.name} />
         </div>
       </div>
     );
@@ -358,9 +353,13 @@ const SubjectPage = () => {
       <main className="container mx-auto px-4 py-8">
         {/* Breadcrumb */}
         <div className="flex items-center gap-2 text-sm text-muted-foreground mb-6">
-          <Link to="/" className="hover:text-foreground">Home</Link>
+          <Link to="/" className="hover:text-foreground">
+            Home
+          </Link>
           <ChevronRight className="h-4 w-4" />
-          <Link to={`/university/${university?.slug}`} className="hover:text-foreground">{university?.name}</Link>
+          <Link to={`/university/${university?.slug}`} className="hover:text-foreground">
+            {university?.name}
+          </Link>
           <ChevronRight className="h-4 w-4" />
           <span>{course?.name}</span>
           <ChevronRight className="h-4 w-4" />
@@ -371,16 +370,14 @@ const SubjectPage = () => {
         <div className="hidden lg:block">
           <ResizablePanelGroup direction="horizontal" className="min-h-[calc(100vh-12rem)]">
             {/* Main Content Panel */}
-            <ResizablePanel defaultSize={65} minSize={50}>
+            <ResizablePanel defaultSize={75} minSize={50}>
               <div className="space-y-6 pr-4">
                 {/* Subject Header */}
                 <div className="bg-card border rounded-lg p-6">
                   <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-4">
                     <div className="space-y-2">
                       <div className="flex items-center gap-3">
-                        <h1 className="text-2xl font-bold text-foreground">
-                          {subject.name}
-                        </h1>
+                        <h1 className="text-2xl font-bold text-foreground">{subject.name}</h1>
                         <Badge variant="secondary">{subject.code}</Badge>
                       </div>
                       <p className="text-muted-foreground">
@@ -396,9 +393,7 @@ const SubjectPage = () => {
                         <Clock className="h-3 w-3" />
                         {subject.duration}
                       </Badge>
-                      <Badge variant="outline">
-                        {subject.exam_type}
-                      </Badge>
+                      <Badge variant="outline">{subject.exam_type}</Badge>
                       <AddToLibraryButton itemId={subject.id} itemType="subject" />
                       <AddToStudylistButton itemId={subject.id} itemType="subject" />
                     </div>
@@ -439,8 +434,8 @@ const SubjectPage = () => {
                       <FileText className="h-4 w-4" />
                       PYQs
                     </TabsTrigger>
-                    <TabsTrigger 
-                      value="ai" 
+                    <TabsTrigger
+                      value="ai"
                       className="gap-2"
                       onClick={(e) => {
                         e.preventDefault();
@@ -463,17 +458,13 @@ const SubjectPage = () => {
                       </CardHeader>
                       <CardContent>
                         {importantQuestions.length === 0 ? (
-                          <p className="text-center text-muted-foreground py-8">
-                            No important questions available yet
-                          </p>
+                          <p className="text-center text-muted-foreground py-8">No important questions available yet</p>
                         ) : (
                           <div className="space-y-4">
                             {units.map((unit) => {
-                              const unitQuestions = importantQuestions.filter(
-                                (q) => q.unit_id === unit.id
-                              );
+                              const unitQuestions = importantQuestions.filter((q) => q.unit_id === unit.id);
                               if (unitQuestions.length === 0) return null;
-                              
+
                               return (
                                 <Collapsible
                                   key={unit.id}
@@ -485,9 +476,7 @@ const SubjectPage = () => {
                                       Unit {unit.number}: {unit.name}
                                     </span>
                                     <div className="flex items-center gap-2">
-                                      <Badge variant="secondary">
-                                        {unitQuestions.length} questions
-                                      </Badge>
+                                      <Badge variant="secondary">{unitQuestions.length} questions</Badge>
                                       {openUnits.includes(unit.id) ? (
                                         <ChevronDown className="h-4 w-4" />
                                       ) : (
@@ -497,27 +486,17 @@ const SubjectPage = () => {
                                   </CollapsibleTrigger>
                                   <CollapsibleContent className="mt-2 space-y-2">
                                     {unitQuestions.map((q, idx) => (
-                                      <div
-                                        key={q.id}
-                                        className="p-3 border rounded-lg"
-                                      >
+                                      <div key={q.id} className="p-3 border rounded-lg">
                                         <div className="flex items-start justify-between gap-2">
                                           <p className="text-sm">
-                                            <span className="font-medium text-muted-foreground">
-                                              Q{idx + 1}.{" "}
-                                            </span>
+                                            <span className="font-medium text-muted-foreground">Q{idx + 1}. </span>
                                             {q.question}
                                           </p>
                                           <div className="flex items-center gap-2 shrink-0">
-                                            <Badge
-                                              variant="outline"
-                                              className={getFrequencyColor(q.frequency)}
-                                            >
+                                            <Badge variant="outline" className={getFrequencyColor(q.frequency)}>
                                               {q.frequency}
                                             </Badge>
-                                            <Badge variant="secondary">
-                                              {q.marks}M
-                                            </Badge>
+                                            <Badge variant="secondary">{q.marks}M</Badge>
                                           </div>
                                         </div>
                                       </div>
@@ -543,17 +522,13 @@ const SubjectPage = () => {
                       </CardHeader>
                       <CardContent>
                         {notes.length === 0 ? (
-                          <p className="text-center text-muted-foreground py-8">
-                            No notes available yet
-                          </p>
+                          <p className="text-center text-muted-foreground py-8">No notes available yet</p>
                         ) : (
                           <div className="space-y-4">
                             {units.map((unit) => {
-                              const unitNotes = notes.filter(
-                                (n) => n.unit_id === unit.id
-                              );
+                              const unitNotes = notes.filter((n) => n.unit_id === unit.id);
                               if (unitNotes.length === 0) return null;
-                              
+
                               return (
                                 <Collapsible
                                   key={unit.id}
@@ -565,9 +540,7 @@ const SubjectPage = () => {
                                       Unit {unit.number}: {unit.name}
                                     </span>
                                     <div className="flex items-center gap-2">
-                                      <Badge variant="secondary">
-                                        {unitNotes.length} chapters
-                                      </Badge>
+                                      <Badge variant="secondary">{unitNotes.length} chapters</Badge>
                                       {openUnits.includes(unit.id) ? (
                                         <ChevronDown className="h-4 w-4" />
                                       ) : (
@@ -579,9 +552,7 @@ const SubjectPage = () => {
                                     {unitNotes.map((note) => (
                                       <Card key={note.id} className="border-l-4 border-l-primary/50">
                                         <CardHeader className="pb-2">
-                                          <CardTitle className="text-base">
-                                            {note.chapter_title}
-                                          </CardTitle>
+                                          <CardTitle className="text-base">{note.chapter_title}</CardTitle>
                                         </CardHeader>
                                         <CardContent>
                                           <ul className="space-y-2">
@@ -591,10 +562,10 @@ const SubjectPage = () => {
                                                 className="flex items-start gap-2 text-sm text-muted-foreground"
                                               >
                                                 <span className="h-1.5 w-1.5 rounded-full bg-primary/50 mt-1.5 shrink-0" />
-                                                <span 
-                                                  dangerouslySetInnerHTML={{ 
-                                                    __html: DOMPurify.sanitize(point) 
-                                                  }} 
+                                                <span
+                                                  dangerouslySetInnerHTML={{
+                                                    __html: DOMPurify.sanitize(point),
+                                                  }}
                                                 />
                                               </li>
                                             ))}
@@ -616,12 +587,8 @@ const SubjectPage = () => {
                   <TabsContent value="pyq" className="mt-6">
                     <Card>
                       <CardHeader>
-                        <CardTitle className="text-lg text-primary">
-                          Previous Year Question Papers
-                        </CardTitle>
-                        <p className="text-sm text-muted-foreground">
-                          Download and practice with actual exam papers
-                        </p>
+                        <CardTitle className="text-lg text-primary">Previous Year Question Papers</CardTitle>
+                        <p className="text-sm text-muted-foreground">Download and practice with actual exam papers</p>
                       </CardHeader>
                       <CardContent>
                         {pyqPapers.length === 0 ? (
@@ -638,9 +605,7 @@ const SubjectPage = () => {
                               >
                                 <div className="flex items-center justify-between p-3 bg-muted/50 rounded-lg">
                                   <CollapsibleTrigger className="flex items-center gap-2 flex-1">
-                                    <span className="font-medium">
-                                      {paper.year} Exam
-                                    </span>
+                                    <span className="font-medium">{paper.year} Exam</span>
                                     {paper.paper_code && (
                                       <Badge variant="outline" className="text-xs">
                                         {paper.paper_code}
@@ -655,17 +620,8 @@ const SubjectPage = () => {
                                   <div className="flex items-center gap-2 ml-4">
                                     {paper.pdf_url && (
                                       <>
-                                        <Button
-                                          variant="outline"
-                                          size="sm"
-                                          className="gap-1"
-                                          asChild
-                                        >
-                                          <a
-                                            href={paper.pdf_url}
-                                            target="_blank"
-                                            rel="noopener noreferrer"
-                                          >
+                                        <Button variant="outline" size="sm" className="gap-1" asChild>
+                                          <a href={paper.pdf_url} target="_blank" rel="noopener noreferrer">
                                             <Download className="h-3 w-3" />
                                             PDF
                                           </a>
@@ -674,7 +630,7 @@ const SubjectPage = () => {
                                           variant="ghost"
                                           size="icon"
                                           onClick={() => {
-                                            const printWindow = window.open(paper.pdf_url!, '_blank');
+                                            const printWindow = window.open(paper.pdf_url!, "_blank");
                                             if (printWindow) {
                                               printWindow.onload = () => printWindow.print();
                                             }
@@ -693,15 +649,10 @@ const SubjectPage = () => {
                                     </p>
                                   ) : (
                                     paper.pyq_questions.map((q, idx) => (
-                                      <div
-                                        key={q.id}
-                                        className="p-3 border rounded-lg"
-                                      >
+                                      <div key={q.id} className="p-3 border rounded-lg">
                                         <div className="flex items-start justify-between gap-2">
                                           <p className="text-sm">
-                                            <span className="font-medium text-muted-foreground">
-                                              {idx + 1}.{" "}
-                                            </span>
+                                            <span className="font-medium text-muted-foreground">{idx + 1}. </span>
                                             {q.question}
                                           </p>
                                           <Badge variant="secondary" className="shrink-0">
@@ -737,9 +688,7 @@ const SubjectPage = () => {
                           {aiMessages.length === 0 ? (
                             <div className="text-center py-12">
                               <MessageSquare className="h-12 w-12 mx-auto text-muted-foreground/50 mb-4" />
-                              <p className="text-muted-foreground">
-                                Ask anything about {subject.name}
-                              </p>
+                              <p className="text-muted-foreground">Ask anything about {subject.name}</p>
                               <p className="text-sm text-muted-foreground mt-1">
                                 Get explanations, practice questions, or study tips
                               </p>
@@ -749,15 +698,11 @@ const SubjectPage = () => {
                               {aiMessages.map((msg, idx) => (
                                 <div
                                   key={idx}
-                                  className={`flex ${
-                                    msg.role === "user" ? "justify-end" : "justify-start"
-                                  }`}
+                                  className={`flex ${msg.role === "user" ? "justify-end" : "justify-start"}`}
                                 >
                                   <div
                                     className={`max-w-[80%] rounded-lg px-4 py-2 ${
-                                      msg.role === "user"
-                                        ? "bg-primary text-primary-foreground"
-                                        : "bg-muted"
+                                      msg.role === "user" ? "bg-primary text-primary-foreground" : "bg-muted"
                                     }`}
                                   >
                                     <p className="text-sm whitespace-pre-wrap">{msg.content}</p>
@@ -797,9 +742,9 @@ const SubjectPage = () => {
             <ResizableHandle withHandle className="mx-2" />
 
             {/* AI Chat Panel */}
-            <ResizablePanel 
-              defaultSize={35} 
-              minSize={15} 
+            <ResizablePanel
+              defaultSize={25}
+              minSize={15}
               maxSize={35}
               collapsible
               collapsedSize={0}
@@ -816,10 +761,7 @@ const SubjectPage = () => {
                 >
                   <Maximize2 className="h-4 w-4" />
                 </Button>
-                <SubjectAIChat 
-                  subject={subject}
-                  universityName={university?.name}
-                />
+                <SubjectAIChat subject={subject} universityName={university?.name} />
               </div>
             </ResizablePanel>
           </ResizablePanelGroup>
@@ -831,9 +773,7 @@ const SubjectPage = () => {
           <div className="bg-card border rounded-lg p-4">
             <div className="space-y-3">
               <div className="flex items-center gap-2 flex-wrap">
-                <h1 className="text-xl font-bold text-foreground">
-                  {subject.name}
-                </h1>
+                <h1 className="text-xl font-bold text-foreground">{subject.name}</h1>
                 <Badge variant="secondary">{subject.code}</Badge>
               </div>
               <p className="text-sm text-muted-foreground">
@@ -853,10 +793,7 @@ const SubjectPage = () => {
           </div>
 
           {/* AI Chat - Mobile (Full width card) */}
-          <SubjectAIChat 
-            subject={subject}
-            universityName={university?.name}
-          />
+          <SubjectAIChat subject={subject} universityName={university?.name} />
         </div>
       </main>
 
