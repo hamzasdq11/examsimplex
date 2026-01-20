@@ -369,7 +369,7 @@ const SubjectPage = () => {
         <div className="hidden lg:block">
           <ResizablePanelGroup direction="horizontal" className="min-h-[calc(100vh-12rem)]">
             {/* Main Content Panel */}
-            <ResizablePanel defaultSize={76} minSize={50}>
+            <ResizablePanel defaultSize={78} minSize={50}>
               <div className="space-y-6 pr-4">
                 {/* Subject Header */}
                 <div className="bg-card border rounded-lg p-6">
@@ -742,7 +742,7 @@ const SubjectPage = () => {
 
             {/* AI Chat Panel */}
             <ResizablePanel
-              defaultSize={24}
+              defaultSize={23}
               minSize={15}
               maxSize={45}
               collapsible
