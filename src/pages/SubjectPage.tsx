@@ -36,6 +36,7 @@ import {
   PanelRightOpen,
   X,
   Sparkles,
+  Maximize2,
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import type { Subject, Unit, Note, ImportantQuestion, PYQPaper, PYQQuestion, University, Course, Semester } from "@/types/database";
@@ -317,7 +318,7 @@ const SubjectPage = () => {
               <Sparkles className="h-5 w-5 text-primary" />
             </div>
             <div>
-              <h1 className="font-semibold text-lg">AI Study Mode</h1>
+              <h1 className="font-semibold text-lg">Practice Mode</h1>
               <p className="text-sm text-muted-foreground">
                 {subject.name} • {university?.name || subject.code}
               </p>
@@ -447,7 +448,7 @@ const SubjectPage = () => {
                       }}
                     >
                       <Sparkles className="h-4 w-4" />
-                      AI Study Mode
+                      Practice Mode
                     </TabsTrigger>
                   </TabsList>
 
@@ -797,7 +798,7 @@ const SubjectPage = () => {
 
             {/* AI Chat Panel */}
             <ResizablePanel 
-              defaultSize={22} 
+              defaultSize={20} 
               minSize={15} 
               maxSize={45}
               collapsible
@@ -805,10 +806,21 @@ const SubjectPage = () => {
               onCollapse={() => setIsAIPanelCollapsed(true)}
               onExpand={() => setIsAIPanelCollapsed(false)}
             >
-              <SubjectAIChat 
-                subject={subject}
-                universityName={university?.name}
-              />
+              <div className="relative h-full">
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={() => setIsAIFullscreen(true)}
+                  className="absolute top-2 right-2 z-10 h-7 w-7 hover:bg-muted"
+                  title="Expand to fullscreen"
+                >
+                  <Maximize2 className="h-4 w-4" />
+                </Button>
+                <SubjectAIChat 
+                  subject={subject}
+                  universityName={university?.name}
+                />
+              </div>
             </ResizablePanel>
           </ResizablePanelGroup>
         </div>
