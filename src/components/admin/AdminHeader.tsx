@@ -14,7 +14,7 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
-import { ThemeToggle } from '@/components/ThemeToggle';
+
 
 export function AdminHeader() {
   const { user, signOut } = useAuth();
@@ -37,7 +37,6 @@ export function AdminHeader() {
       </div>
 
       <div className="flex items-center gap-2">
-        <ThemeToggle />
         <DropdownMenu>
         <DropdownMenuTrigger asChild>
           <Button variant="ghost" className="flex items-center gap-2">
