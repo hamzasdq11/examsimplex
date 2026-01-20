@@ -1,4 +1,5 @@
 import { TrendingUp, Lightbulb, Clock } from "lucide-react";
+import { AnimatedSection } from "@/hooks/useScrollAnimation";
 
 const advantages = [
   {
@@ -46,9 +47,11 @@ const Advantages = () => {
   return (
     <section className="py-16 md:py-24 bg-background">
       <div className="container max-w-6xl mx-auto px-6 md:px-8">
-        <h2 className="text-3xl md:text-5xl font-display font-bold text-center text-foreground mb-16">
-          Experience the Advantage
-        </h2>
+        <AnimatedSection animation="fade-up">
+          <h2 className="text-3xl md:text-5xl font-display font-bold text-center text-foreground mb-16">
+            Experience the Advantage
+          </h2>
+        </AnimatedSection>
 
         <div className="space-y-20">
           {advantages.map((item, index) => (
@@ -59,8 +62,12 @@ const Advantages = () => {
               }`}
             >
               {/* Benefit Card */}
-              <div className="md:[direction:ltr]">
-                <div className={`w-24 h-24 rounded-full ${item.iconBg} flex items-center justify-center mb-6`}>
+              <AnimatedSection 
+                animation={item.layout === "right" ? "fade-right" : "fade-left"} 
+                delay={index * 100}
+                className="md:[direction:ltr]"
+              >
+                <div className={`w-24 h-24 rounded-full ${item.iconBg} flex items-center justify-center mb-6 transition-all duration-500 hover:scale-110 hover:rotate-6`}>
                   <item.icon className="h-12 w-12 text-primary" />
                 </div>
                 <h3 className="text-2xl md:text-3xl font-bold text-foreground mb-4">
@@ -69,13 +76,17 @@ const Advantages = () => {
                 <p className="text-lg text-muted-foreground">
                   {item.description}
                 </p>
-              </div>
+              </AnimatedSection>
 
               {/* Testimonial Card */}
-              <div className="md:[direction:ltr]">
-                <div className={`${item.testimonial.bgColor} rounded-2xl p-8`}>
+              <AnimatedSection 
+                animation={item.layout === "right" ? "fade-left" : "fade-right"} 
+                delay={index * 100 + 150}
+                className="md:[direction:ltr]"
+              >
+                <div className={`${item.testimonial.bgColor} rounded-2xl p-8 transition-all duration-500 hover:shadow-xl hover:-translate-y-1`}>
                   <svg
-                    className="w-10 h-10 text-primary mb-4"
+                    className="w-10 h-10 text-primary mb-4 transition-transform duration-300 hover:scale-110"
                     fill="currentColor"
                     viewBox="0 0 24 24"
                   >
@@ -85,7 +96,7 @@ const Advantages = () => {
                     {item.testimonial.quote}
                   </p>
                   <div className="flex items-center gap-4">
-                    <div className="w-12 h-12 rounded-full bg-muted flex items-center justify-center text-xl">
+                    <div className="w-12 h-12 rounded-full bg-muted flex items-center justify-center text-xl transition-transform duration-300 hover:scale-110">
                       👤
                     </div>
                     <div>
@@ -95,7 +106,7 @@ const Advantages = () => {
                     </div>
                   </div>
                 </div>
-              </div>
+              </AnimatedSection>
             </div>
           ))}
         </div>

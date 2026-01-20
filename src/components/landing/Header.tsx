@@ -43,7 +43,7 @@ const Header = () => {
   ];
 
   return (
-    <header className="sticky top-0 z-50 w-full bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+    <header className="sticky top-0 z-50 w-full bg-background/95 backdrop-blur-md supports-[backdrop-filter]:bg-background/60 transition-all duration-300">
       {/* Desktop Header */}
       <div className="container hidden md:flex h-16 items-center justify-between border-b border-border/40">
         <div className="flex items-center gap-10">
@@ -52,7 +52,7 @@ const Header = () => {
               <button
                 key={item.section}
                 onClick={() => scrollToSection(item.section)}
-                className="text-sm font-medium text-foreground hover:text-foreground/80 transition-colors"
+                className="relative text-sm font-medium text-foreground hover:text-primary transition-colors duration-300 after:absolute after:left-0 after:bottom-0 after:h-0.5 after:w-0 after:bg-primary after:transition-all after:duration-300 hover:after:w-full"
               >
                 {item.label}
               </button>
@@ -101,10 +101,10 @@ const Header = () => {
             </DropdownMenu>
           ) : (
             <div className="flex items-center gap-3">
-              <Button asChild variant="ghost" className="text-sm font-medium">
+              <Button asChild variant="ghost" className="text-sm font-medium transition-all duration-300 hover:bg-primary/10">
                 <Link to="/auth">Log in</Link>
               </Button>
-              <Button asChild className="bg-primary hover:bg-primary/90 text-primary-foreground rounded-full px-6">
+              <Button asChild className="bg-primary hover:bg-primary/90 text-primary-foreground rounded-full px-6 btn-glow transition-all duration-300 hover:scale-105">
                 <Link to="/auth?tab=signup">Sign Up</Link>
               </Button>
             </div>
@@ -173,7 +173,7 @@ const Header = () => {
             <button
               key={item.section}
               onClick={() => scrollToSection(item.section)}
-              className="px-3 py-2 text-sm font-medium text-muted-foreground hover:text-foreground hover:bg-muted/60 rounded-lg transition-colors"
+              className="px-3 py-2 text-sm font-medium text-muted-foreground hover:text-foreground hover:bg-muted/60 rounded-lg transition-all duration-300 active:scale-95"
             >
               {item.label}
             </button>
