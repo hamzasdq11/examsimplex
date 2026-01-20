@@ -86,25 +86,16 @@ const Hero = () => {
                 />
               </div>
 
-              {/* Floating Icons - with original slower animation */}
-              <div 
-                className="absolute top-4 sm:top-6 right-2 sm:right-0 w-10 h-10 sm:w-14 sm:h-14 bg-card rounded-xl shadow-lg flex items-center justify-center hover:scale-110 transition-transform duration-300"
-                style={{ animation: "float 3s ease-in-out infinite" }}
-              >
+              {/* Floating Icons - with 3s animation cycle */}
+              <div className="absolute top-4 sm:top-6 right-2 sm:right-0 w-10 h-10 sm:w-14 sm:h-14 bg-card rounded-xl shadow-lg flex items-center justify-center hover:scale-110 transition-transform duration-300 animate-float">
                 <MessageCircle className="h-5 w-5 sm:h-7 sm:w-7 text-primary" />
               </div>
               
-              <div 
-                className="absolute top-1/4 -left-6 sm:-left-10 w-10 h-10 sm:w-14 sm:h-14 bg-card rounded-xl shadow-lg flex items-center justify-center hover:scale-110 transition-transform duration-300" 
-                style={{ animation: "float 3s ease-in-out infinite", animationDelay: "0.5s" }}
-              >
+              <div className="absolute top-1/4 -left-6 sm:-left-10 w-10 h-10 sm:w-14 sm:h-14 bg-card rounded-xl shadow-lg flex items-center justify-center hover:scale-110 transition-transform duration-300 animate-float [animation-delay:0.5s]">
                 <BarChart3 className="h-5 w-5 sm:h-7 sm:w-7 text-primary" />
               </div>
               
-              <div 
-                className="absolute bottom-8 sm:bottom-12 -right-3 sm:-right-6 w-10 h-10 sm:w-14 sm:h-14 bg-card rounded-xl shadow-lg flex items-center justify-center hover:scale-110 transition-transform duration-300" 
-                style={{ animation: "float 3s ease-in-out infinite", animationDelay: "1s" }}
-              >
+              <div className="absolute bottom-8 sm:bottom-12 -right-3 sm:-right-6 w-10 h-10 sm:w-14 sm:h-14 bg-card rounded-xl shadow-lg flex items-center justify-center hover:scale-110 transition-transform duration-300 animate-float [animation-delay:1s]">
                 <TrendingUp className="h-5 w-5 sm:h-7 sm:w-7 text-primary" />
               </div>
             </div>
