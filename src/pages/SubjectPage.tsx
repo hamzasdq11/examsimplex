@@ -320,7 +320,7 @@ const SubjectPage = () => {
               <Sparkles className="h-5 w-5 text-primary" />
             </div>
             <div>
-              <h1 className="font-semibold text-lg">AI Study Mode</h1>
+              <h1 className="font-semibold text-lg">Practice Mode</h1>
               <p className="text-sm text-muted-foreground">
                 {subject.name} • {university?.name || subject.code}
               </p>
@@ -442,7 +442,7 @@ const SubjectPage = () => {
                       }}
                     >
                       <Sparkles className="h-4 w-4" />
-                      AI Study Mode
+                      Practice Mode
                     </TabsTrigger>
                   </TabsList>
 
