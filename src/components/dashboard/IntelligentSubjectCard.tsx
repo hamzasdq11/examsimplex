@@ -1,4 +1,4 @@
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -32,6 +32,7 @@ export function IntelligentSubjectCard({
   semesterId,
   totalPyqs = 0
 }: IntelligentSubjectCardProps) {
+  const navigate = useNavigate();
   const subjectUrl = `/university/${universityId}/${courseId}/${semesterId}/${subject.id}`;
   
   // Calculate coverage percentage
@@ -142,12 +143,25 @@ export function IntelligentSubjectCard({
           
           {/* Secondary Links */}
           <div className="flex items-center justify-center gap-3 text-xs text-muted-foreground pt-1 border-t">
-            <span className="hover:text-foreground transition-colors cursor-pointer">View syllabus</span>
+            <Link 
+              to={`${subjectUrl}?tab=notes`} 
+              className="hover:text-foreground transition-colors"
+              onClick={(e) => e.stopPropagation()}
+            >
+              View syllabus
+            </Link>
             <span className="text-border">•</span>
-            <span className="hover:text-primary transition-colors cursor-pointer flex items-center gap-1">
+            <button 
+              onClick={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                navigate(`/dashboard/ai-study?subject=${subject.id}&q=Help me study ${subject.name}`);
+              }}
+              className="hover:text-primary transition-colors flex items-center gap-1"
+            >
               <Sparkles className="h-3 w-3" />
               Ask AI
-            </span>
+            </button>
           </div>
         </CardContent>
       </Card>
