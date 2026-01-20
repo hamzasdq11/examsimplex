@@ -2,13 +2,19 @@ import { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
 import { useProfile } from '@/hooks/useProfile';
+import { useStudyProgress } from '@/hooks/useStudyProgress';
+import { useExamSettings } from '@/hooks/useExamSettings';
+import { useDailyFocus } from '@/hooks/useDailyFocus';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Avatar, AvatarFallback } from '@/components/ui/avatar';
-import { Badge } from '@/components/ui/badge';
-import { Loader2, BookOpen, FileText, HelpCircle, GraduationCap, MapPin, Calendar, Edit, LogOut, Home } from 'lucide-react';
+import { Card } from '@/components/ui/card';
+import { Loader2, BookOpen, LogOut, Home, PlusCircle } from 'lucide-react';
 import { SEO } from '@/components/SEO';
+import { AIBriefingHero } from '@/components/dashboard/AIBriefingHero';
+import { TodaysFocusCard } from '@/components/dashboard/TodaysFocusCard';
+import { ProgressStatsGrid } from '@/components/dashboard/ProgressStatsGrid';
+import { IntelligentSubjectCard } from '@/components/dashboard/IntelligentSubjectCard';
+import { GlobalAICommandBar } from '@/components/dashboard/GlobalAICommandBar';
 
 interface Subject {
   id: string;
@@ -22,27 +28,29 @@ interface Subject {
 export default function Dashboard() {
   const { user, loading: authLoading, signOut } = useAuth();
   const { profile, loading: profileLoading, isProfileComplete } = useProfile();
+  const { progress, getTotalStats, getOverallReadiness, getWeakestSubjects, getSubjectProgress } = useStudyProgress();
+  const { settings, getDaysUntilExam, getExamTypeLabel, updateSettings } = useExamSettings();
+  const { focus, loading: focusLoading, refresh: refreshFocus } = useDailyFocus(profile?.semester_id || null);
+  
   const navigate = useNavigate();
   const [subjects, setSubjects] = useState<Subject[]>([]);
   const [loadingSubjects, setLoadingSubjects] = useState(true);
   const [isProcessingOAuth, setIsProcessingOAuth] = useState(false);
 
-  // Detect OAuth callback (tokens in URL hash)
+  // Detect OAuth callback
   useEffect(() => {
     const hashParams = new URLSearchParams(window.location.hash.substring(1));
     if (hashParams.get('access_token') || hashParams.get('refresh_token')) {
       setIsProcessingOAuth(true);
-      // Clean up the URL hash
       window.history.replaceState(null, '', window.location.pathname);
-      // Give Supabase time to process the tokens
       const timer = setTimeout(() => setIsProcessingOAuth(false), 3000);
       return () => clearTimeout(timer);
     }
   }, []);
 
-  // Redirect to onboarding if profile is incomplete
+  // Redirect if not authenticated or profile incomplete
   useEffect(() => {
-    if (isProcessingOAuth) return; // Don't redirect while processing OAuth
+    if (isProcessingOAuth) return;
     
     if (!authLoading && !profileLoading) {
       if (!user) {
@@ -53,7 +61,7 @@ export default function Dashboard() {
     }
   }, [authLoading, profileLoading, user, isProfileComplete, navigate, isProcessingOAuth]);
 
-  // Fetch subjects for user's semester
+  // Fetch subjects
   useEffect(() => {
     const fetchSubjects = async () => {
       if (!profile?.semester_id) {
@@ -71,9 +79,7 @@ export default function Dashboard() {
       setLoadingSubjects(false);
     };
 
-    if (profile) {
-      fetchSubjects();
-    }
+    if (profile) fetchSubjects();
   }, [profile]);
 
   const handleSignOut = async () => {
@@ -81,12 +87,20 @@ export default function Dashboard() {
     navigate('/');
   };
 
-  const getUserInitials = () => {
-    if (profile?.full_name) {
-      return profile.full_name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2);
-    }
-    return user?.email?.charAt(0).toUpperCase() || 'U';
+  const handleExamDateSet = async (date: Date, type: string) => {
+    await updateSettings({ 
+      exam_date: date.toISOString().split('T')[0], 
+      exam_type: type 
+    });
   };
+
+  // Calculate stats
+  const stats = getTotalStats();
+  const readiness = getOverallReadiness();
+  const weakestSubjects = getWeakestSubjects(1);
+  const pendingSubjects = subjects.length - progress.filter(p => 
+    (p.notes_viewed / Math.max(p.total_notes, 1)) >= 0.8
+  ).length;
 
   if (authLoading || profileLoading) {
     return (
@@ -99,132 +113,82 @@ export default function Dashboard() {
   if (!user || !profile) return null;
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-background via-background to-muted/10">
+    <div className="min-h-screen bg-gradient-to-br from-background via-background to-muted/10 pb-24">
       <SEO
         title="Dashboard"
-        description="Your personalized EXAM Simplex dashboard. Access your courses, study materials, and track your exam preparation progress."
+        description="Your personalized EXAM Simplex dashboard."
         canonicalUrl="/dashboard"
         noIndex={true}
       />
+      
       {/* Header */}
       <header className="sticky top-0 z-50 border-b border-border/40 bg-background/95 backdrop-blur">
-        <div className="container flex h-16 items-center justify-between">
+        <div className="container flex h-14 items-center justify-between">
           <Link to="/" className="flex items-center gap-2 text-lg font-semibold">
-            <BookOpen className="h-6 w-6 text-primary" />
+            <BookOpen className="h-5 w-5 text-primary" />
             EXAM Simplex
           </Link>
-          <div className="flex items-center gap-4">
+          <div className="flex items-center gap-2">
             <Button variant="ghost" size="sm" asChild>
-              <Link to="/">
-                <Home className="h-4 w-4 mr-2" />
-                Home
-              </Link>
+              <Link to="/"><Home className="h-4 w-4 mr-1" />Home</Link>
             </Button>
             <Button variant="ghost" size="sm" onClick={handleSignOut}>
-              <LogOut className="h-4 w-4 mr-2" />
-              Sign out
+              <LogOut className="h-4 w-4 mr-1" />Sign out
             </Button>
           </div>
         </div>
       </header>
 
-      <main className="container py-8 space-y-8">
-        {/* Profile Card */}
-        <Card className="overflow-hidden">
-          <div className="h-32 bg-gradient-to-r from-primary/80 to-primary" />
-          <CardContent className="relative pt-0">
-            <div className="flex flex-col sm:flex-row sm:items-end gap-4 -mt-8">
-              <Avatar className="h-24 w-24 border-4 border-background shadow-lg">
-                <AvatarFallback className="text-2xl bg-primary text-primary-foreground">
-                  {getUserInitials()}
-                </AvatarFallback>
-              </Avatar>
-              <div className="flex-1 pb-2">
-                <h1 className="text-2xl font-bold">{profile.full_name}</h1>
-                <p className="text-muted-foreground">{user.email}</p>
-              </div>
-              <Button variant="outline" size="sm" onClick={() => navigate('/onboarding?edit=true')}>
-                <Edit className="h-4 w-4 mr-2" />
-                Edit Profile
-              </Button>
-            </div>
+      <main className="container py-6 space-y-6">
+        {/* AI Briefing Hero */}
+        <AIBriefingHero
+          userName={profile.full_name || 'Student'}
+          userEmail={user.email || ''}
+          universityName={profile.university?.name || null}
+          daysUntilExam={getDaysUntilExam()}
+          examType={getExamTypeLabel()}
+          subjectsCount={subjects.length}
+          pendingSubjects={pendingSubjects}
+          weakestSubject={weakestSubjects[0] ? subjects.find(s => s.id === weakestSubjects[0].subject_id)?.name || null : null}
+          readinessPercent={readiness}
+          onEditProfile={() => navigate('/onboarding?edit=true')}
+          onExamDateSet={handleExamDateSet}
+        />
 
-            <div className="mt-6 flex flex-wrap gap-4">
-              {profile.university && (
-                <div className="flex items-center gap-2 text-sm">
-                  <GraduationCap className="h-4 w-4 text-muted-foreground" />
-                  <span>{profile.university.name}</span>
-                </div>
-              )}
-              {profile.course && (
-                <div className="flex items-center gap-2 text-sm">
-                  <BookOpen className="h-4 w-4 text-muted-foreground" />
-                  <span>{profile.course.name}</span>
-                </div>
-              )}
-              {profile.semester && (
-                <div className="flex items-center gap-2 text-sm">
-                  <Calendar className="h-4 w-4 text-muted-foreground" />
-                  <span>{profile.semester.name}</span>
-                </div>
-              )}
-            </div>
-          </CardContent>
-        </Card>
-
-        {/* Quick Access */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <Card className="bg-gradient-to-br from-hsl(var(--card-cyan)) to-hsl(var(--card-mint)) border-0">
-            <CardHeader className="pb-2">
-              <CardTitle className="flex items-center gap-2 text-lg">
-                <BookOpen className="h-5 w-5" />
-                My Subjects
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <p className="text-3xl font-bold">{subjects.length}</p>
-              <p className="text-sm text-muted-foreground">subjects this semester</p>
-            </CardContent>
-          </Card>
-
-          <Card className="bg-gradient-to-br from-hsl(var(--card-lavender)) to-hsl(var(--card-purple)) border-0">
-            <CardHeader className="pb-2">
-              <CardTitle className="flex items-center gap-2 text-lg">
-                <FileText className="h-5 w-5" />
-                Study Notes
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <p className="text-3xl font-bold">-</p>
-              <p className="text-sm text-muted-foreground">available for your subjects</p>
-            </CardContent>
-          </Card>
-
-          <Card className="bg-gradient-to-br from-hsl(var(--card-pink)) to-hsl(var(--card-lavender)) border-0">
-            <CardHeader className="pb-2">
-              <CardTitle className="flex items-center gap-2 text-lg">
-                <HelpCircle className="h-5 w-5" />
-                Important Questions
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <p className="text-3xl font-bold">-</p>
-              <p className="text-sm text-muted-foreground">to practice</p>
-            </CardContent>
-          </Card>
+        {/* Today's Focus + Progress Stats */}
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          <TodaysFocusCard
+            focus={focus}
+            loading={focusLoading}
+            universityId={profile.university_id}
+            courseId={profile.course_id}
+            semesterId={profile.semester_id}
+            onRefresh={refreshFocus}
+          />
+          <div className="lg:col-span-2">
+            <ProgressStatsGrid
+              notesCoverage={stats.notesCoverage}
+              notesViewed={stats.notesViewed}
+              totalNotes={stats.totalNotes}
+              pyqsCoverage={stats.pyqsCoverage}
+              pyqsPracticed={stats.pyqsPracticed}
+              totalPyqs={stats.totalPyqs}
+              aiSessions={stats.aiSessions}
+              subjectsCount={subjects.length}
+            />
+          </div>
         </div>
 
         {/* Subjects Grid */}
         <section>
           <div className="flex items-center justify-between mb-4">
-            <h2 className="text-xl font-semibold">Your Subjects</h2>
-            {profile.university && (
-              <Button variant="link" asChild>
-                <Link to={`/university/${profile.university.id}`}>
-                  View All Courses
-                </Link>
-              </Button>
-            )}
+            <h2 className="text-lg font-semibold">Your Subjects</h2>
+            <Button variant="ghost" size="sm" asChild>
+              <Link to={`/university/${profile.university_id}`}>
+                <PlusCircle className="h-4 w-4 mr-1" />
+                Add subjects
+              </Link>
+            </Button>
           </div>
 
           {loadingSubjects ? (
@@ -232,53 +196,30 @@ export default function Dashboard() {
               <Loader2 className="h-6 w-6 animate-spin text-primary" />
             </div>
           ) : subjects.length === 0 ? (
-            <Card className="p-8 text-center">
+            <Card className="p-8 text-center border-dashed">
               <BookOpen className="h-12 w-12 mx-auto text-muted-foreground/50 mb-4" />
-              <p className="text-muted-foreground mb-2">No subjects found for your semester</p>
-              <p className="text-sm text-muted-foreground">
-                Subjects will appear here once they're added to your semester.
-              </p>
+              <p className="text-muted-foreground mb-2">No subjects found</p>
+              <p className="text-sm text-muted-foreground">Subjects will appear once added to your semester.</p>
             </Card>
           ) : (
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
               {subjects.map((subject) => (
-                <Link
+                <IntelligentSubjectCard
                   key={subject.id}
-                  to={`/university/${profile.university_id}/${profile.course_id}/${profile.semester_id}/${subject.id}`}
-                >
-                  <Card className="h-full hover:shadow-lg transition-all hover:-translate-y-1 cursor-pointer group">
-                    <CardHeader>
-                      <div
-                        className="w-12 h-12 rounded-lg flex items-center justify-center mb-2"
-                        style={{
-                          background: `linear-gradient(135deg, ${subject.gradient_from || '#3B82F6'}, ${subject.gradient_to || '#8B5CF6'})`,
-                        }}
-                      >
-                        <BookOpen className="h-6 w-6 text-white" />
-                      </div>
-                      <CardTitle className="text-lg group-hover:text-primary transition-colors">
-                        {subject.name}
-                      </CardTitle>
-                      <CardDescription>
-                        <Badge variant="secondary">{subject.code}</Badge>
-                      </CardDescription>
-                    </CardHeader>
-                    <CardContent>
-                      <div className="flex gap-2 text-xs text-muted-foreground">
-                        <span>Notes</span>
-                        <span>•</span>
-                        <span>PYQs</span>
-                        <span>•</span>
-                        <span>Questions</span>
-                      </div>
-                    </CardContent>
-                  </Card>
-                </Link>
+                  subject={subject}
+                  progress={getSubjectProgress(subject.id)}
+                  universityId={profile.university_id!}
+                  courseId={profile.course_id!}
+                  semesterId={profile.semester_id!}
+                />
               ))}
             </div>
           )}
         </section>
       </main>
+
+      {/* Global AI Command Bar */}
+      <GlobalAICommandBar />
     </div>
   );
 }
