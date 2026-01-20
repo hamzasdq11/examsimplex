@@ -22,6 +22,7 @@ import Universities from "./pages/admin/Universities";
 import Courses from "./pages/admin/Courses";
 import Subjects from "./pages/admin/Subjects";
 import Questions from "./pages/admin/Questions";
+import MCQs from "./pages/admin/MCQs";
 import Notes from "./pages/admin/Notes";
 import PYQs from "./pages/admin/PYQs";
 import Users from "./pages/admin/Users";
@@ -58,6 +59,7 @@ const App = () => (
                 
                 <Route path="/admin/subjects" element={<ProtectedRoute requireAdmin><Subjects /></ProtectedRoute>} />
                 <Route path="/admin/questions" element={<ProtectedRoute requireAdmin><Questions /></ProtectedRoute>} />
+                <Route path="/admin/mcqs" element={<ProtectedRoute requireAdmin><MCQs /></ProtectedRoute>} />
                 <Route path="/admin/notes" element={<ProtectedRoute requireAdmin><Notes /></ProtectedRoute>} />
                 <Route path="/admin/pyqs" element={<ProtectedRoute requireAdmin><PYQs /></ProtectedRoute>} />
                 <Route path="/admin/users" element={<ProtectedRoute requireAdmin><Users /></ProtectedRoute>} />
