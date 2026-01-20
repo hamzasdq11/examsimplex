@@ -479,6 +479,76 @@ export type Database = {
           },
         ]
       }
+      session_steps: {
+        Row: {
+          completed_at: string | null
+          created_at: string
+          description: string | null
+          duration_minutes: number
+          id: string
+          session_id: string
+          status: string
+          step_index: number
+          step_type: string
+          subject_id: string | null
+          title: string
+          unit_id: string | null
+          updated_at: string
+        }
+        Insert: {
+          completed_at?: string | null
+          created_at?: string
+          description?: string | null
+          duration_minutes?: number
+          id?: string
+          session_id: string
+          status?: string
+          step_index: number
+          step_type: string
+          subject_id?: string | null
+          title: string
+          unit_id?: string | null
+          updated_at?: string
+        }
+        Update: {
+          completed_at?: string | null
+          created_at?: string
+          description?: string | null
+          duration_minutes?: number
+          id?: string
+          session_id?: string
+          status?: string
+          step_index?: number
+          step_type?: string
+          subject_id?: string | null
+          title?: string
+          unit_id?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "session_steps_session_id_fkey"
+            columns: ["session_id"]
+            isOneToOne: false
+            referencedRelation: "user_sessions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "session_steps_subject_id_fkey"
+            columns: ["subject_id"]
+            isOneToOne: false
+            referencedRelation: "subjects"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "session_steps_unit_id_fkey"
+            columns: ["unit_id"]
+            isOneToOne: false
+            referencedRelation: "units"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       studylist_items: {
         Row: {
           created_at: string
@@ -745,6 +815,48 @@ export type Database = {
           created_at?: string
           id?: string
           role?: Database["public"]["Enums"]["app_role"]
+          user_id?: string
+        }
+        Relationships: []
+      }
+      user_sessions: {
+        Row: {
+          completed_at: string | null
+          completed_duration_minutes: number | null
+          created_at: string
+          current_step_index: number | null
+          id: string
+          session_date: string
+          started_at: string | null
+          status: string
+          total_duration_minutes: number
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          completed_at?: string | null
+          completed_duration_minutes?: number | null
+          created_at?: string
+          current_step_index?: number | null
+          id?: string
+          session_date?: string
+          started_at?: string | null
+          status?: string
+          total_duration_minutes?: number
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          completed_at?: string | null
+          completed_duration_minutes?: number | null
+          created_at?: string
+          current_step_index?: number | null
+          id?: string
+          session_date?: string
+          started_at?: string | null
+          status?: string
+          total_duration_minutes?: number
+          updated_at?: string
           user_id?: string
         }
         Relationships: []

@@ -154,7 +154,7 @@ export function AIBriefingHero({
 
               {/* CTA */}
               <div className="flex flex-wrap items-center gap-3 pt-2">
-                <Button size="lg" className="gap-2" onClick={() => navigate('/dashboard/study')}>
+                <Button size="lg" className="gap-2" onClick={() => navigate('/dashboard/ai-study?q=What should I study today based on my progress?')}>
                   <Zap className="h-4 w-4" />
                   Start Smart Revision
                 </Button>

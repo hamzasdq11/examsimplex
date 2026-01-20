@@ -53,9 +53,10 @@ interface SubjectAIChatProps {
     code: string;
   };
   universityName?: string;
+  initialQuery?: string;
 }
 
-export const SubjectAIChat = ({ subject, universityName }: SubjectAIChatProps) => {
+export const SubjectAIChat = ({ subject, universityName, initialQuery }: SubjectAIChatProps) => {
   const { user } = useAuth();
   const { toast } = useToast();
   const [messages, setMessages] = useState<Message[]>([
@@ -76,6 +77,18 @@ export const SubjectAIChat = ({ subject, universityName }: SubjectAIChatProps) =
       scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
     }
   }, [messages]);
+
+  // Handle initial query from URL params
+  useEffect(() => {
+    if (initialQuery && user) {
+      // Small delay to ensure component is ready
+      const timer = setTimeout(() => {
+        handleSubmit('ask', initialQuery);
+      }, 500);
+      return () => clearTimeout(timer);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [initialQuery, user]);
 
   const handleSubmit = async (type: "ask" | "notes" | "quiz" | "code" = "ask", customMessage?: string) => {
     const messageText = customMessage || input.trim();

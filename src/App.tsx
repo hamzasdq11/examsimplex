@@ -13,6 +13,7 @@ import SubjectPage from "./pages/SubjectPage";
 import Auth from "./pages/Auth";
 import Onboarding from "./pages/Onboarding";
 import UserDashboard from "./pages/Dashboard";
+import AIStudyMode from "./pages/AIStudyMode";
 import Library from "./pages/Library";
 import Studylists from "./pages/Studylists";
 import StudylistDetail from "./pages/StudylistDetail";
@@ -42,6 +43,8 @@ const App = () => (
                 <Route path="/auth" element={<Auth />} />
                 <Route path="/onboarding" element={<Onboarding />} />
                 <Route path="/dashboard" element={<UserDashboard />} />
+                <Route path="/dashboard/ai-study" element={<AIStudyMode />} />
+                <Route path="/dashboard/study" element={<AIStudyMode />} />
                 <Route path="/library" element={<Library />} />
                 <Route path="/studylists" element={<Studylists />} />
                 <Route path="/studylists/:id" element={<StudylistDetail />} />
