@@ -7,7 +7,8 @@ import {
   FileText, 
   FileQuestion,
   Users,
-  Home
+  Home,
+  ListChecks
 } from 'lucide-react';
 import { NavLink } from '@/components/NavLink';
 import {
@@ -29,6 +30,7 @@ const menuItems = [
   { title: 'Courses', url: '/admin/courses', icon: GraduationCap },
   { title: 'Subjects', url: '/admin/subjects', icon: BookOpen },
   { title: 'Questions', url: '/admin/questions', icon: HelpCircle },
+  { title: 'MCQs', url: '/admin/mcqs', icon: ListChecks },
   { title: 'Notes', url: '/admin/notes', icon: FileText },
   { title: 'PYQs', url: '/admin/pyqs', icon: FileQuestion },
   { title: 'Users', url: '/admin/users', icon: Users },

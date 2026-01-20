@@ -110,3 +110,29 @@ export interface UserRole {
   role: AppRole;
   created_at: string;
 }
+
+export interface MCQQuestion {
+  id: string;
+  subject_id: string;
+  unit_id: string | null;
+  question: string;
+  option_a: string;
+  option_b: string;
+  option_c: string;
+  option_d: string;
+  correct_option: 'A' | 'B' | 'C' | 'D';
+  explanation: string | null;
+  difficulty: 'easy' | 'medium' | 'hard';
+  created_at: string;
+  updated_at: string;
+}
+
+export interface UserMCQAttempt {
+  id: string;
+  user_id: string;
+  mcq_question_id: string;
+  selected_option: string;
+  is_correct: boolean;
+  time_taken_seconds: number | null;
+  attempted_at: string;
+}

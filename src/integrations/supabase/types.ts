@@ -142,6 +142,69 @@ export type Database = {
           },
         ]
       }
+      mcq_questions: {
+        Row: {
+          correct_option: string
+          created_at: string
+          difficulty: string
+          explanation: string | null
+          id: string
+          option_a: string
+          option_b: string
+          option_c: string
+          option_d: string
+          question: string
+          subject_id: string
+          unit_id: string | null
+          updated_at: string
+        }
+        Insert: {
+          correct_option: string
+          created_at?: string
+          difficulty?: string
+          explanation?: string | null
+          id?: string
+          option_a: string
+          option_b: string
+          option_c: string
+          option_d: string
+          question: string
+          subject_id: string
+          unit_id?: string | null
+          updated_at?: string
+        }
+        Update: {
+          correct_option?: string
+          created_at?: string
+          difficulty?: string
+          explanation?: string | null
+          id?: string
+          option_a?: string
+          option_b?: string
+          option_c?: string
+          option_d?: string
+          question?: string
+          subject_id?: string
+          unit_id?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "mcq_questions_subject_id_fkey"
+            columns: ["subject_id"]
+            isOneToOne: false
+            referencedRelation: "subjects"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "mcq_questions_unit_id_fkey"
+            columns: ["unit_id"]
+            isOneToOne: false
+            referencedRelation: "units"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       notes: {
         Row: {
           chapter_title: string
@@ -797,6 +860,44 @@ export type Database = {
           user_id?: string
         }
         Relationships: []
+      }
+      user_mcq_attempts: {
+        Row: {
+          attempted_at: string
+          id: string
+          is_correct: boolean
+          mcq_question_id: string
+          selected_option: string
+          time_taken_seconds: number | null
+          user_id: string
+        }
+        Insert: {
+          attempted_at?: string
+          id?: string
+          is_correct: boolean
+          mcq_question_id: string
+          selected_option: string
+          time_taken_seconds?: number | null
+          user_id: string
+        }
+        Update: {
+          attempted_at?: string
+          id?: string
+          is_correct?: boolean
+          mcq_question_id?: string
+          selected_option?: string
+          time_taken_seconds?: number | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_mcq_attempts_mcq_question_id_fkey"
+            columns: ["mcq_question_id"]
+            isOneToOne: false
+            referencedRelation: "mcq_questions"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       user_roles: {
         Row: {
