@@ -4,16 +4,17 @@ import { useAuth } from '@/hooks/useAuth';
 import { useProfile } from '@/hooks/useProfile';
 import { useStudyProgress } from '@/hooks/useStudyProgress';
 import { useExamSettings } from '@/hooks/useExamSettings';
-import { useSession } from '@/hooks/useSession';
+import { useDailyFocus } from '@/hooks/useDailyFocus';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Loader2, BookOpen, LogOut, Home, PlusCircle } from 'lucide-react';
 import { SEO } from '@/components/SEO';
-import { ActiveSessionHero } from '@/components/dashboard/ActiveSessionHero';
-import { SessionTimeline } from '@/components/dashboard/SessionTimeline';
-import { AIDirective, TimelineDirective } from '@/components/dashboard/AIDirective';
-import { CollapsedSubjectsDrawer } from '@/components/dashboard/CollapsedSubjectsDrawer';
+import { AIBriefingHero } from '@/components/dashboard/AIBriefingHero';
+import { TodaysFocusCard } from '@/components/dashboard/TodaysFocusCard';
+import { ProgressStatsGrid } from '@/components/dashboard/ProgressStatsGrid';
+import { IntelligentSubjectCard } from '@/components/dashboard/IntelligentSubjectCard';
+import { GlobalAICommandBar } from '@/components/dashboard/GlobalAICommandBar';
 
 interface Subject {
   id: string;
@@ -27,27 +28,14 @@ interface Subject {
 export default function Dashboard() {
   const { user, loading: authLoading, signOut } = useAuth();
   const { profile, loading: profileLoading, isProfileComplete } = useProfile();
-  const { progress, getWeakestSubjects } = useStudyProgress();
-  const { getDaysUntilExam } = useExamSettings();
-  const { 
-    session,
-    currentStep,
-    loading: sessionLoading,
-    generating,
-    progressPercent,
-    completedSteps,
-    totalSteps,
-    generateSession,
-    startSession,
-    completeStep,
-    skipStep,
-  } = useSession(profile?.semester_id || null);
+  const { progress, getTotalStats, getOverallReadiness, getWeakestSubjects, getSubjectProgress } = useStudyProgress();
+  const { settings, getDaysUntilExam, getExamTypeLabel, updateSettings } = useExamSettings();
+  const { focus, loading: focusLoading, refresh: refreshFocus } = useDailyFocus(profile?.semester_id || null);
   
   const navigate = useNavigate();
   const [subjects, setSubjects] = useState<Subject[]>([]);
   const [loadingSubjects, setLoadingSubjects] = useState(true);
   const [isProcessingOAuth, setIsProcessingOAuth] = useState(false);
-  const [pyqCounts, setPyqCounts] = useState<Record<string, number>>({});
 
   // Detect OAuth callback
   useEffect(() => {
@@ -73,7 +61,7 @@ export default function Dashboard() {
     }
   }, [authLoading, profileLoading, user, isProfileComplete, navigate, isProcessingOAuth]);
 
-  // Fetch subjects and PYQ counts
+  // Fetch subjects
   useEffect(() => {
     const fetchSubjects = async () => {
       if (!profile?.semester_id) {
@@ -87,23 +75,7 @@ export default function Dashboard() {
         .eq('semester_id', profile.semester_id)
         .order('name');
 
-      if (data) {
-        setSubjects(data);
-        
-        // Fetch PYQ counts for each subject
-        const { data: pyqs } = await supabase
-          .from('pyq_papers')
-          .select('subject_id')
-          .in('subject_id', data.map(s => s.id));
-        
-        if (pyqs) {
-          const counts: Record<string, number> = {};
-          pyqs.forEach(p => {
-            counts[p.subject_id] = (counts[p.subject_id] || 0) + 1;
-          });
-          setPyqCounts(counts);
-        }
-      }
+      if (data) setSubjects(data);
       setLoadingSubjects(false);
     };
 
@@ -115,12 +87,20 @@ export default function Dashboard() {
     navigate('/');
   };
 
-  // Get weakest subjects for directive
-  const weakestSubjects = getWeakestSubjects(2);
-  const daysUntilExam = getDaysUntilExam();
-  const prioritySubjectNames = weakestSubjects
-    .map(ws => subjects.find(s => s.id === ws.subject_id)?.name)
-    .filter(Boolean) as string[];
+  const handleExamDateSet = async (date: Date, type: string) => {
+    await updateSettings({ 
+      exam_date: date.toISOString().split('T')[0], 
+      exam_type: type 
+    });
+  };
+
+  // Calculate stats
+  const stats = getTotalStats();
+  const readiness = getOverallReadiness();
+  const weakestSubjects = getWeakestSubjects(1);
+  const pendingSubjects = subjects.length - progress.filter(p => 
+    (p.notes_viewed / Math.max(p.total_notes, 1)) >= 0.8
+  ).length;
 
   if (authLoading || profileLoading) {
     return (
@@ -132,13 +112,8 @@ export default function Dashboard() {
 
   if (!user || !profile) return null;
 
-  const showTimelineDirective = daysUntilExam !== null && 
-    daysUntilExam <= 30 && 
-    prioritySubjectNames.length > 0 && 
-    !session?.status;
-
   return (
-    <div className="min-h-screen bg-gradient-to-br from-background via-background to-muted/10">
+    <div className="min-h-screen bg-gradient-to-br from-background via-background to-muted/10 pb-24">
       <SEO
         title="Dashboard"
         description="Your personalized EXAM Simplex dashboard."
@@ -165,71 +140,86 @@ export default function Dashboard() {
       </header>
 
       <main className="container py-6 space-y-6">
-        {/* AI Directive (proactive message) */}
-        {showTimelineDirective && (
-          <TimelineDirective
-            daysUntilExam={daysUntilExam!}
-            prioritySubjects={prioritySubjectNames}
-            onAction={generateSession}
-          />
-        )}
-
-        {/* Active Session Hero - The main directive component */}
-        <ActiveSessionHero
-          session={session}
-          currentStep={currentStep}
-          loading={sessionLoading || loadingSubjects}
-          generating={generating}
-          progressPercent={progressPercent}
-          completedSteps={completedSteps}
-          totalSteps={totalSteps}
-          daysUntilExam={daysUntilExam}
-          onGenerateSession={generateSession}
-          onStartSession={startSession}
-          onCompleteStep={completeStep}
-          onSkipStep={skipStep}
-          universityId={profile.university_id}
-          courseId={profile.course_id}
-          semesterId={profile.semester_id}
+        {/* AI Briefing Hero */}
+        <AIBriefingHero
+          userName={profile.full_name || 'Student'}
+          userEmail={user.email || ''}
+          universityName={profile.university?.name || null}
+          daysUntilExam={getDaysUntilExam()}
+          examType={getExamTypeLabel()}
+          subjectsCount={subjects.length}
+          pendingSubjects={pendingSubjects}
+          weakestSubject={weakestSubjects[0] ? subjects.find(s => s.id === weakestSubjects[0].subject_id)?.name || null : null}
+          readinessPercent={readiness}
+          onEditProfile={() => navigate('/onboarding?edit=true')}
+          onExamDateSet={handleExamDateSet}
         />
 
-        {/* Session Timeline - Shows when session is active */}
-        {session && session.steps.length > 0 && session.status !== 'pending' && (
-          <SessionTimeline
-            steps={session.steps}
-            currentStepIndex={session.current_step_index}
+        {/* Today's Focus + Progress Stats */}
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          <TodaysFocusCard
+            focus={focus}
+            loading={focusLoading}
+            universityId={profile.university_id}
+            courseId={profile.course_id}
+            semesterId={profile.semester_id}
+            onRefresh={refreshFocus}
           />
-        )}
-
-        {/* Collapsed Subjects Drawer - Hidden by default */}
-        {!loadingSubjects && subjects.length > 0 && (
-          <div className="pt-4 border-t border-border/40">
-            <CollapsedSubjectsDrawer
-              subjects={subjects}
-              progress={progress}
-              universityId={profile.university_id!}
-              courseId={profile.course_id!}
-              semesterId={profile.semester_id!}
-              pyqCounts={pyqCounts}
+          <div className="lg:col-span-2">
+            <ProgressStatsGrid
+              notesCoverage={stats.notesCoverage}
+              notesViewed={stats.notesViewed}
+              totalNotes={stats.totalNotes}
+              pyqsCoverage={stats.pyqsCoverage}
+              pyqsPracticed={stats.pyqsPracticed}
+              totalPyqs={stats.totalPyqs}
+              aiSessions={stats.aiSessions}
+              subjectsCount={subjects.length}
             />
           </div>
-        )}
+        </div>
 
-        {/* Empty state if no subjects */}
-        {!loadingSubjects && subjects.length === 0 && (
-          <Card className="p-8 text-center border-dashed">
-            <BookOpen className="h-12 w-12 mx-auto text-muted-foreground/50 mb-4" />
-            <p className="text-muted-foreground mb-2">No subjects found</p>
-            <p className="text-sm text-muted-foreground mb-4">Add subjects to your semester to get started.</p>
-            <Button asChild>
+        {/* Subjects Grid */}
+        <section>
+          <div className="flex items-center justify-between mb-4">
+            <h2 className="text-lg font-semibold">Your Subjects</h2>
+            <Button variant="ghost" size="sm" asChild>
               <Link to={`/university/${profile.university_id}`}>
-                <PlusCircle className="h-4 w-4 mr-2" />
-                Browse subjects
+                <PlusCircle className="h-4 w-4 mr-1" />
+                Add subjects
               </Link>
             </Button>
-          </Card>
-        )}
+          </div>
+
+          {loadingSubjects ? (
+            <div className="flex items-center justify-center py-12">
+              <Loader2 className="h-6 w-6 animate-spin text-primary" />
+            </div>
+          ) : subjects.length === 0 ? (
+            <Card className="p-8 text-center border-dashed">
+              <BookOpen className="h-12 w-12 mx-auto text-muted-foreground/50 mb-4" />
+              <p className="text-muted-foreground mb-2">No subjects found</p>
+              <p className="text-sm text-muted-foreground">Subjects will appear once added to your semester.</p>
+            </Card>
+          ) : (
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+              {subjects.map((subject) => (
+                <IntelligentSubjectCard
+                  key={subject.id}
+                  subject={subject}
+                  progress={getSubjectProgress(subject.id)}
+                  universityId={profile.university_id!}
+                  courseId={profile.course_id!}
+                  semesterId={profile.semester_id!}
+                />
+              ))}
+            </div>
+          )}
+        </section>
       </main>
+
+      {/* Global AI Command Bar */}
+      <GlobalAICommandBar />
     </div>
   );
 }
