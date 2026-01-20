@@ -19,24 +19,32 @@ import {
   DialogHeader,
   DialogTitle,
   DialogTrigger,
+  DialogFooter,
 } from '@/components/ui/dialog';
 import { useToast } from '@/hooks/use-toast';
-import { Plus, Pencil, Trash2, Loader2, Search, Upload } from 'lucide-react';
+import { Plus, Pencil, Trash2, Loader2, Search, Upload, Layers } from 'lucide-react';
 import { BulkImportDialog } from '@/components/admin/BulkImportDialog';
 import { HierarchyBreadcrumb, BreadcrumbItem } from '@/components/admin/HierarchyBreadcrumb';
 import { SelectionGrid, SelectionItem } from '@/components/admin/SelectionGrid';
-import type { Subject, Semester, Course, University } from '@/types/database';
+import type { Subject, Semester, Course, University, Unit } from '@/types/database';
 
 export default function Subjects() {
   const [subjects, setSubjects] = useState<any[]>([]);
   const [universities, setUniversities] = useState<University[]>([]);
   const [courses, setCourses] = useState<Course[]>([]);
   const [semesters, setSemesters] = useState<Semester[]>([]);
+  const [units, setUnits] = useState<Unit[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [isImportOpen, setIsImportOpen] = useState(false);
   const [editingSubject, setEditingSubject] = useState<Subject | null>(null);
+  
+  // Units dialog state
+  const [isUnitsDialogOpen, setIsUnitsDialogOpen] = useState(false);
+  const [selectedSubjectForUnits, setSelectedSubjectForUnits] = useState<Subject | null>(null);
+  const [newUnitName, setNewUnitName] = useState('');
+  const [savingUnit, setSavingUnit] = useState(false);
   
   // Hierarchy state
   const [selectedUniversity, setSelectedUniversity] = useState<University | null>(null);
@@ -57,7 +65,7 @@ export default function Subjects() {
     gradient_from: '#3B82F6',
     gradient_to: '#8B5CF6',
     icon: 'BookOpen',
-    units: 5, // Number of units to create
+    units: 5,
   });
   const [saving, setSaving] = useState(false);
   const { toast } = useToast();
@@ -68,11 +76,12 @@ export default function Subjects() {
 
   async function fetchData() {
     try {
-      const [subjectsRes, universitiesRes, coursesRes, semestersRes] = await Promise.all([
+      const [subjectsRes, universitiesRes, coursesRes, semestersRes, unitsRes] = await Promise.all([
         supabase.from('subjects').select('*, semesters(*, courses(*, universities(*)))').order('name'),
         supabase.from('universities').select('*').order('name'),
         supabase.from('courses').select('*').order('name'),
         supabase.from('semesters').select('*').order('number'),
+        supabase.from('units').select('*').order('number'),
       ]);
 
       if (subjectsRes.error) throw subjectsRes.error;
@@ -80,6 +89,7 @@ export default function Subjects() {
       setUniversities(universitiesRes.data || []);
       setCourses(coursesRes.data || []);
       setSemesters(semestersRes.data || []);
+      setUnits(unitsRes.data || []);
     } catch (error) {
       console.error('Error:', error);
       toast({ title: 'Error', description: 'Failed to fetch data', variant: 'destructive' });
@@ -104,7 +114,6 @@ export default function Subjects() {
         if (error) throw error;
         toast({ title: 'Success', description: 'Subject updated successfully' });
       } else {
-        // Create subject first
         const { data: newSubject, error: subjectError } = await supabase
           .from('subjects')
           .insert([dataToSave])
@@ -113,7 +122,6 @@ export default function Subjects() {
         
         if (subjectError) throw subjectError;
 
-        // Create units for the subject
         if (unitCount > 0 && newSubject) {
           const unitsToCreate = Array.from({ length: unitCount }, (_, i) => ({
             subject_id: newSubject.id,
@@ -156,17 +164,17 @@ export default function Subjects() {
       gradient_from: subject.gradient_from || '#3B82F6',
       gradient_to: subject.gradient_to || '#8B5CF6',
       icon: subject.icon || 'BookOpen',
-      units: 5, // Not editable for existing subjects
+      units: 5,
     });
     setIsDialogOpen(true);
   };
 
   const handleDelete = async (id: string) => {
-    if (!confirm('Delete this subject?')) return;
+    if (!confirm('Delete this subject? All associated units, notes, and questions will also be deleted.')) return;
     try {
       const { error } = await supabase.from('subjects').delete().eq('id', id);
       if (error) throw error;
-      toast({ title: 'Success', description: 'Subject deleted' });
+      toast({ title: 'Success', description: 'Subject deleted successfully' });
       fetchData();
     } catch (error: any) {
       toast({ title: 'Error', description: error.message, variant: 'destructive' });
@@ -199,6 +207,83 @@ export default function Subjects() {
       setFormData(prev => ({ ...prev, semester_id: selectedSemester.id }));
     }
     setIsDialogOpen(true);
+  };
+
+  // Units management functions
+  const openUnitsDialog = (subject: Subject) => {
+    setSelectedSubjectForUnits(subject);
+    setNewUnitName('');
+    setIsUnitsDialogOpen(true);
+  };
+
+  const getSubjectUnits = (subjectId: string) => {
+    return units.filter(u => u.subject_id === subjectId).sort((a, b) => a.number - b.number);
+  };
+
+  const handleAddUnit = async () => {
+    if (!selectedSubjectForUnits) return;
+    setSavingUnit(true);
+
+    try {
+      const existingUnits = getSubjectUnits(selectedSubjectForUnits.id);
+      const newNumber = existingUnits.length + 1;
+
+      const { error } = await supabase.from('units').insert({
+        subject_id: selectedSubjectForUnits.id,
+        name: newUnitName.trim() || `Unit ${newNumber}`,
+        number: newNumber,
+        weight: 20,
+      });
+
+      if (error) throw error;
+      setNewUnitName('');
+      toast({ title: 'Success', description: 'Unit added successfully' });
+      fetchData();
+    } catch (error: any) {
+      toast({ title: 'Error', description: error.message, variant: 'destructive' });
+    } finally {
+      setSavingUnit(false);
+    }
+  };
+
+  const handleUpdateUnit = async (unitId: string, name: string, weight: number) => {
+    try {
+      const { error } = await supabase.from('units').update({ name, weight }).eq('id', unitId);
+      if (error) throw error;
+      fetchData();
+    } catch (error: any) {
+      toast({ title: 'Error', description: error.message, variant: 'destructive' });
+    }
+  };
+
+  const handleDeleteUnit = async (unitId: string) => {
+    if (!confirm('Delete this unit? All associated notes and questions will be orphaned.')) return;
+    try {
+      const { error } = await supabase.from('units').delete().eq('id', unitId);
+      if (error) throw error;
+      toast({ title: 'Success', description: 'Unit deleted successfully' });
+      fetchData();
+    } catch (error: any) {
+      toast({ title: 'Error', description: error.message, variant: 'destructive' });
+    }
+  };
+
+  const createInitialUnits = async (subject: Subject, count = 5) => {
+    try {
+      const unitsToCreate = Array.from({ length: count }, (_, i) => ({
+        subject_id: subject.id,
+        number: i + 1,
+        name: `Unit ${i + 1}`,
+        weight: Math.floor(100 / count),
+      }));
+
+      const { error } = await supabase.from('units').insert(unitsToCreate);
+      if (error) throw error;
+      toast({ title: 'Success', description: `Created ${count} units for ${subject.name}` });
+      fetchData();
+    } catch (error: any) {
+      toast({ title: 'Error', description: error.message, variant: 'destructive' });
+    }
   };
 
   // Filter data based on hierarchy
@@ -313,14 +398,15 @@ export default function Subjects() {
                   </DialogHeader>
                   <form onSubmit={handleSubmit} className="space-y-4">
                     <div className="space-y-2">
-                      <Label>Semester</Label>
-                      <Input value={`${selectedUniversity?.name} > ${selectedCourse?.name} > ${selectedSemester?.name}`} disabled />
+                      <Label htmlFor="semester-display">Semester</Label>
+                      <Input id="semester-display" value={`${selectedUniversity?.name} > ${selectedCourse?.name} > ${selectedSemester?.name}`} disabled />
                     </div>
                     
                     <div className="grid grid-cols-2 gap-4">
                       <div className="space-y-2">
-                        <Label>Subject Name</Label>
+                        <Label htmlFor="subject-name">Subject Name</Label>
                         <Input
+                          id="subject-name"
                           placeholder="Database Management System"
                           value={formData.name}
                           onChange={(e) => setFormData({ ...formData, name: e.target.value })}
@@ -328,8 +414,9 @@ export default function Subjects() {
                         />
                       </div>
                       <div className="space-y-2">
-                        <Label>Code</Label>
+                        <Label htmlFor="subject-code">Code</Label>
                         <Input
+                          id="subject-code"
                           placeholder="BCS501"
                           value={formData.code}
                           onChange={(e) => setFormData({ ...formData, code: e.target.value })}
@@ -340,8 +427,9 @@ export default function Subjects() {
                     
                     <div className="grid grid-cols-2 gap-4">
                       <div className="space-y-2">
-                        <Label>Slug</Label>
+                        <Label htmlFor="subject-slug">Slug</Label>
                         <Input
+                          id="subject-slug"
                           placeholder="dbms"
                           value={formData.slug}
                           onChange={(e) => setFormData({ ...formData, slug: e.target.value })}
@@ -350,8 +438,9 @@ export default function Subjects() {
                       </div>
                       {!editingSubject && (
                         <div className="space-y-2">
-                          <Label>Units</Label>
+                          <Label htmlFor="initial-units">Initial Units</Label>
                           <Input
+                            id="initial-units"
                             type="number"
                             min={1}
                             max={10}
@@ -360,31 +449,34 @@ export default function Subjects() {
                             onChange={(e) => setFormData({ ...formData, units: parseInt(e.target.value) || 5 })}
                             required
                           />
-                          <p className="text-xs text-muted-foreground">Number of units to create (1-10)</p>
+                          <p className="text-xs text-muted-foreground">You can manage units after creation</p>
                         </div>
                       )}
                     </div>
 
                     <div className="grid grid-cols-3 gap-4">
                       <div className="space-y-2">
-                        <Label>Total Marks</Label>
+                        <Label htmlFor="total-marks">Total Marks</Label>
                         <Input
+                          id="total-marks"
                           type="number"
                           value={formData.total_marks}
                           onChange={(e) => setFormData({ ...formData, total_marks: parseInt(e.target.value) })}
                         />
                       </div>
                       <div className="space-y-2">
-                        <Label>Theory Marks</Label>
+                        <Label htmlFor="theory-marks">Theory Marks</Label>
                         <Input
+                          id="theory-marks"
                           type="number"
                           value={formData.theory_marks}
                           onChange={(e) => setFormData({ ...formData, theory_marks: parseInt(e.target.value) })}
                         />
                       </div>
                       <div className="space-y-2">
-                        <Label>Internal Marks</Label>
+                        <Label htmlFor="internal-marks">Internal Marks</Label>
                         <Input
+                          id="internal-marks"
                           type="number"
                           value={formData.internal_marks}
                           onChange={(e) => setFormData({ ...formData, internal_marks: parseInt(e.target.value) })}
@@ -394,16 +486,18 @@ export default function Subjects() {
 
                     <div className="grid grid-cols-2 gap-4">
                       <div className="space-y-2">
-                        <Label>Gradient From</Label>
+                        <Label htmlFor="gradient-from">Gradient From</Label>
                         <Input
+                          id="gradient-from"
                           type="color"
                           value={formData.gradient_from}
                           onChange={(e) => setFormData({ ...formData, gradient_from: e.target.value })}
                         />
                       </div>
                       <div className="space-y-2">
-                        <Label>Gradient To</Label>
+                        <Label htmlFor="gradient-to">Gradient To</Label>
                         <Input
+                          id="gradient-to"
                           type="color"
                           value={formData.gradient_to}
                           onChange={(e) => setFormData({ ...formData, gradient_to: e.target.value })}
@@ -411,13 +505,13 @@ export default function Subjects() {
                       </div>
                     </div>
 
-                    <div className="flex justify-end gap-2">
+                    <DialogFooter>
                       <Button type="button" variant="outline" onClick={() => setIsDialogOpen(false)}>Cancel</Button>
                       <Button type="submit" disabled={saving}>
                         {saving && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                         {editingSubject ? 'Update' : 'Create'}
                       </Button>
-                    </div>
+                    </DialogFooter>
                   </form>
                 </DialogContent>
               </Dialog>
@@ -497,33 +591,134 @@ export default function Subjects() {
                       <TableHead>Name</TableHead>
                       <TableHead>Code</TableHead>
                       <TableHead>Marks</TableHead>
+                      <TableHead>Units</TableHead>
                       <TableHead className="text-right">Actions</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {filteredSubjects.map((subject) => (
-                      <TableRow key={subject.id}>
-                        <TableCell className="font-medium">{subject.name}</TableCell>
-                        <TableCell>{subject.code}</TableCell>
-                        <TableCell>{subject.total_marks}</TableCell>
-                        <TableCell className="text-right">
-                          <div className="flex justify-end gap-2">
-                            <Button variant="ghost" size="icon" onClick={() => handleEdit(subject)}>
-                              <Pencil className="h-4 w-4" />
-                            </Button>
-                            <Button variant="ghost" size="icon" onClick={() => handleDelete(subject.id)}>
-                              <Trash2 className="h-4 w-4 text-destructive" />
-                            </Button>
-                          </div>
-                        </TableCell>
-                      </TableRow>
-                    ))}
+                    {filteredSubjects.map((subject) => {
+                      const unitCount = units.filter(u => u.subject_id === subject.id).length;
+                      return (
+                        <TableRow key={subject.id}>
+                          <TableCell className="font-medium">{subject.name}</TableCell>
+                          <TableCell>{subject.code}</TableCell>
+                          <TableCell>{subject.total_marks}</TableCell>
+                          <TableCell>
+                            {unitCount === 0 ? (
+                              <Button 
+                                size="sm" 
+                                variant="outline" 
+                                onClick={() => createInitialUnits(subject)}
+                                className="h-7 text-xs"
+                              >
+                                <Plus className="mr-1 h-3 w-3" />
+                                Create 5 Units
+                              </Button>
+                            ) : (
+                              <span className="text-muted-foreground">{unitCount} units</span>
+                            )}
+                          </TableCell>
+                          <TableCell className="text-right">
+                            <div className="flex justify-end gap-1">
+                              <Button 
+                                variant="ghost" 
+                                size="icon" 
+                                onClick={() => openUnitsDialog(subject)}
+                                title="Manage Units"
+                              >
+                                <Layers className="h-4 w-4" />
+                              </Button>
+                              <Button variant="ghost" size="icon" onClick={() => handleEdit(subject)}>
+                                <Pencil className="h-4 w-4" />
+                              </Button>
+                              <Button variant="ghost" size="icon" onClick={() => handleDelete(subject.id)}>
+                                <Trash2 className="h-4 w-4 text-destructive" />
+                              </Button>
+                            </div>
+                          </TableCell>
+                        </TableRow>
+                      );
+                    })}
                   </TableBody>
                 </Table>
               )}
             </CardContent>
           </Card>
         )}
+
+        {/* Units Management Dialog */}
+        <Dialog open={isUnitsDialogOpen} onOpenChange={setIsUnitsDialogOpen}>
+          <DialogContent className="sm:max-w-[500px]">
+            <DialogHeader>
+              <DialogTitle>Manage Units - {selectedSubjectForUnits?.name}</DialogTitle>
+            </DialogHeader>
+            
+            <div className="space-y-4">
+              {/* Existing Units */}
+              <div className="space-y-2 max-h-[300px] overflow-y-auto">
+                {selectedSubjectForUnits && getSubjectUnits(selectedSubjectForUnits.id).length === 0 ? (
+                  <p className="text-sm text-muted-foreground text-center py-4">No units yet. Add one below.</p>
+                ) : (
+                  selectedSubjectForUnits && getSubjectUnits(selectedSubjectForUnits.id).map((unit) => (
+                    <div key={unit.id} className="flex items-center gap-2 p-2 border rounded-md">
+                      <span className="text-sm font-medium text-muted-foreground w-8">#{unit.number}</span>
+                      <Input
+                        defaultValue={unit.name}
+                        onBlur={(e) => {
+                          if (e.target.value !== unit.name) {
+                            handleUpdateUnit(unit.id, e.target.value, unit.weight);
+                          }
+                        }}
+                        className="flex-1"
+                      />
+                      <Input
+                        type="number"
+                        defaultValue={unit.weight}
+                        onBlur={(e) => {
+                          const newWeight = parseInt(e.target.value) || 20;
+                          if (newWeight !== unit.weight) {
+                            handleUpdateUnit(unit.id, unit.name, newWeight);
+                          }
+                        }}
+                        className="w-20"
+                        title="Weight %"
+                      />
+                      <Button 
+                        variant="ghost" 
+                        size="icon"
+                        onClick={() => handleDeleteUnit(unit.id)}
+                      >
+                        <Trash2 className="h-4 w-4 text-destructive" />
+                      </Button>
+                    </div>
+                  ))
+                )}
+              </div>
+
+              {/* Add New Unit */}
+              <div className="flex gap-2 pt-2 border-t">
+                <Input
+                  placeholder="New unit name (e.g., Introduction)"
+                  value={newUnitName}
+                  onChange={(e) => setNewUnitName(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter') {
+                      e.preventDefault();
+                      handleAddUnit();
+                    }
+                  }}
+                />
+                <Button onClick={handleAddUnit} disabled={savingUnit}>
+                  {savingUnit ? <Loader2 className="h-4 w-4 animate-spin" /> : <Plus className="h-4 w-4" />}
+                </Button>
+              </div>
+            </div>
+
+            <DialogFooter>
+              <Button variant="outline" onClick={() => setIsUnitsDialogOpen(false)}>Done</Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
       </div>
     </AdminLayout>
   );
