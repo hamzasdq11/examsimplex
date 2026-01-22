@@ -54,21 +54,39 @@ interface SubjectAIChatProps {
   };
   universityName?: string;
   initialQuery?: string;
+  onQueryConsumed?: () => void;
+  externalMessages?: Message[];
+  onMessagesChange?: (messages: Message[]) => void;
 }
 
-export const SubjectAIChat = ({ subject, universityName, initialQuery }: SubjectAIChatProps) => {
+export const SubjectAIChat = ({ 
+  subject, 
+  universityName, 
+  initialQuery,
+  onQueryConsumed,
+  externalMessages,
+  onMessagesChange
+}: SubjectAIChatProps) => {
   const { user } = useAuth();
   const { toast } = useToast();
-  const [messages, setMessages] = useState<Message[]>([
+  
+  // Use external messages if provided, otherwise use internal state
+  const defaultMessages: Message[] = [
     {
       role: "assistant",
       content: `Hi! I'm your ${subject.name} study assistant. Ask me anything about concepts, exam preparation, practice questions, or request code examples and visualizations.`,
       confidence: 1
     }
-  ]);
+  ];
+  
+  const [internalMessages, setInternalMessages] = useState<Message[]>(defaultMessages);
+  const messages = externalMessages ?? internalMessages;
+  const setMessages = onMessagesChange ?? setInternalMessages;
+  
   const [input, setInput] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [copiedIndex, setCopiedIndex] = useState<number | null>(null);
+  const [queryProcessed, setQueryProcessed] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
@@ -78,17 +96,25 @@ export const SubjectAIChat = ({ subject, universityName, initialQuery }: Subject
     }
   }, [messages]);
 
-  // Handle initial query from URL params
+  // Handle initial query - only process once
   useEffect(() => {
-    if (initialQuery && user) {
-      // Small delay to ensure component is ready
+    if (initialQuery && user && !queryProcessed && !isLoading) {
+      setQueryProcessed(true);
       const timer = setTimeout(() => {
         handleSubmit('ask', initialQuery);
-      }, 500);
+        onQueryConsumed?.();
+      }, 300);
       return () => clearTimeout(timer);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [initialQuery, user]);
+
+  // Reset queryProcessed when initialQuery changes
+  useEffect(() => {
+    if (!initialQuery) {
+      setQueryProcessed(false);
+    }
+  }, [initialQuery]);
 
   const handleSubmit = async (type: "ask" | "notes" | "quiz" | "code" = "ask", customMessage?: string) => {
     const messageText = customMessage || input.trim();
