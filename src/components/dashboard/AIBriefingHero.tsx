@@ -1,9 +1,7 @@
 import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
-import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
-import { Calendar, Flame, Target, TrendingUp, Zap, Edit, CalendarDays } from 'lucide-react';
+import { Calendar, Flame, Target, TrendingUp } from 'lucide-react';
 import { SetExamDateDialog } from './SetExamDateDialog';
 import { cn } from '@/lib/utils';
 
@@ -34,7 +32,6 @@ export function AIBriefingHero({
   onEditProfile,
   onExamDateSet
 }: AIBriefingHeroProps) {
-  const navigate = useNavigate();
   const [showExamDialog, setShowExamDialog] = useState(false);
 
   const getInitials = () => {
@@ -152,17 +149,6 @@ export function AIBriefingHero({
                 </div>
               </div>
 
-              {/* CTA */}
-              <div className="flex flex-wrap items-center gap-3 pt-2">
-                <Button size="lg" className="gap-2" onClick={() => navigate('/dashboard/ai-study?q=What should I study today based on my progress?')}>
-                  <Zap className="h-4 w-4" />
-                  Start Smart Revision
-                </Button>
-                <Button variant="ghost" size="sm" onClick={onEditProfile}>
-                  <Edit className="h-4 w-4 mr-2" />
-                  Edit Profile
-                </Button>
-              </div>
             </div>
           </div>
         </div>

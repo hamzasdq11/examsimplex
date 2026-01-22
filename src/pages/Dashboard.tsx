@@ -8,7 +8,7 @@ import { useDailyFocus } from '@/hooks/useDailyFocus';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
-import { Loader2, BookOpen, LogOut, Home, PlusCircle } from 'lucide-react';
+import { Loader2, BookOpen, LogOut, Home, Edit } from 'lucide-react';
 import { SEO } from '@/components/SEO';
 import { AIBriefingHero } from '@/components/dashboard/AIBriefingHero';
 import { TodaysFocusCard } from '@/components/dashboard/TodaysFocusCard';
@@ -166,6 +166,9 @@ export default function Dashboard() {
             <Button variant="ghost" size="sm" asChild>
               <Link to="/"><Home className="h-4 w-4 mr-1" />Home</Link>
             </Button>
+            <Button variant="ghost" size="sm" onClick={() => navigate('/onboarding?edit=true')}>
+              <Edit className="h-4 w-4 mr-1" />Edit Profile
+            </Button>
             <Button variant="ghost" size="sm" onClick={handleSignOut}>
               <LogOut className="h-4 w-4 mr-1" />Sign out
             </Button>
@@ -228,15 +231,7 @@ export default function Dashboard() {
 
           {/* Subjects Grid */}
           <section>
-            <div className="flex items-center justify-between mb-4">
-              <h2 className="text-lg font-semibold">Your Subjects</h2>
-              <Button variant="ghost" size="sm" asChild>
-                <Link to={`/university/${profile.university_id}`}>
-                  <PlusCircle className="h-4 w-4 mr-1" />
-                  Add subjects
-                </Link>
-              </Button>
-            </div>
+            <h2 className="text-lg font-semibold mb-4">Your Subjects</h2>
 
             {loadingSubjects ? (
               <div className="flex items-center justify-center py-12">
