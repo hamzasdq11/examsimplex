@@ -60,7 +60,7 @@ export function ResizableAIPanel({
               onOpenChange(false);
             }}
           />
-          <div className="flex-1 overflow-hidden">
+          <div className="flex-1 min-h-0">
             <SubjectAIChat
               subject={subject}
               universityName={universityName}
@@ -108,24 +108,26 @@ export function ResizableAIPanel({
         minSize={25} 
         maxSize={60}
         onResize={(size) => setDefaultSize(size)}
-        className="h-full flex flex-col bg-background border-l"
+        className="bg-background border-l"
       >
-        <PanelHeader
-          subject={subject}
-          isFullscreen={false}
-          onMaximize={() => onFullscreenChange(true)}
-          onClose={() => onOpenChange(false)}
-        />
-        <div className="flex-1 min-h-0 overflow-hidden" style={{ height: 'calc(100% - 52px)' }}>
-          <SubjectAIChat
+        <div className="h-full flex flex-col">
+          <PanelHeader
             subject={subject}
-            universityName={universityName}
-            initialQuery={initialQuery}
-            onQueryConsumed={onQueryConsumed}
-            externalMessages={messages}
-            onMessagesChange={onMessagesChange}
-            hideHeader={true}
+            isFullscreen={false}
+            onMaximize={() => onFullscreenChange(true)}
+            onClose={() => onOpenChange(false)}
           />
+          <div className="flex-1 min-h-0">
+            <SubjectAIChat
+              subject={subject}
+              universityName={universityName}
+              initialQuery={initialQuery}
+              onQueryConsumed={onQueryConsumed}
+              externalMessages={messages}
+              onMessagesChange={onMessagesChange}
+              hideHeader={true}
+            />
+          </div>
         </div>
       </ResizablePanel>
     </ResizablePanelGroup>
