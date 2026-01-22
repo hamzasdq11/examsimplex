@@ -18,77 +18,76 @@ import {
   DialogContent,
   DialogHeader,
   DialogTitle,
-  DialogTrigger,
   DialogFooter,
 } from '@/components/ui/dialog';
+import { Alert, AlertDescription } from '@/components/ui/alert';
 import { useToast } from '@/hooks/use-toast';
-import { Plus, Pencil, Trash2, Loader2, Search, Upload, Layers } from 'lucide-react';
+import { Plus, Pencil, Trash2, Loader2, Search, Upload, AlertCircle, Layers } from 'lucide-react';
 import { BulkImportDialog } from '@/components/admin/BulkImportDialog';
-import { HierarchyBreadcrumb, BreadcrumbItem } from '@/components/admin/HierarchyBreadcrumb';
-import { SelectionGrid, SelectionItem } from '@/components/admin/SelectionGrid';
-import type { Subject, Semester, Course, University, Unit } from '@/types/database';
+import { useAdminContext } from '@/contexts/AdminContext';
+import type { Subject, Unit } from '@/types/database';
 
 export default function Subjects() {
-  const [subjects, setSubjects] = useState<any[]>([]);
-  const [universities, setUniversities] = useState<University[]>([]);
-  const [courses, setCourses] = useState<Course[]>([]);
-  const [semesters, setSemesters] = useState<Semester[]>([]);
+  const {
+    selectedUniversityId,
+    selectedCourseId,
+    selectedSemesterId,
+    selectedUniversity,
+    selectedCourse,
+    selectedSemester,
+    isContextComplete,
+  } = useAdminContext();
+
+  const [subjects, setSubjects] = useState<Subject[]>([]);
   const [units, setUnits] = useState<Unit[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
   const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [isUnitsDialogOpen, setIsUnitsDialogOpen] = useState(false);
   const [isImportOpen, setIsImportOpen] = useState(false);
   const [editingSubject, setEditingSubject] = useState<Subject | null>(null);
-  
-  // Units dialog state
-  const [isUnitsDialogOpen, setIsUnitsDialogOpen] = useState(false);
   const [selectedSubjectForUnits, setSelectedSubjectForUnits] = useState<Subject | null>(null);
+  const [subjectUnits, setSubjectUnits] = useState<Unit[]>([]);
   const [newUnitName, setNewUnitName] = useState('');
-  const [savingUnit, setSavingUnit] = useState(false);
-  
-  // Hierarchy state
-  const [selectedUniversity, setSelectedUniversity] = useState<University | null>(null);
-  const [selectedCourse, setSelectedCourse] = useState<Course | null>(null);
-  const [selectedSemester, setSelectedSemester] = useState<Semester | null>(null);
-  
+  const [editingUnit, setEditingUnit] = useState<Unit | null>(null);
+
   const [formData, setFormData] = useState({
-    semester_id: '',
     name: '',
     code: '',
     slug: '',
-    exam_type: 'End Semester',
     total_marks: 100,
     theory_marks: 70,
     internal_marks: 30,
-    duration: '3 Hours',
+    duration: '3 hours',
     pattern: 'Theory',
-    gradient_from: '#3B82F6',
-    gradient_to: '#8B5CF6',
-    icon: 'BookOpen',
-    units: 5,
+    exam_type: 'Written',
+    initial_units: 5,
   });
   const [saving, setSaving] = useState(false);
   const { toast } = useToast();
 
   useEffect(() => {
-    fetchData();
-  }, []);
+    if (selectedSemesterId) {
+      fetchData();
+    } else {
+      setSubjects([]);
+      setUnits([]);
+      setLoading(false);
+    }
+  }, [selectedSemesterId]);
 
   async function fetchData() {
+    if (!selectedSemesterId) return;
+
+    setLoading(true);
     try {
-      const [subjectsRes, universitiesRes, coursesRes, semestersRes, unitsRes] = await Promise.all([
-        supabase.from('subjects').select('*, semesters(*, courses(*, universities(*)))').order('name'),
-        supabase.from('universities').select('*').order('name'),
-        supabase.from('courses').select('*').order('name'),
-        supabase.from('semesters').select('*').order('number'),
+      const [subjectsRes, unitsRes] = await Promise.all([
+        supabase.from('subjects').select('*').eq('semester_id', selectedSemesterId).order('name'),
         supabase.from('units').select('*').order('number'),
       ]);
 
       if (subjectsRes.error) throw subjectsRes.error;
       setSubjects(subjectsRes.data || []);
-      setUniversities(universitiesRes.data || []);
-      setCourses(coursesRes.data || []);
-      setSemesters(semestersRes.data || []);
       setUnits(unitsRes.data || []);
     } catch (error) {
       console.error('Error:', error);
@@ -100,41 +99,35 @@ export default function Subjects() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!selectedSemesterId) return;
+
     setSaving(true);
 
     try {
-      const { units: unitCount, ...subjectData } = formData;
       const dataToSave = {
-        ...subjectData,
-        semester_id: selectedSemester?.id || formData.semester_id,
+        name: formData.name,
+        code: formData.code,
+        slug: formData.slug || formData.code.toLowerCase().replace(/\s+/g, '-'),
+        total_marks: formData.total_marks,
+        theory_marks: formData.theory_marks,
+        internal_marks: formData.internal_marks,
+        duration: formData.duration,
+        pattern: formData.pattern,
+        exam_type: formData.exam_type,
+        semester_id: selectedSemesterId,
       };
 
       if (editingSubject) {
         const { error } = await supabase.from('subjects').update(dataToSave).eq('id', editingSubject.id);
         if (error) throw error;
-        toast({ title: 'Success', description: 'Subject updated successfully' });
+        toast({ title: 'Success', description: 'Subject updated' });
       } else {
-        const { data: newSubject, error: subjectError } = await supabase
-          .from('subjects')
-          .insert([dataToSave])
-          .select()
-          .single();
-        
-        if (subjectError) throw subjectError;
+        const { data: newSubject, error } = await supabase.from('subjects').insert([dataToSave]).select().single();
+        if (error) throw error;
 
-        if (unitCount > 0 && newSubject) {
-          const unitsToCreate = Array.from({ length: unitCount }, (_, i) => ({
-            subject_id: newSubject.id,
-            number: i + 1,
-            name: `Unit ${i + 1}`,
-            weight: Math.floor(100 / unitCount),
-          }));
-
-          const { error: unitsError } = await supabase.from('units').insert(unitsToCreate);
-          if (unitsError) throw unitsError;
-        }
-
-        toast({ title: 'Success', description: `Subject created with ${unitCount} units` });
+        // Create initial units
+        await createInitialUnits(newSubject.id, formData.initial_units);
+        toast({ title: 'Success', description: 'Subject created with units' });
       }
 
       setIsDialogOpen(false);
@@ -148,33 +141,42 @@ export default function Subjects() {
     }
   };
 
-  const handleEdit = (subject: any) => {
+  const createInitialUnits = async (subjectId: string, count: number) => {
+    const unitsToCreate = [];
+    for (let i = 1; i <= count; i++) {
+      unitsToCreate.push({
+        subject_id: subjectId,
+        number: i,
+        name: `Unit ${i}`,
+        weight: 1,
+      });
+    }
+    await supabase.from('units').insert(unitsToCreate);
+  };
+
+  const handleEdit = (subject: Subject) => {
     setEditingSubject(subject);
     setFormData({
-      semester_id: subject.semester_id,
       name: subject.name,
       code: subject.code,
       slug: subject.slug,
-      exam_type: subject.exam_type,
       total_marks: subject.total_marks,
       theory_marks: subject.theory_marks,
       internal_marks: subject.internal_marks,
       duration: subject.duration,
       pattern: subject.pattern,
-      gradient_from: subject.gradient_from || '#3B82F6',
-      gradient_to: subject.gradient_to || '#8B5CF6',
-      icon: subject.icon || 'BookOpen',
-      units: 5,
+      exam_type: subject.exam_type,
+      initial_units: 5,
     });
     setIsDialogOpen(true);
   };
 
   const handleDelete = async (id: string) => {
-    if (!confirm('Delete this subject? All associated units, notes, and questions will also be deleted.')) return;
+    if (!confirm('Delete this subject and all its content?')) return;
     try {
       const { error } = await supabase.from('subjects').delete().eq('id', id);
       if (error) throw error;
-      toast({ title: 'Success', description: 'Subject deleted successfully' });
+      toast({ title: 'Success', description: 'Subject deleted' });
       fetchData();
     } catch (error: any) {
       toast({ title: 'Error', description: error.message, variant: 'destructive' });
@@ -183,73 +185,60 @@ export default function Subjects() {
 
   const resetForm = () => {
     setFormData({
-      semester_id: '',
       name: '',
       code: '',
       slug: '',
-      exam_type: 'End Semester',
       total_marks: 100,
       theory_marks: 70,
       internal_marks: 30,
-      duration: '3 Hours',
+      duration: '3 hours',
       pattern: 'Theory',
-      gradient_from: '#3B82F6',
-      gradient_to: '#8B5CF6',
-      icon: 'BookOpen',
-      units: 5,
+      exam_type: 'Written',
+      initial_units: 5,
     });
   };
 
   const openNewDialog = () => {
     setEditingSubject(null);
     resetForm();
-    if (selectedSemester) {
-      setFormData(prev => ({ ...prev, semester_id: selectedSemester.id }));
-    }
     setIsDialogOpen(true);
   };
 
-  // Units management functions
   const openUnitsDialog = (subject: Subject) => {
     setSelectedSubjectForUnits(subject);
-    setNewUnitName('');
+    setSubjectUnits(units.filter(u => u.subject_id === subject.id));
     setIsUnitsDialogOpen(true);
   };
 
-  const getSubjectUnits = (subjectId: string) => {
-    return units.filter(u => u.subject_id === subjectId).sort((a, b) => a.number - b.number);
-  };
-
   const handleAddUnit = async () => {
-    if (!selectedSubjectForUnits) return;
-    setSavingUnit(true);
+    if (!selectedSubjectForUnits || !newUnitName.trim()) return;
 
     try {
-      const existingUnits = getSubjectUnits(selectedSubjectForUnits.id);
-      const newNumber = existingUnits.length + 1;
-
-      const { error } = await supabase.from('units').insert({
+      const nextNumber = subjectUnits.length + 1;
+      const { data, error } = await supabase.from('units').insert([{
         subject_id: selectedSubjectForUnits.id,
-        name: newUnitName.trim() || `Unit ${newNumber}`,
-        number: newNumber,
-        weight: 20,
-      });
+        number: nextNumber,
+        name: newUnitName.trim(),
+        weight: 1,
+      }]).select().single();
 
       if (error) throw error;
+      setSubjectUnits([...subjectUnits, data]);
       setNewUnitName('');
-      toast({ title: 'Success', description: 'Unit added successfully' });
+      toast({ title: 'Success', description: 'Unit added' });
       fetchData();
     } catch (error: any) {
       toast({ title: 'Error', description: error.message, variant: 'destructive' });
-    } finally {
-      setSavingUnit(false);
     }
   };
 
-  const handleUpdateUnit = async (unitId: string, name: string, weight: number) => {
+  const handleUpdateUnit = async (unit: Unit, updates: Partial<Unit>) => {
     try {
-      const { error } = await supabase.from('units').update({ name, weight }).eq('id', unitId);
+      const { error } = await supabase.from('units').update(updates).eq('id', unit.id);
       if (error) throw error;
+      setSubjectUnits(subjectUnits.map(u => u.id === unit.id ? { ...u, ...updates } : u));
+      setEditingUnit(null);
+      toast({ title: 'Success', description: 'Unit updated' });
       fetchData();
     } catch (error: any) {
       toast({ title: 'Error', description: error.message, variant: 'destructive' });
@@ -257,114 +246,46 @@ export default function Subjects() {
   };
 
   const handleDeleteUnit = async (unitId: string) => {
-    if (!confirm('Delete this unit? All associated notes and questions will be orphaned.')) return;
+    if (!confirm('Delete this unit?')) return;
     try {
       const { error } = await supabase.from('units').delete().eq('id', unitId);
       if (error) throw error;
-      toast({ title: 'Success', description: 'Unit deleted successfully' });
+      setSubjectUnits(subjectUnits.filter(u => u.id !== unitId));
+      toast({ title: 'Success', description: 'Unit deleted' });
       fetchData();
     } catch (error: any) {
       toast({ title: 'Error', description: error.message, variant: 'destructive' });
     }
   };
 
-  const createInitialUnits = async (subject: Subject, count = 5) => {
-    try {
-      const unitsToCreate = Array.from({ length: count }, (_, i) => ({
-        subject_id: subject.id,
-        number: i + 1,
-        name: `Unit ${i + 1}`,
-        weight: Math.floor(100 / count),
-      }));
-
-      const { error } = await supabase.from('units').insert(unitsToCreate);
-      if (error) throw error;
-      toast({ title: 'Success', description: `Created ${count} units for ${subject.name}` });
-      fetchData();
-    } catch (error: any) {
-      toast({ title: 'Error', description: error.message, variant: 'destructive' });
-    }
-  };
-
-  // Filter data based on hierarchy
-  const universityCourses = selectedUniversity 
-    ? courses.filter(c => c.university_id === selectedUniversity.id)
-    : [];
-
-  const courseSemesters = selectedCourse
-    ? semesters.filter(s => s.course_id === selectedCourse.id)
-    : [];
-
-  const semesterSubjects = selectedSemester
-    ? subjects.filter(s => s.semester_id === selectedSemester.id)
-    : [];
-
-  const filteredSubjects = semesterSubjects.filter(s =>
+  const filteredSubjects = subjects.filter(s =>
     s.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
     s.code.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
-  // Transform data for selection grids
-  const universityItems: SelectionItem[] = universities.map(uni => ({
-    id: uni.id,
-    title: uni.name,
-    subtitle: uni.full_name,
-    metadata: uni.location,
-    badge: `${courses.filter(c => c.university_id === uni.id).length} courses`,
-  }));
-
-  const courseItems: SelectionItem[] = universityCourses.map(course => ({
-    id: course.id,
-    title: course.name,
-    subtitle: course.code,
-    metadata: `${course.duration_years} years`,
-    badge: `${semesters.filter(s => s.course_id === course.id).length} semesters`,
-  }));
-
-  const semesterItems: SelectionItem[] = courseSemesters.map(sem => ({
-    id: sem.id,
-    title: sem.name,
-    subtitle: `Semester ${sem.number}`,
-    badge: `${subjects.filter(s => s.semester_id === sem.id).length} subjects`,
-  }));
-
-  // Breadcrumb items
-  const breadcrumbItems: BreadcrumbItem[] = [];
-  if (selectedUniversity) {
-    breadcrumbItems.push({
-      label: selectedUniversity.name,
-      onClick: () => {
-        setSelectedCourse(null);
-        setSelectedSemester(null);
-      },
-    });
-  }
-  if (selectedCourse) {
-    breadcrumbItems.push({
-      label: selectedCourse.name,
-      onClick: () => {
-        setSelectedSemester(null);
-      },
-    });
-  }
-  if (selectedSemester) {
-    breadcrumbItems.push({ label: selectedSemester.name });
-  }
-
-  const handleHomeClick = () => {
-    setSelectedUniversity(null);
-    setSelectedCourse(null);
-    setSelectedSemester(null);
+  const getSubjectUnitCount = (subjectId: string) => {
+    return units.filter(u => u.subject_id === subjectId).length;
   };
 
-  const getCurrentLevel = () => {
-    if (!selectedUniversity) return 'university';
-    if (!selectedCourse) return 'course';
-    if (!selectedSemester) return 'semester';
-    return 'subject';
-  };
-
-  const currentLevel = getCurrentLevel();
+  // Show alert if context is incomplete
+  if (!isContextComplete) {
+    return (
+      <AdminLayout>
+        <div className="space-y-6">
+          <div>
+            <h2 className="text-3xl font-bold tracking-tight text-foreground">Subjects</h2>
+            <p className="text-muted-foreground">Manage subjects and their units</p>
+          </div>
+          <Alert>
+            <AlertCircle className="h-4 w-4" />
+            <AlertDescription>
+              Please select a <strong>University</strong>, <strong>Course</strong>, and <strong>Semester</strong> from the context bar above to manage subjects.
+            </AlertDescription>
+          </Alert>
+        </div>
+      </AdminLayout>
+    );
+  }
 
   return (
     <AdminLayout>
@@ -373,278 +294,185 @@ export default function Subjects() {
           <div>
             <h2 className="text-3xl font-bold tracking-tight text-foreground">Subjects</h2>
             <p className="text-muted-foreground">
-              {currentLevel === 'university' && 'Select a university'}
-              {currentLevel === 'course' && `Select a course from ${selectedUniversity?.name}`}
-              {currentLevel === 'semester' && `Select a semester from ${selectedCourse?.name}`}
-              {currentLevel === 'subject' && `Manage subjects for ${selectedSemester?.name}`}
+              {selectedUniversity?.name} / {selectedCourse?.name} / {selectedSemester?.name}
             </p>
           </div>
-          {selectedSemester && (
-            <div className="flex gap-2">
-              <Button variant="outline" onClick={() => setIsImportOpen(true)}>
-                <Upload className="mr-2 h-4 w-4" />
-                Import
-              </Button>
-              <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-                <DialogTrigger asChild>
-                  <Button onClick={openNewDialog}>
-                    <Plus className="mr-2 h-4 w-4" />
-                    Add Subject
-                  </Button>
-                </DialogTrigger>
-                <DialogContent className="sm:max-w-[600px] max-h-[90vh] overflow-y-auto">
-                  <DialogHeader>
-                    <DialogTitle>{editingSubject ? 'Edit Subject' : 'Add New Subject'}</DialogTitle>
-                  </DialogHeader>
-                  <form onSubmit={handleSubmit} className="space-y-4">
-                    <div className="space-y-2">
-                      <Label htmlFor="semester-display">Semester</Label>
-                      <Input id="semester-display" value={`${selectedUniversity?.name} > ${selectedCourse?.name} > ${selectedSemester?.name}`} disabled />
-                    </div>
-                    
-                    <div className="grid grid-cols-2 gap-4">
-                      <div className="space-y-2">
-                        <Label htmlFor="subject-name">Subject Name</Label>
-                        <Input
-                          id="subject-name"
-                          placeholder="Database Management System"
-                          value={formData.name}
-                          onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                          required
-                        />
-                      </div>
-                      <div className="space-y-2">
-                        <Label htmlFor="subject-code">Code</Label>
-                        <Input
-                          id="subject-code"
-                          placeholder="BCS501"
-                          value={formData.code}
-                          onChange={(e) => setFormData({ ...formData, code: e.target.value })}
-                          required
-                        />
-                      </div>
-                    </div>
-                    
-                    <div className="grid grid-cols-2 gap-4">
-                      <div className="space-y-2">
-                        <Label htmlFor="subject-slug">Slug</Label>
-                        <Input
-                          id="subject-slug"
-                          placeholder="dbms"
-                          value={formData.slug}
-                          onChange={(e) => setFormData({ ...formData, slug: e.target.value })}
-                          required
-                        />
-                      </div>
-                      {!editingSubject && (
-                        <div className="space-y-2">
-                          <Label htmlFor="initial-units">Initial Units</Label>
-                          <Input
-                            id="initial-units"
-                            type="number"
-                            min={1}
-                            max={10}
-                            placeholder="5"
-                            value={formData.units}
-                            onChange={(e) => setFormData({ ...formData, units: parseInt(e.target.value) || 5 })}
-                            required
-                          />
-                          <p className="text-xs text-muted-foreground">You can manage units after creation</p>
-                        </div>
-                      )}
-                    </div>
-
-                    <div className="grid grid-cols-3 gap-4">
-                      <div className="space-y-2">
-                        <Label htmlFor="total-marks">Total Marks</Label>
-                        <Input
-                          id="total-marks"
-                          type="number"
-                          value={formData.total_marks}
-                          onChange={(e) => setFormData({ ...formData, total_marks: parseInt(e.target.value) })}
-                        />
-                      </div>
-                      <div className="space-y-2">
-                        <Label htmlFor="theory-marks">Theory Marks</Label>
-                        <Input
-                          id="theory-marks"
-                          type="number"
-                          value={formData.theory_marks}
-                          onChange={(e) => setFormData({ ...formData, theory_marks: parseInt(e.target.value) })}
-                        />
-                      </div>
-                      <div className="space-y-2">
-                        <Label htmlFor="internal-marks">Internal Marks</Label>
-                        <Input
-                          id="internal-marks"
-                          type="number"
-                          value={formData.internal_marks}
-                          onChange={(e) => setFormData({ ...formData, internal_marks: parseInt(e.target.value) })}
-                        />
-                      </div>
-                    </div>
-
-                    <div className="grid grid-cols-2 gap-4">
-                      <div className="space-y-2">
-                        <Label htmlFor="gradient-from">Gradient From</Label>
-                        <Input
-                          id="gradient-from"
-                          type="color"
-                          value={formData.gradient_from}
-                          onChange={(e) => setFormData({ ...formData, gradient_from: e.target.value })}
-                        />
-                      </div>
-                      <div className="space-y-2">
-                        <Label htmlFor="gradient-to">Gradient To</Label>
-                        <Input
-                          id="gradient-to"
-                          type="color"
-                          value={formData.gradient_to}
-                          onChange={(e) => setFormData({ ...formData, gradient_to: e.target.value })}
-                        />
-                      </div>
-                    </div>
-
-                    <DialogFooter>
-                      <Button type="button" variant="outline" onClick={() => setIsDialogOpen(false)}>Cancel</Button>
-                      <Button type="submit" disabled={saving}>
-                        {saving && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                        {editingSubject ? 'Update' : 'Create'}
-                      </Button>
-                    </DialogFooter>
-                  </form>
-                </DialogContent>
-              </Dialog>
-              <BulkImportDialog
-                open={isImportOpen}
-                onOpenChange={setIsImportOpen}
-                tableName="subjects"
-                onImportComplete={fetchData}
-              />
-            </div>
-          )}
+          <div className="flex gap-2">
+            <Button variant="outline" onClick={() => setIsImportOpen(true)}>
+              <Upload className="mr-2 h-4 w-4" />
+              Import
+            </Button>
+            <Button onClick={openNewDialog}>
+              <Plus className="mr-2 h-4 w-4" />
+              Add Subject
+            </Button>
+          </div>
         </div>
 
-        <HierarchyBreadcrumb items={breadcrumbItems} onHomeClick={handleHomeClick} />
+        <Card>
+          <CardHeader>
+            <div className="relative max-w-sm">
+              <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+              <Input
+                placeholder="Search subjects..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="pl-9"
+              />
+            </div>
+          </CardHeader>
+          <CardContent>
+            {loading ? (
+              <div className="flex items-center justify-center py-8">
+                <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+              </div>
+            ) : filteredSubjects.length === 0 ? (
+              <div className="text-center py-8 text-muted-foreground">
+                No subjects found. Add your first subject to get started.
+              </div>
+            ) : (
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Name</TableHead>
+                    <TableHead>Code</TableHead>
+                    <TableHead>Marks</TableHead>
+                    <TableHead>Units</TableHead>
+                    <TableHead className="text-right">Actions</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {filteredSubjects.map((subject) => (
+                    <TableRow key={subject.id}>
+                      <TableCell className="font-medium">{subject.name}</TableCell>
+                      <TableCell>{subject.code}</TableCell>
+                      <TableCell>{subject.total_marks}</TableCell>
+                      <TableCell>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => openUnitsDialog(subject)}
+                          className="gap-1"
+                        >
+                          <Layers className="h-4 w-4" />
+                          {getSubjectUnitCount(subject.id)}
+                        </Button>
+                      </TableCell>
+                      <TableCell className="text-right">
+                        <div className="flex justify-end gap-2">
+                          <Button variant="ghost" size="icon" onClick={() => handleEdit(subject)}>
+                            <Pencil className="h-4 w-4" />
+                          </Button>
+                          <Button variant="ghost" size="icon" onClick={() => handleDelete(subject.id)}>
+                            <Trash2 className="h-4 w-4 text-destructive" />
+                          </Button>
+                        </div>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            )}
+          </CardContent>
+        </Card>
 
-        {currentLevel === 'university' && (
-          <SelectionGrid
-            items={universityItems}
-            onSelect={(item) => {
-              const uni = universities.find(u => u.id === item.id);
-              if (uni) setSelectedUniversity(uni);
-            }}
-            loading={loading}
-            emptyMessage="No universities found"
-          />
-        )}
+        {/* Add/Edit Subject Dialog */}
+        <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+          <DialogContent className="sm:max-w-[500px]">
+            <DialogHeader>
+              <DialogTitle>{editingSubject ? 'Edit Subject' : 'Add New Subject'}</DialogTitle>
+            </DialogHeader>
+            <form onSubmit={handleSubmit} className="space-y-4">
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="name">Subject Name</Label>
+                  <Input
+                    id="name"
+                    placeholder="Database Management"
+                    value={formData.name}
+                    onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                    required
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="code">Code</Label>
+                  <Input
+                    id="code"
+                    placeholder="BCS501"
+                    value={formData.code}
+                    onChange={(e) => setFormData({ ...formData, code: e.target.value })}
+                    required
+                  />
+                </div>
+              </div>
 
-        {currentLevel === 'course' && (
-          <SelectionGrid
-            items={courseItems}
-            onSelect={(item) => {
-              const course = courses.find(c => c.id === item.id);
-              if (course) setSelectedCourse(course);
-            }}
-            loading={loading}
-            emptyMessage="No courses found for this university"
-          />
-        )}
-
-        {currentLevel === 'semester' && (
-          <SelectionGrid
-            items={semesterItems}
-            onSelect={(item) => {
-              const sem = semesters.find(s => s.id === item.id);
-              if (sem) setSelectedSemester(sem);
-            }}
-            loading={loading}
-            emptyMessage="No semesters found for this course"
-            columns={4}
-          />
-        )}
-
-        {currentLevel === 'subject' && (
-          <Card>
-            <CardHeader>
-              <div className="relative max-w-sm">
-                <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+              <div className="space-y-2">
+                <Label htmlFor="slug">Slug</Label>
                 <Input
-                  placeholder="Search subjects..."
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  className="pl-9"
+                  id="slug"
+                  placeholder="dbms"
+                  value={formData.slug}
+                  onChange={(e) => setFormData({ ...formData, slug: e.target.value })}
                 />
               </div>
-            </CardHeader>
-            <CardContent>
-              {loading ? (
-                <div className="flex items-center justify-center py-8">
-                  <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+
+              <div className="grid grid-cols-3 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="total_marks">Total Marks</Label>
+                  <Input
+                    id="total_marks"
+                    type="number"
+                    value={formData.total_marks}
+                    onChange={(e) => setFormData({ ...formData, total_marks: parseInt(e.target.value) })}
+                  />
                 </div>
-              ) : filteredSubjects.length === 0 ? (
-                <div className="text-center py-8 text-muted-foreground">No subjects found</div>
-              ) : (
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead>Name</TableHead>
-                      <TableHead>Code</TableHead>
-                      <TableHead>Marks</TableHead>
-                      <TableHead>Units</TableHead>
-                      <TableHead className="text-right">Actions</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {filteredSubjects.map((subject) => {
-                      const unitCount = units.filter(u => u.subject_id === subject.id).length;
-                      return (
-                        <TableRow key={subject.id}>
-                          <TableCell className="font-medium">{subject.name}</TableCell>
-                          <TableCell>{subject.code}</TableCell>
-                          <TableCell>{subject.total_marks}</TableCell>
-                          <TableCell>
-                            {unitCount === 0 ? (
-                              <Button 
-                                size="sm" 
-                                variant="outline" 
-                                onClick={() => createInitialUnits(subject)}
-                                className="h-7 text-xs"
-                              >
-                                <Plus className="mr-1 h-3 w-3" />
-                                Create 5 Units
-                              </Button>
-                            ) : (
-                              <span className="text-muted-foreground">{unitCount} units</span>
-                            )}
-                          </TableCell>
-                          <TableCell className="text-right">
-                            <div className="flex justify-end gap-1">
-                              <Button 
-                                variant="ghost" 
-                                size="icon" 
-                                onClick={() => openUnitsDialog(subject)}
-                                title="Manage Units"
-                              >
-                                <Layers className="h-4 w-4" />
-                              </Button>
-                              <Button variant="ghost" size="icon" onClick={() => handleEdit(subject)}>
-                                <Pencil className="h-4 w-4" />
-                              </Button>
-                              <Button variant="ghost" size="icon" onClick={() => handleDelete(subject.id)}>
-                                <Trash2 className="h-4 w-4 text-destructive" />
-                              </Button>
-                            </div>
-                          </TableCell>
-                        </TableRow>
-                      );
-                    })}
-                  </TableBody>
-                </Table>
+                <div className="space-y-2">
+                  <Label htmlFor="theory_marks">Theory</Label>
+                  <Input
+                    id="theory_marks"
+                    type="number"
+                    value={formData.theory_marks}
+                    onChange={(e) => setFormData({ ...formData, theory_marks: parseInt(e.target.value) })}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="internal_marks">Internal</Label>
+                  <Input
+                    id="internal_marks"
+                    type="number"
+                    value={formData.internal_marks}
+                    onChange={(e) => setFormData({ ...formData, internal_marks: parseInt(e.target.value) })}
+                  />
+                </div>
+              </div>
+
+              {!editingSubject && (
+                <div className="space-y-2">
+                  <Label htmlFor="initial_units">Initial Units</Label>
+                  <Input
+                    id="initial_units"
+                    type="number"
+                    min={1}
+                    max={10}
+                    value={formData.initial_units}
+                    onChange={(e) => setFormData({ ...formData, initial_units: parseInt(e.target.value) })}
+                  />
+                  <p className="text-xs text-muted-foreground">Units can be edited later</p>
+                </div>
               )}
-            </CardContent>
-          </Card>
-        )}
+
+              <DialogFooter>
+                <Button type="button" variant="outline" onClick={() => setIsDialogOpen(false)}>
+                  Cancel
+                </Button>
+                <Button type="submit" disabled={saving}>
+                  {saving && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                  {editingSubject ? 'Update' : 'Create'}
+                </Button>
+              </DialogFooter>
+            </form>
+          </DialogContent>
+        </Dialog>
 
         {/* Units Management Dialog */}
         <Dialog open={isUnitsDialogOpen} onOpenChange={setIsUnitsDialogOpen}>
@@ -652,73 +480,53 @@ export default function Subjects() {
             <DialogHeader>
               <DialogTitle>Manage Units - {selectedSubjectForUnits?.name}</DialogTitle>
             </DialogHeader>
-            
             <div className="space-y-4">
-              {/* Existing Units */}
-              <div className="space-y-2 max-h-[300px] overflow-y-auto">
-                {selectedSubjectForUnits && getSubjectUnits(selectedSubjectForUnits.id).length === 0 ? (
-                  <p className="text-sm text-muted-foreground text-center py-4">No units yet. Add one below.</p>
-                ) : (
-                  selectedSubjectForUnits && getSubjectUnits(selectedSubjectForUnits.id).map((unit) => (
-                    <div key={unit.id} className="flex items-center gap-2 p-2 border rounded-md">
-                      <span className="text-sm font-medium text-muted-foreground w-8">#{unit.number}</span>
-                      <Input
-                        defaultValue={unit.name}
-                        onBlur={(e) => {
-                          if (e.target.value !== unit.name) {
-                            handleUpdateUnit(unit.id, e.target.value, unit.weight);
-                          }
-                        }}
-                        className="flex-1"
-                      />
-                      <Input
-                        type="number"
-                        defaultValue={unit.weight}
-                        onBlur={(e) => {
-                          const newWeight = parseInt(e.target.value) || 20;
-                          if (newWeight !== unit.weight) {
-                            handleUpdateUnit(unit.id, unit.name, newWeight);
-                          }
-                        }}
-                        className="w-20"
-                        title="Weight %"
-                      />
-                      <Button 
-                        variant="ghost" 
-                        size="icon"
-                        onClick={() => handleDeleteUnit(unit.id)}
-                      >
-                        <Trash2 className="h-4 w-4 text-destructive" />
-                      </Button>
-                    </div>
-                  ))
-                )}
-              </div>
-
-              {/* Add New Unit */}
-              <div className="flex gap-2 pt-2 border-t">
+              <div className="flex gap-2">
                 <Input
-                  placeholder="New unit name (e.g., Introduction)"
+                  placeholder="New unit name..."
                   value={newUnitName}
                   onChange={(e) => setNewUnitName(e.target.value)}
-                  onKeyDown={(e) => {
-                    if (e.key === 'Enter') {
-                      e.preventDefault();
-                      handleAddUnit();
-                    }
-                  }}
+                  onKeyDown={(e) => e.key === 'Enter' && handleAddUnit()}
                 />
-                <Button onClick={handleAddUnit} disabled={savingUnit}>
-                  {savingUnit ? <Loader2 className="h-4 w-4 animate-spin" /> : <Plus className="h-4 w-4" />}
+                <Button onClick={handleAddUnit} disabled={!newUnitName.trim()}>
+                  <Plus className="h-4 w-4" />
                 </Button>
               </div>
-            </div>
 
-            <DialogFooter>
-              <Button variant="outline" onClick={() => setIsUnitsDialogOpen(false)}>Done</Button>
-            </DialogFooter>
+              <div className="space-y-2 max-h-[300px] overflow-y-auto">
+                {subjectUnits.map((unit) => (
+                  <div key={unit.id} className="flex items-center gap-2 p-2 rounded-md border">
+                    <span className="text-sm text-muted-foreground w-8">#{unit.number}</span>
+                    {editingUnit?.id === unit.id ? (
+                      <Input
+                        value={editingUnit.name}
+                        onChange={(e) => setEditingUnit({ ...editingUnit, name: e.target.value })}
+                        onBlur={() => handleUpdateUnit(unit, { name: editingUnit.name })}
+                        onKeyDown={(e) => e.key === 'Enter' && handleUpdateUnit(unit, { name: editingUnit.name })}
+                        className="flex-1"
+                        autoFocus
+                      />
+                    ) : (
+                      <span className="flex-1 cursor-pointer" onClick={() => setEditingUnit(unit)}>
+                        {unit.name}
+                      </span>
+                    )}
+                    <Button variant="ghost" size="icon" onClick={() => handleDeleteUnit(unit.id)}>
+                      <Trash2 className="h-4 w-4 text-destructive" />
+                    </Button>
+                  </div>
+                ))}
+              </div>
+            </div>
           </DialogContent>
         </Dialog>
+
+        <BulkImportDialog
+          open={isImportOpen}
+          onOpenChange={setIsImportOpen}
+          tableName="subjects"
+          onImportComplete={fetchData}
+        />
       </div>
     </AdminLayout>
   );
