@@ -116,7 +116,7 @@ export function ResizableAIPanel({
           onMaximize={() => onFullscreenChange(true)}
           onClose={() => onOpenChange(false)}
         />
-        <div className="flex-1 min-h-0 overflow-hidden">
+        <div className="flex-1 min-h-0 overflow-hidden" style={{ height: 'calc(100% - 52px)' }}>
           <SubjectAIChat
             subject={subject}
             universityName={universityName}
