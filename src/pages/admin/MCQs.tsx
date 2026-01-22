@@ -397,14 +397,14 @@ export default function MCQs() {
                     <div>
                       <Label>Unit (Optional)</Label>
                       <Select
-                        value={formData.unit_id}
-                        onValueChange={(v) => setFormData({ ...formData, unit_id: v })}
+                        value={formData.unit_id || "none"}
+                        onValueChange={(v) => setFormData({ ...formData, unit_id: v === "none" ? "" : v })}
                       >
                         <SelectTrigger>
                           <SelectValue placeholder="Select unit" />
                         </SelectTrigger>
                         <SelectContent>
-                          <SelectItem value="">No Unit</SelectItem>
+                          <SelectItem value="none">No Unit</SelectItem>
                           {filteredUnits.map((unit) => (
                             <SelectItem key={unit.id} value={unit.id}>
                               Unit {unit.number}: {unit.name}
