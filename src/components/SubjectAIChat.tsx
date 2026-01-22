@@ -273,7 +273,8 @@ export const SubjectAIChat = ({
   ];
 
   return (
-    <Card className="h-full flex flex-col border-0 lg:border overflow-hidden">
+    <div className="h-full flex flex-col">
+      <Card className="flex-1 min-h-0 flex flex-col border-0 lg:border overflow-hidden">
       {!hideHeader && (
         <CardHeader className="pb-3 border-b shrink-0">
           <div className="flex items-center gap-2">
@@ -444,6 +445,7 @@ export const SubjectAIChat = ({
         </div>
       </CardContent>
     </Card>
+    </div>
   );
 };
 
