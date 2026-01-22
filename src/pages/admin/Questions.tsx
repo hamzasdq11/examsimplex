@@ -365,13 +365,14 @@ export default function Questions() {
                 <div className="space-y-2">
                   <Label htmlFor="unit">Unit (Optional)</Label>
                   <Select
-                    value={formData.unit_id}
-                    onValueChange={(val) => setFormData({ ...formData, unit_id: val })}
+                    value={formData.unit_id || "none"}
+                    onValueChange={(val) => setFormData({ ...formData, unit_id: val === "none" ? "" : val })}
                   >
                     <SelectTrigger>
                       <SelectValue placeholder="Select Unit" />
                     </SelectTrigger>
                     <SelectContent>
+                      <SelectItem value="none">No Unit</SelectItem>
                       {units.map((unit) => (
                         <SelectItem key={unit.id} value={unit.id}>
                           Unit {unit.number}: {unit.name}
