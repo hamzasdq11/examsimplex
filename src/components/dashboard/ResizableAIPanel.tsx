@@ -32,7 +32,7 @@ export function ResizableAIPanel({
   messages,
   onMessagesChange
 }: ResizableAIPanelProps) {
-  const [defaultSize, setDefaultSize] = useState(35);
+  const [defaultSize, setDefaultSize] = useState(25);
 
   // Handle escape key for fullscreen
   useEffect(() => {
