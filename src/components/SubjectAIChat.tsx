@@ -291,8 +291,7 @@ export const SubjectAIChat = ({
         </CardHeader>
       )}
 
-      <div className="flex-1 min-h-0 overflow-hidden">
-        <ScrollArea className="h-full" ref={scrollRef}>
+        <ScrollArea className="flex-1 min-h-0" ref={scrollRef}>
           <div className="p-4 space-y-4">
           {messages.map((msg, idx) => (
             <div
@@ -401,7 +400,6 @@ export const SubjectAIChat = ({
           )}
           </div>
         </ScrollArea>
-      </div>
 
       <CardContent className="p-3 pt-2 border-t shrink-0 space-y-2">
         {/* Quick Actions */}
