@@ -57,6 +57,7 @@ interface SubjectAIChatProps {
   onQueryConsumed?: () => void;
   externalMessages?: Message[];
   onMessagesChange?: (messages: Message[]) => void;
+  hideHeader?: boolean;
 }
 
 export const SubjectAIChat = ({ 
@@ -65,7 +66,8 @@ export const SubjectAIChat = ({
   initialQuery,
   onQueryConsumed,
   externalMessages,
-  onMessagesChange
+  onMessagesChange,
+  hideHeader = false
 }: SubjectAIChatProps) => {
   const { user } = useAuth();
   const { toast } = useToast();
@@ -272,19 +274,21 @@ export const SubjectAIChat = ({
 
   return (
     <Card className="h-full flex flex-col border-0 lg:border overflow-hidden">
-      <CardHeader className="pb-3 border-b shrink-0">
-        <div className="flex items-center gap-2">
-          <div className="p-1.5 rounded-lg bg-primary/10">
-            <Sparkles className="h-4 w-4 text-primary" />
+      {!hideHeader && (
+        <CardHeader className="pb-3 border-b shrink-0">
+          <div className="flex items-center gap-2">
+            <div className="p-1.5 rounded-lg bg-primary/10">
+              <Sparkles className="h-4 w-4 text-primary" />
+            </div>
+            <div className="flex-1 min-w-0">
+              <CardTitle className="text-base">AI Study Assistant</CardTitle>
+              <p className="text-xs text-muted-foreground truncate">
+                {subject.name} • {universityName || subject.code}
+              </p>
+            </div>
           </div>
-          <div className="flex-1 min-w-0">
-            <CardTitle className="text-base">AI Study Assistant</CardTitle>
-            <p className="text-xs text-muted-foreground truncate">
-              {subject.name} • {universityName || subject.code}
-            </p>
-          </div>
-        </div>
-      </CardHeader>
+        </CardHeader>
+      )}
 
       <div className="flex-1 min-h-0 overflow-hidden">
         <ScrollArea className="h-full" ref={scrollRef}>
