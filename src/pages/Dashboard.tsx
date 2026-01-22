@@ -8,15 +8,14 @@ import { useDailyFocus } from '@/hooks/useDailyFocus';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
-import { Sheet, SheetContent } from '@/components/ui/sheet';
-import { Loader2, BookOpen, LogOut, Home, PlusCircle, Maximize2, Minimize2, X } from 'lucide-react';
+import { Loader2, BookOpen, LogOut, Home, PlusCircle } from 'lucide-react';
 import { SEO } from '@/components/SEO';
 import { AIBriefingHero } from '@/components/dashboard/AIBriefingHero';
 import { TodaysFocusCard } from '@/components/dashboard/TodaysFocusCard';
 import { ProgressStatsGrid } from '@/components/dashboard/ProgressStatsGrid';
 import { IntelligentSubjectCard } from '@/components/dashboard/IntelligentSubjectCard';
 import { GlobalAICommandBar } from '@/components/dashboard/GlobalAICommandBar';
-import { SubjectAIChat } from '@/components/SubjectAIChat';
+import { ResizableAIPanel } from '@/components/dashboard/ResizableAIPanel';
 
 interface Subject {
   id: string;
@@ -25,6 +24,16 @@ interface Subject {
   slug: string;
   gradient_from: string | null;
   gradient_to: string | null;
+}
+
+interface Message {
+  role: "user" | "assistant";
+  content: string;
+  response?: any;
+  intent?: string;
+  confidence?: number;
+  modelUsed?: string;
+  processingTime?: number;
 }
 
 export default function Dashboard() {
@@ -38,9 +47,18 @@ export default function Dashboard() {
   const [subjects, setSubjects] = useState<Subject[]>([]);
   const [loadingSubjects, setLoadingSubjects] = useState(true);
   const [isProcessingOAuth, setIsProcessingOAuth] = useState(false);
+  
+  // AI Panel state - persisted across open/close
   const [isAIPanelOpen, setIsAIPanelOpen] = useState(false);
   const [isAIFullscreen, setIsAIFullscreen] = useState(false);
   const [aiInitialQuery, setAiInitialQuery] = useState('');
+  const [aiMessages, setAiMessages] = useState<Message[]>([
+    {
+      role: "assistant",
+      content: "Hi! I'm your study assistant. Ask me anything about concepts, exam preparation, practice questions, or request code examples and visualizations.",
+      confidence: 1
+    }
+  ]);
 
   // Detect OAuth callback
   useEffect(() => {
@@ -97,6 +115,10 @@ export default function Dashboard() {
     setIsAIPanelOpen(true);
   };
 
+  const handleQueryConsumed = () => {
+    setAiInitialQuery('');
+  };
+
   const handleExamDateSet = async (date: Date, type: string) => {
     await updateSettings({ 
       exam_date: date.toISOString().split('T')[0], 
@@ -122,8 +144,10 @@ export default function Dashboard() {
 
   if (!user || !profile) return null;
 
+  const aiSubject = { id: 'general', name: 'General Study', code: 'AI' };
+
   return (
-    <div className="min-h-screen bg-gradient-to-br from-background via-background to-muted/10 pb-24">
+    <div className="min-h-screen bg-gradient-to-br from-background via-background to-muted/10">
       <SEO
         title="Dashboard"
         description="Your personalized EXAM Simplex dashboard."
@@ -131,7 +155,7 @@ export default function Dashboard() {
         noIndex={true}
       />
       
-      {/* Header */}
+      {/* Header - Always visible */}
       <header className="sticky top-0 z-50 border-b border-border/40 bg-background/95 backdrop-blur">
         <div className="container flex h-14 items-center justify-between">
           <Link to="/" className="flex items-center gap-2 text-lg font-semibold">
@@ -149,143 +173,101 @@ export default function Dashboard() {
         </div>
       </header>
 
-      <main className="container py-6 space-y-6">
-        {/* AI Briefing Hero */}
-        <AIBriefingHero
-          userName={profile.full_name || 'Student'}
-          userEmail={user.email || ''}
-          universityName={profile.university?.name || null}
-          daysUntilExam={getDaysUntilExam()}
-          examType={getExamTypeLabel()}
-          subjectsCount={subjects.length}
-          pendingSubjects={pendingSubjects}
-          weakestSubject={weakestSubjects[0] ? subjects.find(s => s.id === weakestSubjects[0].subject_id)?.name || null : null}
-          readinessPercent={readiness}
-          onEditProfile={() => navigate('/onboarding?edit=true')}
-          onExamDateSet={handleExamDateSet}
-        />
-
-        {/* Today's Focus + Progress Stats */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          <TodaysFocusCard
-            focus={focus}
-            loading={focusLoading}
-            universityId={profile.university_id}
-            courseId={profile.course_id}
-            semesterId={profile.semester_id}
-            onRefresh={refreshFocus}
+      {/* Main content with resizable AI panel */}
+      <ResizableAIPanel
+        isOpen={isAIPanelOpen}
+        isFullscreen={isAIFullscreen}
+        initialQuery={aiInitialQuery}
+        onOpenChange={setIsAIPanelOpen}
+        onFullscreenChange={setIsAIFullscreen}
+        onQueryConsumed={handleQueryConsumed}
+        subject={aiSubject}
+        universityName={profile.university?.name || 'AKTU'}
+        messages={aiMessages}
+        onMessagesChange={setAiMessages}
+      >
+        <main className="container py-6 space-y-6 pb-24">
+          {/* AI Briefing Hero */}
+          <AIBriefingHero
+            userName={profile.full_name || 'Student'}
+            userEmail={user.email || ''}
+            universityName={profile.university?.name || null}
+            daysUntilExam={getDaysUntilExam()}
+            examType={getExamTypeLabel()}
+            subjectsCount={subjects.length}
+            pendingSubjects={pendingSubjects}
+            weakestSubject={weakestSubjects[0] ? subjects.find(s => s.id === weakestSubjects[0].subject_id)?.name || null : null}
+            readinessPercent={readiness}
+            onEditProfile={() => navigate('/onboarding?edit=true')}
+            onExamDateSet={handleExamDateSet}
           />
-          <div className="lg:col-span-2">
-            <ProgressStatsGrid
-              notesCoverage={stats.notesCoverage}
-              notesViewed={stats.notesViewed}
-              totalNotes={stats.totalNotes}
-              pyqsCoverage={stats.pyqsCoverage}
-              pyqsPracticed={stats.pyqsPracticed}
-              totalPyqs={stats.totalPyqs}
-              aiSessions={stats.aiSessions}
-              subjectsCount={subjects.length}
+
+          {/* Today's Focus + Progress Stats */}
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            <TodaysFocusCard
+              focus={focus}
+              loading={focusLoading}
+              universityId={profile.university_id}
+              courseId={profile.course_id}
+              semesterId={profile.semester_id}
+              onRefresh={refreshFocus}
             />
-          </div>
-        </div>
-
-        {/* Subjects Grid */}
-        <section>
-          <div className="flex items-center justify-between mb-4">
-            <h2 className="text-lg font-semibold">Your Subjects</h2>
-            <Button variant="ghost" size="sm" asChild>
-              <Link to={`/university/${profile.university_id}`}>
-                <PlusCircle className="h-4 w-4 mr-1" />
-                Add subjects
-              </Link>
-            </Button>
-          </div>
-
-          {loadingSubjects ? (
-            <div className="flex items-center justify-center py-12">
-              <Loader2 className="h-6 w-6 animate-spin text-primary" />
+            <div className="lg:col-span-2">
+              <ProgressStatsGrid
+                notesCoverage={stats.notesCoverage}
+                notesViewed={stats.notesViewed}
+                totalNotes={stats.totalNotes}
+                pyqsCoverage={stats.pyqsCoverage}
+                pyqsPracticed={stats.pyqsPracticed}
+                totalPyqs={stats.totalPyqs}
+                aiSessions={stats.aiSessions}
+                subjectsCount={subjects.length}
+              />
             </div>
-          ) : subjects.length === 0 ? (
-            <Card className="p-8 text-center border-dashed">
-              <BookOpen className="h-12 w-12 mx-auto text-muted-foreground/50 mb-4" />
-              <p className="text-muted-foreground mb-2">No subjects found</p>
-              <p className="text-sm text-muted-foreground">Subjects will appear once added to your semester.</p>
-            </Card>
-          ) : (
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-              {subjects.map((subject) => (
-                <IntelligentSubjectCard
-                  key={subject.id}
-                  subject={subject}
-                  progress={getSubjectProgress(subject.id)}
-                  universityId={profile.university_id!}
-                  courseId={profile.course_id!}
-                  semesterId={profile.semester_id!}
-                />
-              ))}
+          </div>
+
+          {/* Subjects Grid */}
+          <section>
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="text-lg font-semibold">Your Subjects</h2>
+              <Button variant="ghost" size="sm" asChild>
+                <Link to={`/university/${profile.university_id}`}>
+                  <PlusCircle className="h-4 w-4 mr-1" />
+                  Add subjects
+                </Link>
+              </Button>
             </div>
-          )}
-        </section>
-      </main>
+
+            {loadingSubjects ? (
+              <div className="flex items-center justify-center py-12">
+                <Loader2 className="h-6 w-6 animate-spin text-primary" />
+              </div>
+            ) : subjects.length === 0 ? (
+              <Card className="p-8 text-center border-dashed">
+                <BookOpen className="h-12 w-12 mx-auto text-muted-foreground/50 mb-4" />
+                <p className="text-muted-foreground mb-2">No subjects found</p>
+                <p className="text-sm text-muted-foreground">Subjects will appear once added to your semester.</p>
+              </Card>
+            ) : (
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                {subjects.map((subject) => (
+                  <IntelligentSubjectCard
+                    key={subject.id}
+                    subject={subject}
+                    progress={getSubjectProgress(subject.id)}
+                    universityId={profile.university_id!}
+                    courseId={profile.course_id!}
+                    semesterId={profile.semester_id!}
+                  />
+                ))}
+              </div>
+            )}
+          </section>
+        </main>
+      </ResizableAIPanel>
 
       {/* Global AI Command Bar */}
       <GlobalAICommandBar onAIOpen={handleAIOpen} />
-
-      {/* AI Study Panel - Sheet Mode */}
-      {!isAIFullscreen && (
-        <Sheet open={isAIPanelOpen} onOpenChange={setIsAIPanelOpen}>
-          <SheetContent side="right" className="w-full sm:max-w-lg p-0 flex flex-col">
-            <div className="flex items-center justify-between p-4 border-b">
-              <div>
-                <h2 className="font-semibold">AI Study Assistant</h2>
-                <p className="text-xs text-muted-foreground">General Study</p>
-              </div>
-              <div className="flex gap-1">
-                <Button variant="ghost" size="icon" onClick={() => setIsAIFullscreen(true)}>
-                  <Maximize2 className="h-4 w-4" />
-                </Button>
-                <Button variant="ghost" size="icon" onClick={() => setIsAIPanelOpen(false)}>
-                  <X className="h-4 w-4" />
-                </Button>
-              </div>
-            </div>
-            <div className="flex-1 overflow-hidden">
-              <SubjectAIChat 
-                subject={{ id: 'general', name: 'General Study', code: 'AI' }}
-                universityName={profile.university?.name || 'AKTU'}
-                initialQuery={aiInitialQuery}
-              />
-            </div>
-          </SheetContent>
-        </Sheet>
-      )}
-
-      {/* AI Study Panel - Fullscreen Mode */}
-      {isAIFullscreen && (
-        <div className="fixed inset-0 z-50 bg-background flex flex-col">
-          <div className="flex items-center justify-between p-4 border-b">
-            <div>
-              <h2 className="font-semibold text-lg">AI Study Mode</h2>
-              <p className="text-sm text-muted-foreground">General Study</p>
-            </div>
-            <div className="flex gap-1">
-              <Button variant="ghost" size="icon" onClick={() => setIsAIFullscreen(false)}>
-                <Minimize2 className="h-4 w-4" />
-              </Button>
-              <Button variant="ghost" size="icon" onClick={() => { setIsAIFullscreen(false); setIsAIPanelOpen(false); }}>
-                <X className="h-4 w-4" />
-              </Button>
-            </div>
-          </div>
-          <div className="flex-1 overflow-hidden container py-4">
-            <SubjectAIChat 
-              subject={{ id: 'general', name: 'General Study', code: 'AI' }}
-              universityName={profile.university?.name || 'AKTU'}
-              initialQuery={aiInitialQuery}
-            />
-          </div>
-        </div>
-      )}
     </div>
   );
 }
