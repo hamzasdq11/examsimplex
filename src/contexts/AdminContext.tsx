@@ -109,8 +109,9 @@ export function AdminContextProvider({ children }: { children: ReactNode }) {
   }, [fetchData]);
 
   // Validate stored selections against fetched data
+  // Only run validation when ALL data is loaded to prevent race conditions
   useEffect(() => {
-    if (!loading && universities.length > 0) {
+    if (!loading && universities.length > 0 && courses.length > 0 && semesters.length > 0) {
       // Validate university
       if (selectedUniversityId && !universities.find(u => u.id === selectedUniversityId)) {
         setSelectedUniversityId(null);
@@ -119,19 +120,34 @@ export function AdminContextProvider({ children }: { children: ReactNode }) {
         return;
       }
       
-      // Validate course
-      if (selectedCourseId && !courses.find(c => c.id === selectedCourseId)) {
-        setSelectedCourseId(null);
-        setSelectedSemesterId(null);
-        return;
+      // Validate course belongs to selected university
+      if (selectedCourseId) {
+        const course = courses.find(c => c.id === selectedCourseId);
+        if (!course || course.university_id !== selectedUniversityId) {
+          setSelectedCourseId(null);
+          setSelectedSemesterId(null);
+          return;
+        }
       }
       
-      // Validate semester
-      if (selectedSemesterId && !semesters.find(s => s.id === selectedSemesterId)) {
-        setSelectedSemesterId(null);
+      // Validate semester belongs to selected course
+      if (selectedSemesterId) {
+        const semester = semesters.find(s => s.id === selectedSemesterId);
+        if (!semester || semester.course_id !== selectedCourseId) {
+          setSelectedSemesterId(null);
+        }
       }
     }
   }, [loading, universities, courses, semesters, selectedUniversityId, selectedCourseId, selectedSemesterId]);
+  
+  // Handle case when no data exists
+  useEffect(() => {
+    if (!loading && universities.length === 0 && selectedUniversityId) {
+      setSelectedUniversityId(null);
+      setSelectedCourseId(null);
+      setSelectedSemesterId(null);
+    }
+  }, [loading, universities.length, selectedUniversityId]);
 
   // Computed values
   const selectedUniversity = universities.find(u => u.id === selectedUniversityId) || null;

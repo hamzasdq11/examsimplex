@@ -7,6 +7,7 @@ import { HelmetProvider } from 'react-helmet-async';
 import { ThemeProvider } from 'next-themes';
 import { AuthProvider } from "@/hooks/useAuth";
 import { ProtectedRoute } from "@/components/admin/ProtectedRoute";
+import { AdminContextProvider } from "@/contexts/AdminContext";
 import Index from "./pages/Index";
 import UniversityPage from "./pages/UniversityPage";
 import SubjectPage from "./pages/SubjectPage";
@@ -52,17 +53,16 @@ const App = () => (
                 <Route path="/university/:universityId" element={<UniversityPage />} />
                 <Route path="/university/:universityId/:courseId/:semesterId/:subjectId" element={<SubjectPage />} />
                 
-                {/* Admin Routes */}
-                <Route path="/admin" element={<ProtectedRoute requireAdmin><AdminDashboard /></ProtectedRoute>} />
-                <Route path="/admin/universities" element={<ProtectedRoute requireAdmin><Universities /></ProtectedRoute>} />
-                <Route path="/admin/courses" element={<ProtectedRoute requireAdmin><Courses /></ProtectedRoute>} />
-                
-                <Route path="/admin/subjects" element={<ProtectedRoute requireAdmin><Subjects /></ProtectedRoute>} />
-                <Route path="/admin/questions" element={<ProtectedRoute requireAdmin><Questions /></ProtectedRoute>} />
-                <Route path="/admin/mcqs" element={<ProtectedRoute requireAdmin><MCQs /></ProtectedRoute>} />
-                <Route path="/admin/notes" element={<ProtectedRoute requireAdmin><Notes /></ProtectedRoute>} />
-                <Route path="/admin/pyqs" element={<ProtectedRoute requireAdmin><PYQs /></ProtectedRoute>} />
-                <Route path="/admin/users" element={<ProtectedRoute requireAdmin><Users /></ProtectedRoute>} />
+                {/* Admin Routes - wrapped with AdminContextProvider */}
+                <Route path="/admin" element={<ProtectedRoute requireAdmin><AdminContextProvider><AdminDashboard /></AdminContextProvider></ProtectedRoute>} />
+                <Route path="/admin/universities" element={<ProtectedRoute requireAdmin><AdminContextProvider><Universities /></AdminContextProvider></ProtectedRoute>} />
+                <Route path="/admin/courses" element={<ProtectedRoute requireAdmin><AdminContextProvider><Courses /></AdminContextProvider></ProtectedRoute>} />
+                <Route path="/admin/subjects" element={<ProtectedRoute requireAdmin><AdminContextProvider><Subjects /></AdminContextProvider></ProtectedRoute>} />
+                <Route path="/admin/questions" element={<ProtectedRoute requireAdmin><AdminContextProvider><Questions /></AdminContextProvider></ProtectedRoute>} />
+                <Route path="/admin/mcqs" element={<ProtectedRoute requireAdmin><AdminContextProvider><MCQs /></AdminContextProvider></ProtectedRoute>} />
+                <Route path="/admin/notes" element={<ProtectedRoute requireAdmin><AdminContextProvider><Notes /></AdminContextProvider></ProtectedRoute>} />
+                <Route path="/admin/pyqs" element={<ProtectedRoute requireAdmin><AdminContextProvider><PYQs /></AdminContextProvider></ProtectedRoute>} />
+                <Route path="/admin/users" element={<ProtectedRoute requireAdmin><AdminContextProvider><Users /></AdminContextProvider></ProtectedRoute>} />
                 
                 <Route path="*" element={<NotFound />} />
               </Routes>
