@@ -9,14 +9,15 @@ import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Sheet, SheetContent } from '@/components/ui/sheet';
-import { Loader2, BookOpen, LogOut, Home, PlusCircle, Maximize2, Minimize2, X } from 'lucide-react';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Loader2, BookOpen, LogOut, Home, PlusCircle, Maximize2, Minimize2, X, Sparkles, Grid3X3 } from 'lucide-react';
 import { SEO } from '@/components/SEO';
 import { AIBriefingHero } from '@/components/dashboard/AIBriefingHero';
 import { TodaysFocusCard } from '@/components/dashboard/TodaysFocusCard';
 import { ProgressStatsGrid } from '@/components/dashboard/ProgressStatsGrid';
 import { IntelligentSubjectCard } from '@/components/dashboard/IntelligentSubjectCard';
 import { GlobalAICommandBar } from '@/components/dashboard/GlobalAICommandBar';
-import { SubjectAIChat } from '@/components/SubjectAIChat';
+import { SubjectAIChat, type Message } from '@/components/SubjectAIChat';
 
 interface Subject {
   id: string;
@@ -41,6 +42,16 @@ export default function Dashboard() {
   const [isAIPanelOpen, setIsAIPanelOpen] = useState(false);
   const [isAIFullscreen, setIsAIFullscreen] = useState(false);
   const [aiInitialQuery, setAiInitialQuery] = useState('');
+  const [activeTab, setActiveTab] = useState('subjects');
+  
+  // Lifted AI message state - shared across all views (panel, fullscreen, tab)
+  const [aiMessages, setAiMessages] = useState<Message[]>([
+    {
+      role: "assistant",
+      content: `Hi! I'm your General Study assistant. Ask me anything about concepts, exam preparation, practice questions, or request code examples and visualizations.`,
+      confidence: 1
+    }
+  ]);
 
   // Detect OAuth callback
   useEffect(() => {
@@ -189,43 +200,69 @@ export default function Dashboard() {
           </div>
         </div>
 
-        {/* Subjects Grid */}
-        <section>
-          <div className="flex items-center justify-between mb-4">
-            <h2 className="text-lg font-semibold">Your Subjects</h2>
-            <Button variant="ghost" size="sm" asChild>
-              <Link to={`/university/${profile.university_id}`}>
-                <PlusCircle className="h-4 w-4 mr-1" />
-                Add subjects
-              </Link>
-            </Button>
-          </div>
+        {/* Tabbed Content: Subjects + AI Study */}
+        <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+          <TabsList className="mb-4">
+            <TabsTrigger value="subjects" className="gap-2">
+              <Grid3X3 className="h-4 w-4" />
+              Subjects
+            </TabsTrigger>
+            <TabsTrigger value="ai-study" className="gap-2">
+              <Sparkles className="h-4 w-4" />
+              AI Study
+            </TabsTrigger>
+          </TabsList>
 
-          {loadingSubjects ? (
-            <div className="flex items-center justify-center py-12">
-              <Loader2 className="h-6 w-6 animate-spin text-primary" />
-            </div>
-          ) : subjects.length === 0 ? (
-            <Card className="p-8 text-center border-dashed">
-              <BookOpen className="h-12 w-12 mx-auto text-muted-foreground/50 mb-4" />
-              <p className="text-muted-foreground mb-2">No subjects found</p>
-              <p className="text-sm text-muted-foreground">Subjects will appear once added to your semester.</p>
+          <TabsContent value="subjects">
+            <section>
+              <div className="flex items-center justify-between mb-4">
+                <h2 className="text-lg font-semibold">Your Subjects</h2>
+                <Button variant="ghost" size="sm" asChild>
+                  <Link to={`/university/${profile.university_id}`}>
+                    <PlusCircle className="h-4 w-4 mr-1" />
+                    Add subjects
+                  </Link>
+                </Button>
+              </div>
+
+              {loadingSubjects ? (
+                <div className="flex items-center justify-center py-12">
+                  <Loader2 className="h-6 w-6 animate-spin text-primary" />
+                </div>
+              ) : subjects.length === 0 ? (
+                <Card className="p-8 text-center border-dashed">
+                  <BookOpen className="h-12 w-12 mx-auto text-muted-foreground/50 mb-4" />
+                  <p className="text-muted-foreground mb-2">No subjects found</p>
+                  <p className="text-sm text-muted-foreground">Subjects will appear once added to your semester.</p>
+                </Card>
+              ) : (
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                  {subjects.map((subject) => (
+                    <IntelligentSubjectCard
+                      key={subject.id}
+                      subject={subject}
+                      progress={getSubjectProgress(subject.id)}
+                      universityId={profile.university_id!}
+                      courseId={profile.course_id!}
+                      semesterId={profile.semester_id!}
+                    />
+                  ))}
+                </div>
+              )}
+            </section>
+          </TabsContent>
+
+          <TabsContent value="ai-study" className="min-h-[500px]">
+            <Card className="h-[600px] flex flex-col overflow-hidden">
+              <SubjectAIChat 
+                subject={{ id: 'general', name: 'General Study', code: 'AI' }}
+                universityName={profile.university?.name || 'AKTU'}
+                externalMessages={aiMessages}
+                onExternalMessagesChange={setAiMessages}
+              />
             </Card>
-          ) : (
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-              {subjects.map((subject) => (
-                <IntelligentSubjectCard
-                  key={subject.id}
-                  subject={subject}
-                  progress={getSubjectProgress(subject.id)}
-                  universityId={profile.university_id!}
-                  courseId={profile.course_id!}
-                  semesterId={profile.semester_id!}
-                />
-              ))}
-            </div>
-          )}
-        </section>
+          </TabsContent>
+        </Tabs>
       </main>
 
       {/* Global AI Command Bar */}
@@ -254,6 +291,8 @@ export default function Dashboard() {
                 subject={{ id: 'general', name: 'General Study', code: 'AI' }}
                 universityName={profile.university?.name || 'AKTU'}
                 initialQuery={aiInitialQuery}
+                externalMessages={aiMessages}
+                onExternalMessagesChange={setAiMessages}
               />
             </div>
           </SheetContent>
@@ -281,7 +320,8 @@ export default function Dashboard() {
             <SubjectAIChat 
               subject={{ id: 'general', name: 'General Study', code: 'AI' }}
               universityName={profile.university?.name || 'AKTU'}
-              initialQuery={aiInitialQuery}
+              externalMessages={aiMessages}
+              onExternalMessagesChange={setAiMessages}
             />
           </div>
         </div>
