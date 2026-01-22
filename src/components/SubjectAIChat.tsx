@@ -46,6 +46,9 @@ interface Message {
   processingTime?: number;
 }
 
+// Export Message type for external state management
+export type { Message };
+
 interface SubjectAIChatProps {
   subject: {
     id: string;
@@ -54,18 +57,33 @@ interface SubjectAIChatProps {
   };
   universityName?: string;
   initialQuery?: string;
+  // Optional external state management - when provided, component uses these instead of internal state
+  externalMessages?: Message[];
+  onExternalMessagesChange?: (messages: Message[]) => void;
 }
 
-export const SubjectAIChat = ({ subject, universityName, initialQuery }: SubjectAIChatProps) => {
+export const SubjectAIChat = ({ 
+  subject, 
+  universityName, 
+  initialQuery,
+  externalMessages,
+  onExternalMessagesChange
+}: SubjectAIChatProps) => {
   const { user } = useAuth();
   const { toast } = useToast();
-  const [messages, setMessages] = useState<Message[]>([
+  
+  // Internal state - only used if external state is not provided
+  const [internalMessages, setInternalMessages] = useState<Message[]>([
     {
       role: "assistant",
       content: `Hi! I'm your ${subject.name} study assistant. Ask me anything about concepts, exam preparation, practice questions, or request code examples and visualizations.`,
       confidence: 1
     }
   ]);
+  
+  // Use external or internal state
+  const messages = externalMessages ?? internalMessages;
+  const setMessages = onExternalMessagesChange ?? setInternalMessages;
   const [input, setInput] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [copiedIndex, setCopiedIndex] = useState<number | null>(null);
