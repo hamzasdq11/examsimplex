@@ -7,6 +7,7 @@ import { cn } from '@/lib/utils';
 interface GlobalAICommandBarProps {
   subjectId?: string;
   universityId?: string;
+  onAIOpen?: (query: string) => void;
 }
 
 const SUGGESTED_QUERIES = [
@@ -16,7 +17,7 @@ const SUGGESTED_QUERIES = [
   "What are the most important PYQ topics?",
 ];
 
-export function GlobalAICommandBar({ subjectId, universityId }: GlobalAICommandBarProps) {
+export function GlobalAICommandBar({ subjectId, universityId, onAIOpen }: GlobalAICommandBarProps) {
   const [query, setQuery] = useState('');
   const [isFocused, setIsFocused] = useState(false);
   const [showSuggestions, setShowSuggestions] = useState(false);
@@ -45,17 +46,25 @@ export function GlobalAICommandBar({ subjectId, universityId }: GlobalAICommandB
     e.preventDefault();
     if (!query.trim()) return;
     
-    // Navigate to AI study mode with the query
-    const params = new URLSearchParams({ q: query.trim() });
-    if (subjectId) params.set('subject', subjectId);
-    navigate(`/dashboard/ai-study?${params.toString()}`);
+    if (onAIOpen) {
+      onAIOpen(query.trim());
+      setQuery('');
+    } else {
+      const params = new URLSearchParams({ q: query.trim() });
+      if (subjectId) params.set('subject', subjectId);
+      navigate(`/dashboard/ai-study?${params.toString()}`);
+    }
   };
 
   const handleSuggestionClick = (suggestion: string) => {
-    setQuery(suggestion);
-    const params = new URLSearchParams({ q: suggestion });
-    if (subjectId) params.set('subject', subjectId);
-    navigate(`/dashboard/ai-study?${params.toString()}`);
+    if (onAIOpen) {
+      onAIOpen(suggestion);
+    } else {
+      setQuery(suggestion);
+      const params = new URLSearchParams({ q: suggestion });
+      if (subjectId) params.set('subject', subjectId);
+      navigate(`/dashboard/ai-study?${params.toString()}`);
+    }
   };
 
   return (
@@ -127,14 +136,6 @@ export function GlobalAICommandBar({ subjectId, universityId }: GlobalAICommandB
           </Button>
         </form>
 
-        {/* Keyboard Shortcut Hint */}
-        {!isFocused && (
-          <div className="absolute right-14 top-1/2 -translate-y-1/2 hidden md:flex items-center gap-1">
-            <kbd className="px-1.5 py-0.5 text-[10px] font-medium bg-muted rounded border text-muted-foreground">
-              ⌘K
-            </kbd>
-          </div>
-        )}
       </div>
     </div>
   );
