@@ -96,7 +96,7 @@ export function ResizableAIPanel({
 
   // Open state - resizable panel
   return (
-    <ResizablePanelGroup direction="horizontal" className="min-h-[calc(100vh-3.5rem)]">
+    <ResizablePanelGroup direction="horizontal" className="h-[calc(100vh-3.5rem)]">
       <ResizablePanel defaultSize={100 - defaultSize} minSize={40}>
         {children}
       </ResizablePanel>
