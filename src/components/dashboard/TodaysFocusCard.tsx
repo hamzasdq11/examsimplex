@@ -32,7 +32,7 @@ export function TodaysFocusCard({
 
   if (loading) {
     return (
-      <Card className="border-primary/20 bg-gradient-to-br from-primary/5 to-transparent">
+      <Card className="border-l-4 border-l-primary bg-card">
         <CardHeader className="pb-2">
           <CardTitle className="flex items-center gap-2 text-lg">
             <Brain className="h-5 w-5 text-primary" />
@@ -68,7 +68,7 @@ export function TodaysFocusCard({
   }
 
   return (
-    <Card className="border-primary/20 bg-gradient-to-br from-primary/5 to-transparent overflow-hidden">
+    <Card className="border-l-4 border-l-primary bg-card overflow-hidden">
       <CardHeader className="pb-2">
         <div className="flex items-center justify-between">
           <CardTitle className="flex items-center gap-2 text-lg">
@@ -95,7 +95,7 @@ export function TodaysFocusCard({
         {/* PYQ Info */}
         {focus.pyqYear && (
           <div className="flex items-start gap-2">
-            <FileText className="h-4 w-4 mt-0.5 text-amber-500 shrink-0" />
+            <FileText className="h-4 w-4 mt-0.5 text-warning shrink-0" />
             <p className="text-sm">
               Revise PYQs from {focus.pyqYear}
               {focus.pyqMarks && <span className="text-muted-foreground"> ({focus.pyqMarks} marks)</span>}

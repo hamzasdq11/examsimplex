@@ -84,19 +84,19 @@ export function IntelligentSubjectCard({
           {/* Signals */}
           <div className="flex flex-wrap gap-1.5">
             {isHighWeightage && (
-              <Badge variant="outline" className="text-xs gap-1 border-amber-500/50 text-amber-600 dark:text-amber-400">
+              <Badge variant="outline" className="text-xs gap-1 border-primary/30 text-primary">
                 <Flame className="h-3 w-3" />
                 High weightage
               </Badge>
             )}
             {isWeakArea && (
-              <Badge variant="outline" className="text-xs gap-1 border-destructive/50 text-destructive">
+              <Badge variant="outline" className="text-xs gap-1 border-destructive/30 text-destructive">
                 <AlertTriangle className="h-3 w-3" />
                 Weak area
               </Badge>
             )}
             {hasPendingPyqs && (
-              <Badge variant="outline" className="text-xs gap-1 border-violet-500/50 text-violet-600 dark:text-violet-400">
+              <Badge variant="outline" className="text-xs gap-1 border-border text-muted-foreground">
                 <FileText className="h-3 w-3" />
                 {pyqsUnattempted} PYQs pending
               </Badge>
@@ -110,8 +110,8 @@ export function IntelligentSubjectCard({
                 <span className="text-muted-foreground">Progress</span>
                 <span className={cn(
                   "font-medium",
-                  notesCoverage >= 75 ? "text-green-600 dark:text-green-400" :
-                  notesCoverage >= 50 ? "text-amber-600 dark:text-amber-400" :
+                  notesCoverage >= 75 ? "text-success" :
+                  notesCoverage >= 50 ? "text-warning" :
                   "text-destructive"
                 )}>
                   {notesCoverage}%
@@ -121,8 +121,8 @@ export function IntelligentSubjectCard({
                 <div 
                   className={cn(
                     "h-full rounded-full transition-all",
-                    notesCoverage >= 75 ? "bg-green-500" :
-                    notesCoverage >= 50 ? "bg-amber-500" :
+                    notesCoverage >= 75 ? "bg-success" :
+                    notesCoverage >= 50 ? "bg-warning" :
                     "bg-destructive"
                   )}
                   style={{ width: `${notesCoverage}%` }}

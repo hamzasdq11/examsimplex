@@ -44,24 +44,24 @@ export function AIBriefingHero({
   const getUrgencyColor = () => {
     if (daysUntilExam === null) return 'text-muted-foreground';
     if (daysUntilExam <= 7) return 'text-destructive';
-    if (daysUntilExam <= 14) return 'text-amber-500';
+    if (daysUntilExam <= 14) return 'text-warning';
     return 'text-primary';
   };
 
   const getReadinessColor = () => {
-    if (readinessPercent >= 75) return 'text-green-500';
-    if (readinessPercent >= 50) return 'text-amber-500';
+    if (readinessPercent >= 75) return 'text-success';
+    if (readinessPercent >= 50) return 'text-warning';
     return 'text-destructive';
   };
 
   return (
     <>
-      <Card className="overflow-hidden border-0 bg-gradient-to-br from-primary/5 via-background to-accent/5">
+      <Card className="overflow-hidden border bg-gradient-to-br from-muted/50 via-background to-muted/30">
         <div className="p-6 md:p-8">
           <div className="flex flex-col md:flex-row md:items-start gap-6">
             {/* Avatar and Name */}
             <div className="flex items-center gap-4">
-              <Avatar className="h-16 w-16 border-2 border-primary/20 shadow-lg">
+              <Avatar className="h-16 w-16 border-2 border-border shadow-lg">
                 <AvatarFallback className="text-xl bg-primary text-primary-foreground font-semibold">
                   {getInitials()}
                 </AvatarFallback>
