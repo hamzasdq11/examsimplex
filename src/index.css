@@ -28,23 +28,24 @@ All colors MUST be HSL.
     --popover: 0 0% 100%;
     --popover-foreground: 242 48% 23%;
 
-    /* Primary - Using Primary 6 (#4A3AFF) as main */
+    /* Primary - ONE core color for CTAs */
     --primary: 246 100% 61%;
     --primary-foreground: 0 0% 100%;
+    --primary-soft: 244 100% 97%;
 
-    /* Secondary - Using Primary 2 for light secondary backgrounds */
-    --secondary: 244 100% 94%;
+    /* Secondary - Neutral gray, not purple-tinted */
+    --secondary: 240 33% 98%;
     --secondary-foreground: 242 48% 23%;
 
-    /* Muted - Using Neutral 300 */
-    --muted: 234 33% 95%;
+    /* Muted - Slightly warmer neutral */
+    --muted: 240 20% 96%;
     --muted-foreground: 235 14% 50%;
 
-    /* Accent - Using Primary 1 for subtle accents */
-    --accent: 247 100% 98%;
+    /* Accent - Light neutral, reserved for hover states */
+    --accent: 240 20% 96%;
     --accent-foreground: 242 48% 23%;
 
-    /* Destructive - Using System Red 400 */
+    /* Destructive - System Red 400 */
     --destructive: 0 72% 52%;
     --destructive-foreground: 0 0% 100%;
 
@@ -55,34 +56,40 @@ All colors MUST be HSL.
 
     --radius: 0.75rem;
 
-    /* Card accent colors - Updated to match palette */
-    --card-cyan: 212 100% 96%;
-    --card-lavender: 244 100% 94%;
-    --card-blue: 223 100% 94%;
-    --card-pink: 356 100% 97%;
-    --card-purple: 265 96% 94%;
-    --card-mint: 148 43% 91%;
+    /* Card accent colors - Neutralized, very subtle */
+    --card-cyan: 210 30% 97%;
+    --card-lavender: 240 20% 97%;
+    --card-blue: 220 25% 97%;
+    --card-pink: 350 20% 97%;
+    --card-purple: 270 20% 97%;
+    --card-mint: 160 20% 96%;
 
-    /* Section backgrounds - Using Primary 9 */
-    --section-dark: 245 100% 20%;
+    /* Section backgrounds */
+    --section-dark: 242 48% 18%;
+    --section-highlight: 244 100% 98%;
 
-    /* Sidebar - Using Neutral palette */
-    --sidebar-background: 240 33% 98%;
-    --sidebar-foreground: 252 26% 37%;
-    --sidebar-primary: 242 48% 23%;
+    /* Sidebar - Neutral palette */
+    --sidebar-background: 240 20% 98%;
+    --sidebar-foreground: 242 48% 30%;
+    --sidebar-primary: 246 100% 61%;
     --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 234 33% 95%;
+    --sidebar-accent: 240 20% 95%;
     --sidebar-accent-foreground: 242 48% 23%;
     --sidebar-border: 236 30% 89%;
     --sidebar-ring: 246 100% 61%;
 
-    /* System colors for states */
-    --info: 211 93% 44%;
+    /* System colors for states - Slightly muted for comfort */
+    --info: 211 80% 50%;
     --info-foreground: 0 0% 100%;
-    --success: 156 78% 29%;
+    --success: 156 60% 35%;
     --success-foreground: 0 0% 100%;
-    --warning: 39 100% 50%;
-    --warning-foreground: 242 48% 23%;
+    --warning: 39 90% 50%;
+    --warning-foreground: 242 48% 20%;
+
+    /* Chart/Data visualization colors - consistent palette */
+    --chart-1: 246 100% 61%;
+    --chart-2: 156 60% 45%;
+    --chart-3: 39 90% 55%;
   }
 
   .dark {
@@ -97,6 +104,7 @@ All colors MUST be HSL.
 
     --primary: 210 40% 98%;
     --primary-foreground: 222 47% 11%;
+    --primary-soft: 217 33% 18%;
 
     --secondary: 217 33% 18%;
     --secondary-foreground: 210 40% 98%;
@@ -114,13 +122,16 @@ All colors MUST be HSL.
     --input: 217 33% 18%;
     --ring: 213 27% 84%;
 
-    /* Pastel card colors (darker for dark mode) */
-    --card-cyan: 180 40% 25%;
-    --card-lavender: 270 40% 25%;
-    --card-blue: 210 40% 25%;
-    --card-pink: 340 40% 25%;
-    --card-purple: 280 30% 25%;
-    --card-mint: 160 30% 25%;
+    /* Neutralized card colors for dark mode */
+    --card-cyan: 210 20% 15%;
+    --card-lavender: 240 15% 15%;
+    --card-blue: 220 20% 15%;
+    --card-pink: 350 15% 15%;
+    --card-purple: 270 15% 15%;
+    --card-mint: 160 15% 15%;
+
+    --section-dark: 222 84% 8%;
+    --section-highlight: 217 33% 12%;
 
     --sidebar-background: 240 6% 10%;
     --sidebar-foreground: 240 5% 96%;
@@ -130,6 +141,18 @@ All colors MUST be HSL.
     --sidebar-accent-foreground: 240 5% 96%;
     --sidebar-border: 240 4% 16%;
     --sidebar-ring: 217 91% 60%;
+
+    /* System colors for dark mode */
+    --info: 211 80% 50%;
+    --info-foreground: 0 0% 100%;
+    --success: 156 60% 40%;
+    --success-foreground: 0 0% 100%;
+    --warning: 39 90% 55%;
+    --warning-foreground: 242 48% 15%;
+
+    --chart-1: 246 70% 65%;
+    --chart-2: 156 50% 50%;
+    --chart-3: 39 80% 60%;
   }
 }
 

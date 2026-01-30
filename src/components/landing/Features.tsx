@@ -45,8 +45,10 @@ const fallbackUniversities = [
   },
 ];
 
-const bgColors = ["bg-rose-50", "bg-sky-50", "bg-amber-50", "bg-emerald-50", "bg-violet-50", "bg-orange-50"];
-const borderColors = ["border-t-rose-400", "border-t-sky-400", "border-t-amber-400", "border-t-emerald-400", "border-t-violet-400", "border-t-orange-400"];
+// Neutral background colors from palette
+const bgColors = ["bg-muted", "bg-primary-soft", "bg-muted", "bg-primary-soft", "bg-muted", "bg-primary-soft"];
+// Semantic border colors for variety
+const borderColors = ["border-t-primary/60", "border-t-success/60", "border-t-warning/60", "border-t-primary/60", "border-t-success/60", "border-t-warning/60"];
 
 const Features = () => {
   const [searchQuery, setSearchQuery] = useState("");

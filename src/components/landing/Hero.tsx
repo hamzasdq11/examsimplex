@@ -5,11 +5,11 @@ import { AnimatedSection } from "@/hooks/useScrollAnimation";
 
 const Hero = () => {
   const avatars = [
-    { src: "https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=100&h=100&fit=crop&crop=face", bg: "bg-card-lavender" },
-    { src: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=100&h=100&fit=crop&crop=face", bg: "bg-card-mint" },
-    { src: "https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=100&h=100&fit=crop&crop=face", bg: "bg-card-pink" },
-    { src: "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=100&h=100&fit=crop&crop=face", bg: "bg-card-cyan" },
-    { src: "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=100&h=100&fit=crop&crop=face", bg: "bg-card-purple" },
+    { src: "https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=100&h=100&fit=crop&crop=face", bg: "bg-muted" },
+    { src: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=100&h=100&fit=crop&crop=face", bg: "bg-muted" },
+    { src: "https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=100&h=100&fit=crop&crop=face", bg: "bg-muted" },
+    { src: "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=100&h=100&fit=crop&crop=face", bg: "bg-muted" },
+    { src: "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=100&h=100&fit=crop&crop=face", bg: "bg-muted" },
   ];
 
   return (
@@ -78,7 +78,7 @@ const Hero = () => {
           <AnimatedSection animation="scale" delay={150} className="relative flex justify-center lg:justify-end mt-4 lg:mt-0">
             {/* Background Circle */}
             <div className="relative">
-              <div className="w-64 h-64 sm:w-80 sm:h-80 md:w-96 md:h-96 rounded-full bg-card-blue flex items-center justify-center transition-transform duration-500 hover:scale-[1.02]">
+              <div className="w-64 h-64 sm:w-80 sm:h-80 md:w-96 md:h-96 rounded-full bg-primary-soft flex items-center justify-center transition-transform duration-500 hover:scale-[1.02]">
                 <img
                   src="https://images.unsplash.com/photo-1522202176988-66273c2fd55f?w=500&h=500&fit=crop"
                   alt="Student studying with laptop"

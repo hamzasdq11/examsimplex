@@ -26,10 +26,12 @@ export function ProgressStatsGrid({
   return (
     <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
       {/* Notes Coverage */}
-      <Card className="bg-gradient-to-br from-cyan-500/10 to-emerald-500/10 border-cyan-500/20">
+      <Card className="bg-card border border-border">
         <CardHeader className="pb-2">
           <CardTitle className="flex items-center gap-2 text-base font-medium">
-            <BookOpen className="h-4 w-4 text-cyan-600 dark:text-cyan-400" />
+            <div className="p-1.5 rounded-md bg-primary-soft">
+              <BookOpen className="h-4 w-4 text-primary" />
+            </div>
             Notes Coverage
           </CardTitle>
         </CardHeader>
@@ -48,10 +50,12 @@ export function ProgressStatsGrid({
       </Card>
 
       {/* PYQs Practiced */}
-      <Card className="bg-gradient-to-br from-violet-500/10 to-purple-500/10 border-violet-500/20">
+      <Card className="bg-card border border-border">
         <CardHeader className="pb-2">
           <CardTitle className="flex items-center gap-2 text-base font-medium">
-            <FileText className="h-4 w-4 text-violet-600 dark:text-violet-400" />
+            <div className="p-1.5 rounded-md bg-warning/10">
+              <FileText className="h-4 w-4 text-warning" />
+            </div>
             PYQs Practiced
           </CardTitle>
         </CardHeader>
@@ -70,10 +74,12 @@ export function ProgressStatsGrid({
       </Card>
 
       {/* AI Sessions */}
-      <Card className="bg-gradient-to-br from-pink-500/10 to-rose-500/10 border-pink-500/20">
+      <Card className="bg-card border border-border">
         <CardHeader className="pb-2">
           <CardTitle className="flex items-center gap-2 text-base font-medium">
-            <MessageSquare className="h-4 w-4 text-pink-600 dark:text-pink-400" />
+            <div className="p-1.5 rounded-md bg-success/10">
+              <MessageSquare className="h-4 w-4 text-success" />
+            </div>
             AI Sessions
           </CardTitle>
         </CardHeader>

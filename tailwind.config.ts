@@ -26,6 +26,7 @@ export default {
         primary: {
           DEFAULT: "hsl(var(--primary))",
           foreground: "hsl(var(--primary-foreground))",
+          soft: "hsl(var(--primary-soft))",
         },
         secondary: {
           DEFAULT: "hsl(var(--secondary))",
@@ -71,6 +72,12 @@ export default {
         },
         section: {
           dark: "hsl(var(--section-dark))",
+          highlight: "hsl(var(--section-highlight))",
+        },
+        chart: {
+          1: "hsl(var(--chart-1))",
+          2: "hsl(var(--chart-2))",
+          3: "hsl(var(--chart-3))",
         },
         sidebar: {
           DEFAULT: "hsl(var(--sidebar-background))",
