@@ -1,211 +1,270 @@
 
-# Plan: Update Website Color Scheme with New Design System Palette
+
+# Plan: Apply iOS 26 Liquid Glass Style
 
 ## Overview
 
-This plan updates all CSS color variables in `src/index.css` to match the provided design system palette while maintaining WCAG accessibility standards and preserving the existing component structure.
+Transform the website's visual appearance with Apple's iOS 26 "Liquid Glass" design language, featuring frosted glass effects, subtle transparency, enhanced blur, and refined shadows across all UI components.
 
-## Color Palette Reference (HEX to HSL Conversion)
+## Design Principles
 
-### Primary Colors (Brand Identity, CTAs, Links)
-| Name | HEX | HSL |
-|------|-----|-----|
-| Primary 9 (darkest) | #080066 | 245 100% 20% |
-| Primary 8 | #231A97 | 246 70% 35% |
-| Primary 7 | #453AD1 | 245 62% 52% |
-| Primary 6 (main) | #4A3AFF | 246 100% 61% |
-| Primary 5 | #6055F2 | 244 85% 64% |
-| Primary 4 | #766CFF | 245 100% 71% |
-| Primary 3 | #B5AFFF | 244 100% 84% |
-| Primary 2 | #E2E0FF | 244 100% 94% |
-| Primary 1 (lightest) | #F4F3FF | 247 100% 98% |
-
-### Secondary Colors (Accents, Badges, Charts)
-| Name | HEX | HSL |
-|------|-----|-----|
-| Secondary 1 | #3324D5 | 249 72% 49% |
-| Secondary 2 | #F2F1FF | 244 100% 97% |
-| Secondary 3 | #7D42FB | 265 96% 62% |
-| Secondary 4 | #2D68FF | 223 100% 59% |
-
-### Neutral Colors (Backgrounds, Typography, Borders)
-| Name | HEX | HSL |
-|------|-----|-----|
-| Neutral 800 (darkest) | #211F54 | 242 48% 23% |
-| Neutral 700 | #4E4775 | 252 26% 37% |
-| Neutral 600 | #6E7191 | 235 14% 50% |
-| Neutral 500 | #A0A3BD | 234 19% 68% |
-| Neutral 400 | #DCDDEB | 236 30% 89% |
-| Neutral 300 | #EFF0F6 | 234 33% 95% |
-| Neutral 200 | #F7F7FC | 240 33% 98% |
-| White | #FFFFFF | 0 0% 100% |
-
-### System Colors (States)
-| State | Shade | HEX | HSL |
-|-------|-------|-----|-----|
-| Info (Blue) | 400 | #086CD9 | 211 93% 44% |
-| Info (Blue) | 300 | #1D88FE | 212 99% 55% |
-| Info (Blue) | 200 | #8FC3FF | 212 100% 78% |
-| Info (Blue) | 100 | #EAF4FF | 212 100% 96% |
-| Success (Green) | 400 | #11845B | 156 78% 29% |
-| Success (Green) | 300 | #05C168 | 153 96% 39% |
-| Success (Green) | 200 | #7FDCA4 | 148 58% 68% |
-| Success (Green) | 100 | #DEF2E6 | 148 43% 91% |
-| Error (Red) | 400 | #DC2B2B | 0 72% 52% |
-| Error (Red) | 300 | #FF5A65 | 356 100% 68% |
-| Error (Red) | 200 | #FFBEC2 | 356 100% 87% |
-| Error (Red) | 100 | #FFEFF0 | 356 100% 97% |
-| Warning (Yellow) | 400 | #FFA800 | 39 100% 50% |
-| Warning (Yellow) | 300 | #FDBD1A | 43 98% 55% |
-| Warning (Yellow) | 200 | #FFE39B | 43 100% 80% |
-| Warning (Yellow) | 100 | #FFF6E4 | 43 100% 95% |
+The Liquid Glass aesthetic is characterized by:
+- **Frosted glass backgrounds**: Semi-transparent surfaces with backdrop blur
+- **Subtle gradient borders**: Light borders with gradient shimmer
+- **Soft shadows**: Diffused, layered shadows for depth
+- **Refined corners**: Larger, smoother border radii
+- **Light overlays**: White-tinted translucent surfaces
 
 ---
 
 ## File Changes
 
-### File 1: `src/index.css`
+### 1. CSS Variables and Utility Classes
 
-Update the CSS variables in the `:root` selector with the new palette:
+**File: `src/index.css`**
 
-**Lines 19-71** - Replace CSS variables:
+Add new CSS variables for glass effects and utility classes:
 
 ```css
-@layer base {
-  :root {
-    /* Backgrounds & Surfaces - Using Neutral palette */
-    --background: 0 0% 100%;
-    --foreground: 242 48% 23%;
+:root {
+  /* Glass effect variables */
+  --glass-bg: 0 0% 100% / 0.7;
+  --glass-bg-subtle: 0 0% 100% / 0.5;
+  --glass-border: 0 0% 100% / 0.3;
+  --glass-blur: 16px;
+  --glass-blur-heavy: 24px;
+  --glass-shadow: 0 8px 32px -8px hsl(242 48% 23% / 0.1);
+}
 
-    --card: 0 0% 100%;
-    --card-foreground: 242 48% 23%;
+/* Glass utility classes */
+.glass {
+  background: hsl(var(--glass-bg));
+  backdrop-filter: blur(var(--glass-blur));
+  -webkit-backdrop-filter: blur(var(--glass-blur));
+  border: 1px solid hsl(var(--glass-border));
+}
 
-    --popover: 0 0% 100%;
-    --popover-foreground: 242 48% 23%;
+.glass-heavy {
+  background: hsl(var(--glass-bg));
+  backdrop-filter: blur(var(--glass-blur-heavy));
+  -webkit-backdrop-filter: blur(var(--glass-blur-heavy));
+}
 
-    /* Primary - Using Primary 6 (#4A3AFF) as main */
-    --primary: 246 100% 61%;
-    --primary-foreground: 0 0% 100%;
-
-    /* Secondary - Using Primary 2 for light secondary backgrounds */
-    --secondary: 244 100% 94%;
-    --secondary-foreground: 242 48% 23%;
-
-    /* Muted - Using Neutral 300 */
-    --muted: 234 33% 95%;
-    --muted-foreground: 235 14% 50%;
-
-    /* Accent - Using Primary 1 for subtle accents */
-    --accent: 247 100% 98%;
-    --accent-foreground: 242 48% 23%;
-
-    /* Destructive - Using System Red 400 */
-    --destructive: 0 72% 52%;
-    --destructive-foreground: 0 0% 100%;
-
-    /* Borders & Inputs - Using Neutral 400 */
-    --border: 236 30% 89%;
-    --input: 236 30% 89%;
-    --ring: 246 100% 61%;
-
-    --radius: 0.75rem;
-
-    /* Card accent colors - Updated to match palette */
-    --card-cyan: 212 100% 96%;
-    --card-lavender: 244 100% 94%;
-    --card-blue: 223 100% 94%;
-    --card-pink: 356 100% 97%;
-    --card-purple: 265 96% 94%;
-    --card-mint: 148 43% 91%;
-
-    /* Section backgrounds - Using Primary 9 */
-    --section-dark: 245 100% 20%;
-
-    /* Sidebar - Using Neutral palette */
-    --sidebar-background: 240 33% 98%;
-    --sidebar-foreground: 252 26% 37%;
-    --sidebar-primary: 242 48% 23%;
-    --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 234 33% 95%;
-    --sidebar-accent-foreground: 242 48% 23%;
-    --sidebar-border: 236 30% 89%;
-    --sidebar-ring: 246 100% 61%;
-
-    /* System colors for states */
-    --info: 211 93% 44%;
-    --info-foreground: 0 0% 100%;
-    --success: 156 78% 29%;
-    --success-foreground: 0 0% 100%;
-    --warning: 39 100% 50%;
-    --warning-foreground: 242 48% 23%;
-  }
+.glass-subtle {
+  background: hsl(var(--glass-bg-subtle));
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
 }
 ```
 
-The dark mode section (lines 73-118) will be kept for future re-activation but updated to use the same palette philosophy with darker variants.
-
 ---
 
-### File 2: `tailwind.config.ts`
+### 2. Card Component
 
-Add new system color tokens for info, success, and warning states:
+**File: `src/components/ui/card.tsx`**
 
-**Lines 34-44** - Add new color definitions after destructive:
+Update Card to use glass morphism:
 
-```typescript
-destructive: {
-  DEFAULT: "hsl(var(--destructive))",
-  foreground: "hsl(var(--destructive-foreground))",
-},
-info: {
-  DEFAULT: "hsl(var(--info))",
-  foreground: "hsl(var(--info-foreground))",
-},
-success: {
-  DEFAULT: "hsl(var(--success))",
-  foreground: "hsl(var(--success-foreground))",
-},
-warning: {
-  DEFAULT: "hsl(var(--warning))",
-  foreground: "hsl(var(--warning-foreground))",
-},
+```tsx
+const Card = React.forwardRef<HTMLDivElement, React.HTMLAttributes<HTMLDivElement>>(
+  ({ className, ...props }, ref) => (
+    <div
+      ref={ref}
+      className={cn(
+        "rounded-2xl border border-white/20 bg-white/70 backdrop-blur-xl text-card-foreground shadow-[0_8px_32px_-8px_hsl(242_48%_23%/0.1)]",
+        className
+      )}
+      {...props}
+    />
+  )
+);
 ```
 
 ---
 
-## Color Application Summary
+### 3. Dialog Component
 
-| UI Element | CSS Variable | New Color |
-|------------|--------------|-----------|
-| Primary buttons, links, CTAs | `--primary` | Primary 6 (#4A3AFF) |
-| Button text on primary | `--primary-foreground` | White |
-| Secondary buttons/badges | `--secondary` | Primary 2 (#E2E0FF) |
-| Text on secondary | `--secondary-foreground` | Neutral 800 |
-| Main background | `--background` | White |
-| Main text | `--foreground` | Neutral 800 (#211F54) |
-| Muted text | `--muted-foreground` | Neutral 600 (#6E7191) |
-| Borders | `--border` | Neutral 400 (#DCDDEB) |
-| Error states | `--destructive` | Red 400 (#DC2B2B) |
-| Info states | `--info` | Blue 400 (#086CD9) |
-| Success states | `--success` | Green 400 (#11845B) |
-| Warning states | `--warning` | Yellow 400 (#FFA800) |
-| Dark sections | `--section-dark` | Primary 9 (#080066) |
+**File: `src/components/ui/dialog.tsx`**
 
----
+Update overlay and content with glass effects:
 
-## Accessibility Considerations
+```tsx
+// DialogOverlay - lighter, blurred background
+className={cn(
+  "fixed inset-0 z-50 bg-black/40 backdrop-blur-sm data-[state=open]:animate-in ...",
+  className
+)}
 
-- Primary text (#211F54) on white background: Contrast ratio ~12:1 (exceeds WCAG AAA)
-- Primary button (#4A3AFF) with white text: Contrast ratio ~5.2:1 (meets WCAG AA)
-- Muted text (#6E7191) on white: Contrast ratio ~5.8:1 (meets WCAG AA)
-- All system state colors maintain sufficient contrast with their respective foreground colors
+// DialogContent - glass panel
+className={cn(
+  "fixed left-[50%] top-[50%] z-50 grid w-full max-w-lg translate-x-[-50%] translate-y-[-50%] gap-4 border border-white/20 bg-white/80 backdrop-blur-2xl p-6 shadow-[0_16px_48px_-12px_hsl(242_48%_23%/0.15)] duration-200 sm:rounded-2xl ...",
+  className
+)}
+```
 
 ---
 
-## Technical Details
+### 4. Dropdown Menu Component
 
-Files to modify:
-1. `src/index.css` - Update all CSS custom properties
-2. `tailwind.config.ts` - Add info, success, warning color tokens
+**File: `src/components/ui/dropdown-menu.tsx`**
 
-No component file changes needed - all components already use the CSS variable system via Tailwind classes.
+Apply glass to dropdown content:
+
+```tsx
+// DropdownMenuContent
+className={cn(
+  "z-50 min-w-[8rem] overflow-hidden rounded-xl border border-white/20 bg-white/80 backdrop-blur-xl p-1 text-popover-foreground shadow-[0_8px_32px_-8px_hsl(242_48%_23%/0.12)] ...",
+  className
+)}
+```
+
+---
+
+### 5. Popover Component
+
+**File: `src/components/ui/popover.tsx`**
+
+Update with glass styling:
+
+```tsx
+className={cn(
+  "z-50 w-72 rounded-xl border border-white/20 bg-white/80 backdrop-blur-xl p-4 text-popover-foreground shadow-[0_8px_32px_-8px_hsl(242_48%_23%/0.12)] outline-none ...",
+  className
+)}
+```
+
+---
+
+### 6. Sheet Component
+
+**File: `src/components/ui/sheet.tsx`**
+
+Update overlay and content:
+
+```tsx
+// SheetOverlay
+className={cn(
+  "fixed inset-0 z-50 bg-black/40 backdrop-blur-sm data-[state=open]:animate-in ...",
+  className
+)}
+
+// sheetVariants base
+"fixed z-50 gap-4 bg-white/80 backdrop-blur-2xl p-6 shadow-[0_16px_48px_-12px_hsl(242_48%_23%/0.15)] border-white/20 transition ease-in-out ..."
+```
+
+---
+
+### 7. Button Component
+
+**File: `src/components/ui/button.tsx`**
+
+Add glass variant and refine existing variants:
+
+```tsx
+const buttonVariants = cva(
+  "inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-xl text-sm font-medium ring-offset-background transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0",
+  {
+    variants: {
+      variant: {
+        default: "bg-primary text-primary-foreground shadow-lg shadow-primary/25 hover:bg-primary/90 hover:shadow-xl hover:shadow-primary/30",
+        destructive: "bg-destructive text-destructive-foreground shadow-lg shadow-destructive/25 hover:bg-destructive/90",
+        outline: "border border-input bg-white/50 backdrop-blur-sm hover:bg-white/80 hover:border-primary/30",
+        secondary: "bg-secondary/80 backdrop-blur-sm text-secondary-foreground hover:bg-secondary",
+        ghost: "hover:bg-white/60 hover:backdrop-blur-sm",
+        link: "text-primary underline-offset-4 hover:underline",
+        glass: "bg-white/60 backdrop-blur-xl border border-white/30 text-foreground shadow-lg hover:bg-white/80",
+      },
+      // ... sizes remain similar but with rounded-xl
+    },
+  }
+);
+```
+
+---
+
+### 8. Input Component
+
+**File: `src/components/ui/input.tsx`**
+
+Add subtle glass effect to inputs:
+
+```tsx
+className={cn(
+  "flex h-10 w-full rounded-xl border border-input bg-white/50 backdrop-blur-sm px-3 py-2 text-base ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium file:text-foreground placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:bg-white/80 disabled:cursor-not-allowed disabled:opacity-50 md:text-sm transition-all duration-200",
+  className
+)}
+```
+
+---
+
+### 9. Header Component
+
+**File: `src/components/landing/Header.tsx`**
+
+Enhance glass navigation:
+
+```tsx
+// Line 46 - Update header className
+<header className="sticky top-0 z-50 w-full bg-white/70 backdrop-blur-2xl supports-[backdrop-filter]:bg-white/60 border-b border-white/20 transition-all duration-300">
+```
+
+---
+
+### 10. Hero Floating Cards
+
+**File: `src/components/landing/Hero.tsx`**
+
+Apply glass to floating icons:
+
+```tsx
+// Lines 90, 94, 98 - Update floating icon containers
+className="absolute top-4 sm:top-6 right-2 sm:right-0 w-10 h-10 sm:w-14 sm:h-14 bg-white/70 backdrop-blur-xl border border-white/30 rounded-2xl shadow-[0_8px_24px_-8px_hsl(242_48%_23%/0.1)] flex items-center justify-center hover:scale-110 hover:bg-white/90 transition-all duration-300 animate-float"
+```
+
+---
+
+## Tailwind Config Update
+
+**File: `tailwind.config.ts`**
+
+Add glass-related utilities:
+
+```typescript
+extend: {
+  backdropBlur: {
+    xs: '2px',
+  },
+  boxShadow: {
+    'glass': '0 8px 32px -8px hsl(242 48% 23% / 0.1)',
+    'glass-lg': '0 16px 48px -12px hsl(242 48% 23% / 0.15)',
+  },
+}
+```
+
+---
+
+## Summary of Changes
+
+| Component | Key Changes |
+|-----------|-------------|
+| CSS Variables | Add glass effect variables and utility classes |
+| Card | Glass background, backdrop blur, refined shadow, rounded-2xl |
+| Dialog | Lighter overlay blur, glass content panel |
+| Dropdown | Glass background with blur |
+| Popover | Glass styling with subtle border |
+| Sheet | Glass overlay and content |
+| Button | New glass variant, enhanced shadows, rounded-xl |
+| Input | Subtle glass background, smooth focus transition |
+| Header | Enhanced glass navigation bar |
+| Hero | Glass floating icon cards |
+
+---
+
+## Visual Impact
+
+- Navigation feels lighter and more modern
+- Cards appear to float above content with subtle depth
+- Modals and popovers have an elegant frosted appearance
+- Buttons feel more tactile with refined shadows
+- Overall UI gains a premium, iOS-inspired aesthetic
+
