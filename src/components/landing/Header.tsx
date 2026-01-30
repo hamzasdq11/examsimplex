@@ -43,9 +43,9 @@ const Header = () => {
   ];
 
   return (
-    <header className="sticky top-0 z-50 w-full bg-background/95 backdrop-blur-md supports-[backdrop-filter]:bg-background/60 transition-all duration-300">
+    <header className="sticky top-0 z-50 w-full bg-white/70 backdrop-blur-2xl supports-[backdrop-filter]:bg-white/60 border-b border-white/20 transition-all duration-300">
       {/* Desktop Header */}
-      <div className="container hidden md:flex h-16 items-center justify-between border-b border-border/40">
+      <div className="container hidden md:flex h-16 items-center justify-between">
         <div className="flex items-center gap-10">
           <nav className="flex items-center gap-8">
             {navItems.map((item) => (
