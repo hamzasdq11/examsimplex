@@ -87,15 +87,15 @@ const Hero = () => {
               </div>
 
               {/* Floating Icons - smooth 4s animation cycle */}
-              <div className="absolute top-4 sm:top-6 right-2 sm:right-0 w-10 h-10 sm:w-14 sm:h-14 bg-white/70 backdrop-blur-xl border border-white/30 rounded-2xl shadow-[0_8px_24px_-8px_hsl(242_48%_23%/0.1)] flex items-center justify-center hover:scale-110 hover:bg-white/90 transition-all duration-300 animate-float">
+              <div className="absolute top-4 sm:top-6 right-2 sm:right-0 w-10 h-10 sm:w-14 sm:h-14 bg-card rounded-xl shadow-lg flex items-center justify-center hover:scale-110 transition-transform duration-300 animate-float">
                 <MessageCircle className="h-5 w-5 sm:h-7 sm:w-7 text-primary" />
               </div>
               
-              <div className="absolute top-1/4 -left-6 sm:-left-10 w-10 h-10 sm:w-14 sm:h-14 bg-white/70 backdrop-blur-xl border border-white/30 rounded-2xl shadow-[0_8px_24px_-8px_hsl(242_48%_23%/0.1)] flex items-center justify-center hover:scale-110 hover:bg-white/90 transition-all duration-300 animate-float [animation-delay:1.3s]">
+              <div className="absolute top-1/4 -left-6 sm:-left-10 w-10 h-10 sm:w-14 sm:h-14 bg-card rounded-xl shadow-lg flex items-center justify-center hover:scale-110 transition-transform duration-300 animate-float [animation-delay:1.3s]">
                 <BarChart3 className="h-5 w-5 sm:h-7 sm:w-7 text-primary" />
               </div>
               
-              <div className="absolute bottom-8 sm:bottom-12 -right-3 sm:-right-6 w-10 h-10 sm:w-14 sm:h-14 bg-white/70 backdrop-blur-xl border border-white/30 rounded-2xl shadow-[0_8px_24px_-8px_hsl(242_48%_23%/0.1)] flex items-center justify-center hover:scale-110 hover:bg-white/90 transition-all duration-300 animate-float [animation-delay:2.6s]">
+              <div className="absolute bottom-8 sm:bottom-12 -right-3 sm:-right-6 w-10 h-10 sm:w-14 sm:h-14 bg-card rounded-xl shadow-lg flex items-center justify-center hover:scale-110 transition-transform duration-300 animate-float [animation-delay:2.6s]">
                 <TrendingUp className="h-5 w-5 sm:h-7 sm:w-7 text-primary" />
               </div>
             </div>
