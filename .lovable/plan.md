@@ -1,74 +1,61 @@
 
-# Plan: Update Website Color Scheme with New Design System Palette
 
-## Overview
+# Color Scheme Refinement Plan
 
-This plan updates all CSS color variables in `src/index.css` to match the provided design system palette while maintaining WCAG accessibility standards and preserving the existing component structure.
+## Problem Analysis
 
-## Color Palette Reference (HEX to HSL Conversion)
+After reviewing the codebase, I identified several issues causing the "patchy/weird" visual appearance:
 
-### Primary Colors (Brand Identity, CTAs, Links)
-| Name | HEX | HSL |
-|------|-----|-----|
-| Primary 9 (darkest) | #080066 | 245 100% 20% |
-| Primary 8 | #231A97 | 246 70% 35% |
-| Primary 7 | #453AD1 | 245 62% 52% |
-| Primary 6 (main) | #4A3AFF | 246 100% 61% |
-| Primary 5 | #6055F2 | 244 85% 64% |
-| Primary 4 | #766CFF | 245 100% 71% |
-| Primary 3 | #B5AFFF | 244 100% 84% |
-| Primary 2 | #E2E0FF | 244 100% 94% |
-| Primary 1 (lightest) | #F4F3FF | 247 100% 98% |
+### Current Issues
 
-### Secondary Colors (Accents, Badges, Charts)
-| Name | HEX | HSL |
-|------|-----|-----|
-| Secondary 1 | #3324D5 | 249 72% 49% |
-| Secondary 2 | #F2F1FF | 244 100% 97% |
-| Secondary 3 | #7D42FB | 265 96% 62% |
-| Secondary 4 | #2D68FF | 223 100% 59% |
+1. **Primary Color Overload** - Multiple blue/purple shades competing:
+   - Primary: `246 100% 61%` (#4A3AFF - vibrant blue-purple)
+   - Card accent colors: 6 different tinted pastel backgrounds
+   - Progress cards using cyan, violet, and pink gradients
+   - Multiple `text-primary` uses in icons, links, and badges
 
-### Neutral Colors (Backgrounds, Typography, Borders)
-| Name | HEX | HSL |
-|------|-----|-----|
-| Neutral 800 (darkest) | #211F54 | 242 48% 23% |
-| Neutral 700 | #4E4775 | 252 26% 37% |
-| Neutral 600 | #6E7191 | 235 14% 50% |
-| Neutral 500 | #A0A3BD | 234 19% 68% |
-| Neutral 400 | #DCDDEB | 236 30% 89% |
-| Neutral 300 | #EFF0F6 | 234 33% 95% |
-| Neutral 200 | #F7F7FC | 240 33% 98% |
-| White | #FFFFFF | 0 0% 100% |
+2. **Inconsistent Accent Usage**:
+   - `ProgressStatsGrid.tsx`: Uses cyan-500, violet-500, and pink-500 gradients
+   - `TodaysFocusCard.tsx`: Uses amber-500 for PYQ info
+   - `IntelligentSubjectCard.tsx`: Uses amber, violet, and destructive badges
+   - `StatsBanner.tsx`: Full saturated primary background with animate-pulse
 
-### System Colors (States)
-| State | Shade | HEX | HSL |
-|-------|-------|-----|-----|
-| Info (Blue) | 400 | #086CD9 | 211 93% 44% |
-| Info (Blue) | 300 | #1D88FE | 212 99% 55% |
-| Info (Blue) | 200 | #8FC3FF | 212 100% 78% |
-| Info (Blue) | 100 | #EAF4FF | 212 100% 96% |
-| Success (Green) | 400 | #11845B | 156 78% 29% |
-| Success (Green) | 300 | #05C168 | 153 96% 39% |
-| Success (Green) | 200 | #7FDCA4 | 148 58% 68% |
-| Success (Green) | 100 | #DEF2E6 | 148 43% 91% |
-| Error (Red) | 400 | #DC2B2B | 0 72% 52% |
-| Error (Red) | 300 | #FF5A65 | 356 100% 68% |
-| Error (Red) | 200 | #FFBEC2 | 356 100% 87% |
-| Error (Red) | 100 | #FFEFF0 | 356 100% 97% |
-| Warning (Yellow) | 400 | #FFA800 | 39 100% 50% |
-| Warning (Yellow) | 300 | #FDBD1A | 43 98% 55% |
-| Warning (Yellow) | 200 | #FFE39B | 43 100% 80% |
-| Warning (Yellow) | 100 | #FFF6E4 | 43 100% 95% |
+3. **Competing Tinted Backgrounds**:
+   - Card colors: `--card-cyan`, `--card-lavender`, `--card-blue`, `--card-pink`, `--card-purple`, `--card-mint`
+   - University cards: Using `bg-rose-50`, `bg-sky-50`, `bg-amber-50`, etc. (Tailwind defaults, not from palette)
+
+4. **StatsBanner Overpowering**: Full `bg-primary` section with `animate-pulse-soft` on the "98%" is very attention-grabbing
 
 ---
 
-## File Changes
+## Solution Strategy
 
-### File 1: `src/index.css`
+### Color Role Definitions
 
-Update the CSS variables in the `:root` selector with the new palette:
+| Role | CSS Variable | Value | Usage |
+|------|--------------|-------|-------|
+| **Primary** | `--primary` | `246 100% 61%` | Main CTA buttons only, key active states, no more than 1-2 per viewport |
+| **Primary Muted** | NEW: `--primary-soft` | `244 100% 97%` | Soft highlight backgrounds (Primary 2 from palette) |
+| **Secondary** | `--secondary` | `234 33% 95%` | Secondary buttons, card borders, subtle emphasis |
+| **Neutral Surface** | `--muted` | `240 33% 98%` | Card backgrounds, section backgrounds |
+| **Text Primary** | `--foreground` | `242 48% 23%` | All body text, headings |
+| **Text Secondary** | `--muted-foreground` | `235 14% 50%` | Captions, labels, secondary text |
+| **Border** | `--border` | `236 30% 89%` | All borders, dividers |
+| **System States** | `--success/warning/destructive/info` | Existing | Only for status indicators |
 
-**Lines 19-71** - Replace CSS variables:
+### Key Changes
+
+---
+
+## File 1: `src/index.css`
+
+### Changes to CSS Variables (lines 19-86)
+
+1. **Adjust Secondary** - Make it more neutral (currently too purple-tinted)
+2. **Add Primary Soft variant** - Very light primary for subtle backgrounds
+3. **Tone down card accent colors** - Make them more neutral/muted
+4. **Adjust accent** - More neutral, less purple
+5. **Add chart colors** - Defined set for data visualization
 
 ```css
 @layer base {
@@ -83,23 +70,24 @@ Update the CSS variables in the `:root` selector with the new palette:
     --popover: 0 0% 100%;
     --popover-foreground: 242 48% 23%;
 
-    /* Primary - Using Primary 6 (#4A3AFF) as main */
+    /* Primary - ONE core color for CTAs */
     --primary: 246 100% 61%;
     --primary-foreground: 0 0% 100%;
+    --primary-soft: 244 100% 97%;  /* NEW: Very light primary for backgrounds */
 
-    /* Secondary - Using Primary 2 for light secondary backgrounds */
-    --secondary: 244 100% 94%;
+    /* Secondary - Neutral gray, not purple-tinted */
+    --secondary: 240 33% 98%;
     --secondary-foreground: 242 48% 23%;
 
-    /* Muted - Using Neutral 300 */
-    --muted: 234 33% 95%;
+    /* Muted - Slightly warmer neutral */
+    --muted: 240 20% 96%;
     --muted-foreground: 235 14% 50%;
 
-    /* Accent - Using Primary 1 for subtle accents */
-    --accent: 247 100% 98%;
+    /* Accent - Light neutral, reserved for hover states */
+    --accent: 240 20% 96%;
     --accent-foreground: 242 48% 23%;
 
-    /* Destructive - Using System Red 400 */
+    /* Destructive - Keep as is */
     --destructive: 0 72% 52%;
     --destructive-foreground: 0 0% 100%;
 
@@ -110,102 +98,269 @@ Update the CSS variables in the `:root` selector with the new palette:
 
     --radius: 0.75rem;
 
-    /* Card accent colors - Updated to match palette */
-    --card-cyan: 212 100% 96%;
-    --card-lavender: 244 100% 94%;
-    --card-blue: 223 100% 94%;
-    --card-pink: 356 100% 97%;
-    --card-purple: 265 96% 94%;
-    --card-mint: 148 43% 91%;
+    /* Card accent colors - Neutralized, very subtle */
+    --card-cyan: 210 30% 97%;
+    --card-lavender: 240 20% 97%;
+    --card-blue: 220 25% 97%;
+    --card-pink: 350 20% 97%;
+    --card-purple: 270 20% 97%;
+    --card-mint: 160 20% 96%;
 
-    /* Section backgrounds - Using Primary 9 */
-    --section-dark: 245 100% 20%;
+    /* Section backgrounds */
+    --section-dark: 242 48% 18%;  /* Darker neutral instead of saturated primary */
+    --section-highlight: 244 100% 98%;  /* Very subtle primary tint */
 
-    /* Sidebar - Using Neutral palette */
-    --sidebar-background: 240 33% 98%;
-    --sidebar-foreground: 252 26% 37%;
-    --sidebar-primary: 242 48% 23%;
+    /* Sidebar - Neutral palette */
+    --sidebar-background: 240 20% 98%;
+    --sidebar-foreground: 242 48% 30%;
+    --sidebar-primary: 246 100% 61%;
     --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 234 33% 95%;
+    --sidebar-accent: 240 20% 95%;
     --sidebar-accent-foreground: 242 48% 23%;
     --sidebar-border: 236 30% 89%;
     --sidebar-ring: 246 100% 61%;
 
-    /* System colors for states */
-    --info: 211 93% 44%;
+    /* System colors for states - Slightly muted for comfort */
+    --info: 211 80% 50%;
     --info-foreground: 0 0% 100%;
-    --success: 156 78% 29%;
+    --success: 156 60% 35%;
     --success-foreground: 0 0% 100%;
-    --warning: 39 100% 50%;
-    --warning-foreground: 242 48% 23%;
+    --warning: 39 90% 50%;
+    --warning-foreground: 242 48% 20%;
+
+    /* Chart/Data visualization colors - consistent palette */
+    --chart-1: 246 100% 61%;  /* Primary */
+    --chart-2: 156 60% 45%;   /* Green */
+    --chart-3: 39 90% 55%;    /* Amber */
   }
 }
 ```
 
-The dark mode section (lines 73-118) will be kept for future re-activation but updated to use the same palette philosophy with darker variants.
-
 ---
 
-### File 2: `tailwind.config.ts`
+## File 2: `tailwind.config.ts`
 
-Add new system color tokens for info, success, and warning states:
+### Add new color tokens (around line 28-50)
 
-**Lines 34-44** - Add new color definitions after destructive:
+Add `primarySoft`, `sectionHighlight`, and chart colors:
 
 ```typescript
-destructive: {
-  DEFAULT: "hsl(var(--destructive))",
-  foreground: "hsl(var(--destructive-foreground))",
+primary: {
+  DEFAULT: "hsl(var(--primary))",
+  foreground: "hsl(var(--primary-foreground))",
+  soft: "hsl(var(--primary-soft))",  // NEW
 },
-info: {
-  DEFAULT: "hsl(var(--info))",
-  foreground: "hsl(var(--info-foreground))",
+// ... existing colors ...
+section: {
+  dark: "hsl(var(--section-dark))",
+  highlight: "hsl(var(--section-highlight))",  // NEW
 },
-success: {
-  DEFAULT: "hsl(var(--success))",
-  foreground: "hsl(var(--success-foreground))",
-},
-warning: {
-  DEFAULT: "hsl(var(--warning))",
-  foreground: "hsl(var(--warning-foreground))",
+chart: {  // NEW
+  1: "hsl(var(--chart-1))",
+  2: "hsl(var(--chart-2))",
+  3: "hsl(var(--chart-3))",
 },
 ```
 
 ---
 
-## Color Application Summary
+## File 3: `src/components/landing/StatsBanner.tsx`
 
-| UI Element | CSS Variable | New Color |
-|------------|--------------|-----------|
-| Primary buttons, links, CTAs | `--primary` | Primary 6 (#4A3AFF) |
-| Button text on primary | `--primary-foreground` | White |
-| Secondary buttons/badges | `--secondary` | Primary 2 (#E2E0FF) |
-| Text on secondary | `--secondary-foreground` | Neutral 800 |
-| Main background | `--background` | White |
-| Main text | `--foreground` | Neutral 800 (#211F54) |
-| Muted text | `--muted-foreground` | Neutral 600 (#6E7191) |
-| Borders | `--border` | Neutral 400 (#DCDDEB) |
-| Error states | `--destructive` | Red 400 (#DC2B2B) |
-| Info states | `--info` | Blue 400 (#086CD9) |
-| Success states | `--success` | Green 400 (#11845B) |
-| Warning states | `--warning` | Yellow 400 (#FFA800) |
-| Dark sections | `--section-dark` | Primary 9 (#080066) |
+### Reduce visual intensity of the "98%" section
+
+Replace saturated `bg-primary` with dark neutral background and remove pulsing animation:
+
+```tsx
+const StatsBanner = () => {
+  return (
+    <section className="py-16 md:py-20 bg-section-dark overflow-hidden">
+      <div className="container">
+        <AnimatedSection animation="scale" className="flex flex-col md:flex-row items-center justify-center gap-6 md:gap-10 text-center md:text-left">
+          <span className="text-6xl md:text-8xl font-bold text-white/95">
+            98%
+          </span>
+          <div className="text-white/90">
+            <p className="text-lg md:text-xl opacity-80">Of students who study with us</p>
+            <p className="text-2xl md:text-4xl font-semibold">Get Better Grades</p>
+          </div>
+        </AnimatedSection>
+      </div>
+    </section>
+  );
+};
+```
 
 ---
 
-## Accessibility Considerations
+## File 4: `src/components/dashboard/ProgressStatsGrid.tsx`
 
-- Primary text (#211F54) on white background: Contrast ratio ~12:1 (exceeds WCAG AAA)
-- Primary button (#4A3AFF) with white text: Contrast ratio ~5.2:1 (meets WCAG AA)
-- Muted text (#6E7191) on white: Contrast ratio ~5.8:1 (meets WCAG AA)
-- All system state colors maintain sufficient contrast with their respective foreground colors
+### Unify card colors - use neutral backgrounds with colored icons only
+
+Replace gradient backgrounds with neutral cards, keep colored icons for semantic meaning:
+
+```tsx
+{/* Notes Coverage */}
+<Card className="bg-card border border-border">
+  <CardHeader className="pb-2">
+    <CardTitle className="flex items-center gap-2 text-base font-medium">
+      <div className="p-1.5 rounded-md bg-primary-soft">
+        <BookOpen className="h-4 w-4 text-primary" />
+      </div>
+      Notes Coverage
+    </CardTitle>
+  </CardHeader>
+  {/* ... content stays similar but remove colored text ... */}
+</Card>
+
+{/* PYQs Practiced */}
+<Card className="bg-card border border-border">
+  <CardHeader className="pb-2">
+    <CardTitle className="flex items-center gap-2 text-base font-medium">
+      <div className="p-1.5 rounded-md bg-warning/10">
+        <FileText className="h-4 w-4 text-warning" />
+      </div>
+      PYQs Practiced
+    </CardTitle>
+  </CardHeader>
+  {/* ... */}
+</Card>
+
+{/* AI Sessions */}
+<Card className="bg-card border border-border">
+  <CardHeader className="pb-2">
+    <CardTitle className="flex items-center gap-2 text-base font-medium">
+      <div className="p-1.5 rounded-md bg-success/10">
+        <MessageSquare className="h-4 w-4 text-success" />
+      </div>
+      AI Sessions
+    </CardTitle>
+  </CardHeader>
+  {/* ... */}
+</Card>
+```
 
 ---
 
-## Technical Details
+## File 5: `src/components/dashboard/TodaysFocusCard.tsx`
 
-Files to modify:
-1. `src/index.css` - Update all CSS custom properties
-2. `tailwind.config.ts` - Add info, success, warning color tokens
+### Simplify to neutral with accent border
 
-No component file changes needed - all components already use the CSS variable system via Tailwind classes.
+Replace gradient background with clean card + primary accent border:
+
+```tsx
+<Card className="border-l-4 border-l-primary bg-card">
+  {/* Remove gradient, use clean white card */}
+  {/* Keep colored icons for semantic meaning (amber for PYQ) */}
+</Card>
+```
+
+---
+
+## File 6: `src/components/dashboard/AIBriefingHero.tsx`
+
+### Simplify background gradient
+
+Change from purple-tinted gradient to subtle neutral:
+
+```tsx
+<Card className="overflow-hidden border bg-gradient-to-br from-muted/50 via-background to-muted/30">
+```
+
+---
+
+## File 7: `src/components/landing/Features.tsx`
+
+### Update university card colors to use palette
+
+Replace Tailwind defaults with our neutral palette:
+
+```tsx
+const bgColors = ["bg-muted", "bg-primary-soft", "bg-muted", "bg-primary-soft", "bg-muted", "bg-primary-soft"];
+const borderColors = ["border-t-primary/60", "border-t-success/60", "border-t-warning/60", "border-t-primary/60", "border-t-success/60", "border-t-warning/60"];
+```
+
+---
+
+## File 8: `src/components/landing/Hero.tsx`
+
+### Simplify floating icons and avatar backgrounds
+
+Use neutral backgrounds instead of pastel colors:
+
+```tsx
+const avatars = [
+  { src: "...", bg: "bg-muted" },
+  { src: "...", bg: "bg-muted" },
+  // ...
+];
+```
+
+And for the large circle behind the hero image:
+
+```tsx
+<div className="w-64 h-64 ... rounded-full bg-primary-soft flex items-center justify-center ...">
+```
+
+---
+
+## File 9: `src/components/dashboard/IntelligentSubjectCard.tsx`
+
+### Consolidate badge colors
+
+Use only 3 semantic colors for badges:
+- Primary (default info)
+- Warning (attention needed)
+- Destructive (risk/weak)
+
+```tsx
+{/* High weightage - use primary instead of amber */}
+{isHighWeightage && (
+  <Badge variant="outline" className="text-xs gap-1 border-primary/30 text-primary">
+    <Flame className="h-3 w-3" />
+    High weightage
+  </Badge>
+)}
+{/* Weak area - keep destructive */}
+{isWeakArea && (
+  <Badge variant="outline" className="text-xs gap-1 border-destructive/30 text-destructive">
+    <AlertTriangle className="h-3 w-3" />
+    Weak area
+  </Badge>
+)}
+{/* PYQs pending - use muted/neutral instead of violet */}
+{hasPendingPyqs && (
+  <Badge variant="outline" className="text-xs gap-1 border-border text-muted-foreground">
+    <FileText className="h-3 w-3" />
+    {pyqsUnattempted} PYQs pending
+  </Badge>
+)}
+```
+
+---
+
+## Summary of Design Principles Applied
+
+| Principle | Implementation |
+|-----------|----------------|
+| ONE primary color | `#4A3AFF` for CTAs only, max 1-2 per screen |
+| Neutral backgrounds | Cards use white/off-white, no tinted backgrounds |
+| Semantic accents only | Colors used only for status (success/warning/destructive) |
+| Consistent text | Dark neutral `#211F54` for all body text |
+| Muted icons | Icon backgrounds use very light tints, not full saturation |
+| Dark sections | `#211F54` instead of saturated purple for contrast sections |
+| No decorative color | Every color has functional meaning |
+
+---
+
+## Files to Modify
+
+1. `src/index.css` - Update CSS variables
+2. `tailwind.config.ts` - Add new color tokens
+3. `src/components/landing/StatsBanner.tsx` - Calm down the 98% section
+4. `src/components/dashboard/ProgressStatsGrid.tsx` - Neutral cards with colored icons
+5. `src/components/dashboard/TodaysFocusCard.tsx` - Clean card with accent border
+6. `src/components/dashboard/AIBriefingHero.tsx` - Subtle neutral gradient
+7. `src/components/landing/Features.tsx` - Use palette colors for university cards
+8. `src/components/landing/Hero.tsx` - Neutral avatar/icon backgrounds
+9. `src/components/dashboard/IntelligentSubjectCard.tsx` - Consolidate badge colors
+
