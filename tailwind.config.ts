@@ -88,6 +88,13 @@ export default {
         md: "calc(var(--radius) - 2px)",
         sm: "calc(var(--radius) - 4px)",
       },
+      backdropBlur: {
+        xs: '2px',
+      },
+      boxShadow: {
+        'glass': '0 8px 32px -8px hsl(242 48% 23% / 0.1)',
+        'glass-lg': '0 16px 48px -12px hsl(242 48% 23% / 0.15)',
+      },
       keyframes: {
         "accordion-down": {
           from: { height: "0" },
