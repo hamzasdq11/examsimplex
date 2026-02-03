@@ -1,7 +1,52 @@
 import { Link } from "react-router-dom";
-import { Star, MessageCircle, BarChart3, TrendingUp } from "lucide-react";
+import { Star } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { AnimatedSection } from "@/hooks/useScrollAnimation";
+
+const showcaseCards = [
+  { 
+    src: "https://images.unsplash.com/photo-1517842645767-c639042777db?w=400&h=300&fit=crop",
+    alt: "Study notes",
+    rotate: "-3deg",
+    scale: 1,
+    offsetY: 0
+  },
+  { 
+    src: "https://images.unsplash.com/photo-1434030216411-0b793f4b4173?w=400&h=300&fit=crop",
+    alt: "Student studying",
+    rotate: "2deg", 
+    scale: 1.05,
+    offsetY: -10
+  },
+  { 
+    src: "https://images.unsplash.com/photo-1456513080510-7bf3a84b82f8?w=400&h=300&fit=crop",
+    alt: "Library study",
+    rotate: "-2deg",
+    scale: 0.95,
+    offsetY: 15
+  },
+  { 
+    src: "https://images.unsplash.com/photo-1488190211105-8b0e65b80b4e?w=400&h=300&fit=crop",
+    alt: "Note taking",
+    rotate: "3deg",
+    scale: 1.02,
+    offsetY: -5
+  },
+  { 
+    src: "https://images.unsplash.com/photo-1522202176988-66273c2fd55f?w=400&h=300&fit=crop",
+    alt: "Group study",
+    rotate: "-1deg",
+    scale: 1,
+    offsetY: 8
+  },
+  { 
+    src: "https://images.unsplash.com/photo-1513258496099-48168024aec0?w=400&h=300&fit=crop",
+    alt: "Laptop study",
+    rotate: "2deg",
+    scale: 1.03,
+    offsetY: -12
+  },
+];
 
 const Hero = () => {
   const avatars = [
@@ -11,6 +56,9 @@ const Hero = () => {
     { src: "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=100&h=100&fit=crop&crop=face", bg: "bg-muted" },
     { src: "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=100&h=100&fit=crop&crop=face", bg: "bg-muted" },
   ];
+
+  // Duplicate cards for seamless loop
+  const duplicatedCards = [...showcaseCards, ...showcaseCards];
 
   return (
     <section className="relative overflow-hidden bg-background pt-6 pb-10 md:pt-6 md:pb-12">
@@ -74,30 +122,49 @@ const Hero = () => {
             </AnimatedSection>
           </div>
 
-          {/* Right Content - Hero Image */}
-          <AnimatedSection animation="scale" delay={150} className="relative flex justify-center lg:justify-end mt-4 lg:mt-0">
-            {/* Background Circle */}
-            <div className="relative">
-              <div className="w-64 h-64 sm:w-80 sm:h-80 md:w-96 md:h-96 rounded-full bg-primary-soft flex items-center justify-center transition-transform duration-500 hover:scale-[1.02]">
-                <img
-                  src="https://images.unsplash.com/photo-1522202176988-66273c2fd55f?w=500&h=500&fit=crop"
-                  alt="Student studying with laptop"
-                  className="w-56 h-56 sm:w-72 sm:h-72 md:w-80 md:h-80 rounded-full object-cover transition-transform duration-500 hover:scale-105"
-                />
+          {/* Right Content - Scrolling Showcase */}
+          <AnimatedSection animation="scale" delay={150} className="relative mt-4 lg:mt-0 hidden sm:block">
+            <div className="relative h-64 sm:h-80 md:h-96 overflow-hidden rounded-2xl">
+              {/* Gradient fade on edges */}
+              <div className="absolute inset-y-0 left-0 w-16 bg-gradient-to-r from-background to-transparent z-10" />
+              <div className="absolute inset-y-0 right-0 w-16 bg-gradient-to-l from-background to-transparent z-10" />
+              
+              {/* Scrolling container */}
+              <div className="flex items-center h-full animate-scroll-showcase">
+                {duplicatedCards.map((card, index) => (
+                  <div
+                    key={index}
+                    className="flex-shrink-0 mx-3 transition-transform duration-300 hover:scale-105"
+                    style={{
+                      transform: `rotate(${card.rotate}) scale(${card.scale}) translateY(${card.offsetY}px)`,
+                    }}
+                  >
+                    <div className="w-48 sm:w-56 md:w-64 rounded-xl overflow-hidden shadow-lg shadow-foreground/10 bg-card border border-border">
+                      <img
+                        src={card.src}
+                        alt={card.alt}
+                        className="w-full h-32 sm:h-40 md:h-44 object-cover"
+                        loading="lazy"
+                      />
+                      <div className="p-3 bg-card">
+                        <div className="h-2 w-3/4 bg-muted rounded mb-2" />
+                        <div className="h-2 w-1/2 bg-muted rounded" />
+                      </div>
+                    </div>
+                  </div>
+                ))}
               </div>
+            </div>
+          </AnimatedSection>
 
-              {/* Floating Icons - smooth 4s animation cycle */}
-              <div className="absolute top-4 sm:top-6 right-2 sm:right-0 w-10 h-10 sm:w-14 sm:h-14 bg-card rounded-xl shadow-lg flex items-center justify-center hover:scale-110 transition-transform duration-300 animate-float">
-                <MessageCircle className="h-5 w-5 sm:h-7 sm:w-7 text-primary" />
-              </div>
-              
-              <div className="absolute top-1/4 -left-6 sm:-left-10 w-10 h-10 sm:w-14 sm:h-14 bg-card rounded-xl shadow-lg flex items-center justify-center hover:scale-110 transition-transform duration-300 animate-float [animation-delay:1.3s]">
-                <BarChart3 className="h-5 w-5 sm:h-7 sm:w-7 text-primary" />
-              </div>
-              
-              <div className="absolute bottom-8 sm:bottom-12 -right-3 sm:-right-6 w-10 h-10 sm:w-14 sm:h-14 bg-card rounded-xl shadow-lg flex items-center justify-center hover:scale-110 transition-transform duration-300 animate-float [animation-delay:2.6s]">
-                <TrendingUp className="h-5 w-5 sm:h-7 sm:w-7 text-primary" />
-              </div>
+          {/* Mobile fallback - simple image */}
+          <AnimatedSection animation="scale" delay={150} className="relative mt-4 sm:hidden flex justify-center">
+            <div className="w-64 h-64 rounded-full bg-primary-soft flex items-center justify-center">
+              <img
+                src="https://images.unsplash.com/photo-1522202176988-66273c2fd55f?w=500&h=500&fit=crop"
+                alt="Student studying"
+                className="w-56 h-56 rounded-full object-cover"
+              />
             </div>
           </AnimatedSection>
         </div>
