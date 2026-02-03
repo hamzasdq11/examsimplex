@@ -122,33 +122,43 @@ const Hero = () => {
             </AnimatedSection>
           </div>
 
-          {/* Right Content - Scrolling Showcase */}
+          {/* Right Content - Scrolling Showcase with Perspective */}
           <AnimatedSection animation="scale" delay={150} className="relative mt-4 lg:mt-0 hidden sm:block">
-            <div className="relative h-64 sm:h-80 md:h-96 overflow-hidden rounded-2xl">
+            <div 
+              className="relative h-72 sm:h-96 md:h-[28rem] overflow-hidden"
+              style={{ perspective: '1200px' }}
+            >
               {/* Gradient fade on edges */}
-              <div className="absolute inset-y-0 left-0 w-16 bg-gradient-to-r from-background to-transparent z-10" />
-              <div className="absolute inset-y-0 right-0 w-16 bg-gradient-to-l from-background to-transparent z-10" />
+              <div className="absolute inset-y-0 left-0 w-24 bg-gradient-to-r from-background via-background/80 to-transparent z-10" />
+              <div className="absolute inset-y-0 right-0 w-24 bg-gradient-to-l from-background via-background/80 to-transparent z-10" />
               
-              {/* Scrolling container */}
-              <div className="flex items-center h-full animate-scroll-showcase">
+              {/* Scrolling container with 3D transform */}
+              <div 
+                className="flex items-center h-full animate-scroll-showcase"
+                style={{
+                  transform: 'rotateY(-8deg) rotateX(5deg)',
+                  transformStyle: 'preserve-3d',
+                }}
+              >
                 {duplicatedCards.map((card, index) => (
                   <div
                     key={index}
-                    className="flex-shrink-0 mx-3 transition-transform duration-300 hover:scale-105"
+                    className="flex-shrink-0 mx-4 transition-all duration-500 hover:scale-105 hover:-translate-y-2"
                     style={{
-                      transform: `rotate(${card.rotate}) scale(${card.scale}) translateY(${card.offsetY}px)`,
+                      transform: `rotate(${card.rotate}) scale(${card.scale}) translateY(${card.offsetY}px) translateZ(${index % 6 * 10}px)`,
+                      transformStyle: 'preserve-3d',
                     }}
                   >
-                    <div className="w-48 sm:w-56 md:w-64 rounded-xl overflow-hidden shadow-lg shadow-foreground/10 bg-card border border-border">
+                    <div className="w-52 sm:w-60 md:w-72 rounded-2xl overflow-hidden shadow-2xl shadow-foreground/15 bg-card border border-border/50 backdrop-blur-sm">
                       <img
                         src={card.src}
                         alt={card.alt}
-                        className="w-full h-32 sm:h-40 md:h-44 object-cover"
+                        className="w-full h-36 sm:h-44 md:h-48 object-cover"
                         loading="lazy"
                       />
-                      <div className="p-3 bg-card">
-                        <div className="h-2 w-3/4 bg-muted rounded mb-2" />
-                        <div className="h-2 w-1/2 bg-muted rounded" />
+                      <div className="p-4 bg-card/95">
+                        <div className="h-2.5 w-3/4 bg-muted rounded-full mb-2" />
+                        <div className="h-2 w-1/2 bg-muted/70 rounded-full" />
                       </div>
                     </div>
                   </div>
