@@ -108,9 +108,9 @@ const Hero = () => {
               
               {/* Two-column grid with 3D transform */}
               <div 
-                className="grid grid-cols-2 gap-4 h-full"
+                className="grid grid-cols-2 gap-3 h-full"
                 style={{
-                  transform: 'rotateX(10deg) rotateY(-15deg)',
+                  transform: 'rotateX(8deg) rotateY(-12deg) rotateZ(-8deg)',
                   transformStyle: 'preserve-3d',
                 }}
               >
