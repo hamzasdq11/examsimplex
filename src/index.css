@@ -182,31 +182,17 @@ All colors MUST be HSL.
   animation: float 3s cubic-bezier(0.45, 0, 0.55, 1) infinite;
 }
 
-@keyframes scroll-up {
+@keyframes scroll-showcase {
   0% {
-    transform: translateY(0);
+    transform: translateX(0);
   }
   100% {
-    transform: translateY(-50%);
+    transform: translateX(-50%);
   }
 }
 
-@keyframes scroll-down {
-  0% {
-    transform: translateY(-50%);
-  }
-  100% {
-    transform: translateY(0);
-  }
-}
-
-.animate-scroll-up {
-  animation: scroll-up 30s linear infinite;
-  will-change: transform;
-}
-
-.animate-scroll-down {
-  animation: scroll-down 30s linear infinite;
+.animate-scroll-showcase {
+  animation: scroll-showcase 40s linear infinite;
   will-change: transform;
 }
 

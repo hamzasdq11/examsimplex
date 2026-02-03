@@ -3,22 +3,49 @@ import { Star } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { AnimatedSection } from "@/hooks/useScrollAnimation";
 
-const leftColumnCards = [
-  { src: "https://images.unsplash.com/photo-1517842645767-c639042777db?w=400&h=300&fit=crop", alt: "Study notes" },
-  { src: "https://images.unsplash.com/photo-1434030216411-0b793f4b4173?w=400&h=300&fit=crop", alt: "Student studying" },
-  { src: "https://images.unsplash.com/photo-1456513080510-7bf3a84b82f8?w=400&h=300&fit=crop", alt: "Library study" },
-  { src: "https://images.unsplash.com/photo-1488190211105-8b0e65b80b4e?w=400&h=300&fit=crop", alt: "Note taking" },
-  { src: "https://images.unsplash.com/photo-1522202176988-66273c2fd55f?w=400&h=300&fit=crop", alt: "Group study" },
-  { src: "https://images.unsplash.com/photo-1513258496099-48168024aec0?w=400&h=300&fit=crop", alt: "Laptop study" },
-];
-
-const rightColumnCards = [
-  { src: "https://images.unsplash.com/photo-1501504905252-473c47e087f8?w=400&h=300&fit=crop", alt: "Coffee study" },
-  { src: "https://images.unsplash.com/photo-1453928582365-b6ad33cbcf64?w=400&h=300&fit=crop", alt: "Workspace" },
-  { src: "https://images.unsplash.com/photo-1497633762265-9d179a990aa6?w=400&h=300&fit=crop", alt: "Books stack" },
-  { src: "https://images.unsplash.com/photo-1503676260728-1c00da094a0b?w=400&h=300&fit=crop", alt: "Classroom" },
-  { src: "https://images.unsplash.com/photo-1523050854058-8df90110c9f1?w=400&h=300&fit=crop", alt: "Graduation" },
-  { src: "https://images.unsplash.com/photo-1516321318423-f06f85e504b3?w=400&h=300&fit=crop", alt: "Tech learning" },
+const showcaseCards = [
+  { 
+    src: "https://images.unsplash.com/photo-1517842645767-c639042777db?w=400&h=300&fit=crop",
+    alt: "Study notes",
+    rotate: "-3deg",
+    scale: 1,
+    offsetY: 0
+  },
+  { 
+    src: "https://images.unsplash.com/photo-1434030216411-0b793f4b4173?w=400&h=300&fit=crop",
+    alt: "Student studying",
+    rotate: "2deg", 
+    scale: 1.05,
+    offsetY: -10
+  },
+  { 
+    src: "https://images.unsplash.com/photo-1456513080510-7bf3a84b82f8?w=400&h=300&fit=crop",
+    alt: "Library study",
+    rotate: "-2deg",
+    scale: 0.95,
+    offsetY: 15
+  },
+  { 
+    src: "https://images.unsplash.com/photo-1488190211105-8b0e65b80b4e?w=400&h=300&fit=crop",
+    alt: "Note taking",
+    rotate: "3deg",
+    scale: 1.02,
+    offsetY: -5
+  },
+  { 
+    src: "https://images.unsplash.com/photo-1522202176988-66273c2fd55f?w=400&h=300&fit=crop",
+    alt: "Group study",
+    rotate: "-1deg",
+    scale: 1,
+    offsetY: 8
+  },
+  { 
+    src: "https://images.unsplash.com/photo-1513258496099-48168024aec0?w=400&h=300&fit=crop",
+    alt: "Laptop study",
+    rotate: "2deg",
+    scale: 1.03,
+    offsetY: -12
+  },
 ];
 
 const Hero = () => {
@@ -30,9 +57,8 @@ const Hero = () => {
     { src: "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=100&h=100&fit=crop&crop=face", bg: "bg-muted" },
   ];
 
-  // Duplicate cards for seamless vertical loop
-  const duplicatedLeftCards = [...leftColumnCards, ...leftColumnCards];
-  const duplicatedRightCards = [...rightColumnCards, ...rightColumnCards];
+  // Duplicate cards for seamless loop
+  const duplicatedCards = [...showcaseCards, ...showcaseCards];
 
   return (
     <section className="relative overflow-hidden bg-background pt-6 pb-10 md:pt-6 md:pb-12">
@@ -96,73 +122,47 @@ const Hero = () => {
             </AnimatedSection>
           </div>
 
-          {/* Right Content - Two-Column Vertical Scroll Showcase */}
+          {/* Right Content - Scrolling Showcase with Perspective */}
           <AnimatedSection animation="scale" delay={150} className="relative mt-4 lg:mt-0 hidden sm:block">
             <div 
-              className="relative h-80 sm:h-[26rem] md:h-[32rem] overflow-hidden"
-              style={{ perspective: '1000px' }}
+              className="relative h-72 sm:h-96 md:h-[28rem] overflow-hidden"
+              style={{ perspective: '1200px' }}
             >
-              {/* Gradient fade on top/bottom edges */}
-              <div className="absolute inset-x-0 top-0 h-24 bg-gradient-to-b from-background via-background/80 to-transparent z-10" />
-              <div className="absolute inset-x-0 bottom-0 h-24 bg-gradient-to-t from-background via-background/80 to-transparent z-10" />
+              {/* Gradient fade on edges */}
+              <div className="absolute inset-y-0 left-0 w-24 bg-gradient-to-r from-background via-background/80 to-transparent z-10" />
+              <div className="absolute inset-y-0 right-0 w-24 bg-gradient-to-l from-background via-background/80 to-transparent z-10" />
               
-              {/* Two-column grid with 3D transform */}
+              {/* Scrolling container with 3D transform */}
               <div 
-                className="grid grid-cols-2 gap-4 h-full"
+                className="flex items-center h-full animate-scroll-showcase"
                 style={{
-                  transform: 'rotateX(10deg) rotateY(-15deg)',
+                  transform: 'rotateY(-8deg) rotateX(5deg)',
                   transformStyle: 'preserve-3d',
                 }}
               >
-                {/* Left column - scrolls up */}
-                <div className="overflow-hidden h-full">
-                  <div className="animate-scroll-up flex flex-col gap-4">
-                    {duplicatedLeftCards.map((card, index) => (
-                      <div
-                        key={`left-${index}`}
-                        className="flex-shrink-0 transition-all duration-500 hover:scale-105"
-                      >
-                        <div className="w-full rounded-2xl overflow-hidden shadow-2xl shadow-foreground/10 bg-card border border-border/50">
-                          <img
-                            src={card.src}
-                            alt={card.alt}
-                            className="w-full h-32 sm:h-40 md:h-44 object-cover"
-                            loading="lazy"
-                          />
-                          <div className="p-3 bg-card/95">
-                            <div className="h-2 w-3/4 bg-muted rounded-full mb-1.5" />
-                            <div className="h-1.5 w-1/2 bg-muted/70 rounded-full" />
-                          </div>
-                        </div>
+                {duplicatedCards.map((card, index) => (
+                  <div
+                    key={index}
+                    className="flex-shrink-0 mx-4 transition-all duration-500 hover:scale-105 hover:-translate-y-2"
+                    style={{
+                      transform: `rotate(${card.rotate}) scale(${card.scale}) translateY(${card.offsetY}px) translateZ(${index % 6 * 10}px)`,
+                      transformStyle: 'preserve-3d',
+                    }}
+                  >
+                    <div className="w-52 sm:w-60 md:w-72 rounded-2xl overflow-hidden shadow-2xl shadow-foreground/15 bg-card border border-border/50 backdrop-blur-sm">
+                      <img
+                        src={card.src}
+                        alt={card.alt}
+                        className="w-full h-36 sm:h-44 md:h-48 object-cover"
+                        loading="lazy"
+                      />
+                      <div className="p-4 bg-card/95">
+                        <div className="h-2.5 w-3/4 bg-muted rounded-full mb-2" />
+                        <div className="h-2 w-1/2 bg-muted/70 rounded-full" />
                       </div>
-                    ))}
+                    </div>
                   </div>
-                </div>
-
-                {/* Right column - scrolls down */}
-                <div className="overflow-hidden h-full">
-                  <div className="animate-scroll-down flex flex-col gap-4">
-                    {duplicatedRightCards.map((card, index) => (
-                      <div
-                        key={`right-${index}`}
-                        className="flex-shrink-0 transition-all duration-500 hover:scale-105"
-                      >
-                        <div className="w-full rounded-2xl overflow-hidden shadow-2xl shadow-foreground/10 bg-card border border-border/50">
-                          <img
-                            src={card.src}
-                            alt={card.alt}
-                            className="w-full h-32 sm:h-40 md:h-44 object-cover"
-                            loading="lazy"
-                          />
-                          <div className="p-3 bg-card/95">
-                            <div className="h-2 w-3/4 bg-muted rounded-full mb-1.5" />
-                            <div className="h-1.5 w-1/2 bg-muted/70 rounded-full" />
-                          </div>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                </div>
+                ))}
               </div>
             </div>
           </AnimatedSection>

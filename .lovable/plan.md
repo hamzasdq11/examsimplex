@@ -1,119 +1,133 @@
 
 
-# Plan: Brix Templates-Style Two-Column Vertical Scroll Hero
+# Plan: Implement Smooth Scrolling Hero Image Showcase
 
-## Current vs Target
+## Overview
 
-| Current | Target (Brix Style) |
-|---------|---------------------|
-| Single horizontal row | Two-column grid |
-| Horizontal scroll (left) | Vertical scroll (one up, one down) |
-| Mild 3D perspective | Strong isometric tilt |
-| Cards in a line | Cards stacked vertically |
+Replace the current circular hero image with a Brix Templates-style continuously scrolling showcase of stacked UI preview cards, creating a premium ambient motion effect.
 
-## Visual Reference Analysis
+## Design Analysis
 
-The Brix Templates effect has these key characteristics:
-- **Two columns** of cards side by side
-- **Opposing scroll directions** - left column scrolls up, right column scrolls down
-- **Strong perspective tilt** - approximately `rotateX(10deg) rotateY(-15deg)`
-- **Cards extend beyond viewport** - creates infinite scroll illusion
-- **Uniform card sizing** - consistent dimensions for all cards
+Based on the reference screenshots, the key characteristics are:
+- **Multiple stacked UI mockups** arranged with slight rotation and scale variation
+- **Slow, linear horizontal scroll** (ambient, not attention-grabbing)
+- **Seamless infinite loop** with no visible reset point
+- **Layered depth illusion** through card positioning
+- **Hero text remains fixed** on the left
 
 ## Implementation
 
 ### File 1: `src/index.css`
 
-Replace the horizontal scroll animation with two vertical scroll animations:
+Add a new keyframe for the infinite horizontal scroll:
 
 ```css
-@keyframes scroll-up {
-  0% { transform: translateY(0); }
-  100% { transform: translateY(-50%); }
+@keyframes scroll-showcase {
+  0% {
+    transform: translateX(0);
+  }
+  100% {
+    transform: translateX(-50%);
+  }
 }
 
-@keyframes scroll-down {
-  0% { transform: translateY(-50%); }
-  100% { transform: translateY(0); }
-}
-
-.animate-scroll-up {
-  animation: scroll-up 30s linear infinite;
-}
-
-.animate-scroll-down {
-  animation: scroll-down 30s linear infinite;
+.animate-scroll-showcase {
+  animation: scroll-showcase 40s linear infinite;
 }
 ```
+
+The 40-second duration creates the slow, ambient feel. The `-50%` translation works because we'll duplicate the content to create seamless looping.
+
+---
 
 ### File 2: `src/components/landing/Hero.tsx`
 
-Restructure the showcase into a two-column layout:
+Replace the right content section with the scrolling showcase:
 
-**New Structure:**
+**Structure:**
 ```
-┌─────────────────────────────────────────────┐
-│ Container (perspective: 1000px)             │
-│ ┌─────────────────────────────────────────┐ │
-│ │ Grid (rotateX + rotateY)                │ │
-│ │ ┌─────────────┐  ┌─────────────┐        │ │
-│ │ │  Column 1   │  │  Column 2   │        │ │
-│ │ │  ↑ scroll   │  │  ↓ scroll   │        │ │
-│ │ │  [Card]     │  │  [Card]     │        │ │
-│ │ │  [Card]     │  │  [Card]     │        │ │
-│ │ │  [Card]     │  │  [Card]     │        │ │
-│ │ │  ...        │  │  ...        │        │ │
-│ │ └─────────────┘  └─────────────┘        │ │
-│ └─────────────────────────────────────────┘ │
-└─────────────────────────────────────────────┘
+[Left Content - unchanged]     [Right Content - New Scrolling Showcase]
+                               ┌─────────────────────────────────────┐
+  Headline                     │  ┌────────┐                         │
+  Subtext                      │  │ Card 1 │  ┌────────┐            │
+  CTA Button                   │  │(rotated)│  │ Card 2 │           │
+                               │  └────────┘  │(larger) │ ...       │
+                               │              └────────┘            │
+                               └─────────────────────────────────────┘
+                                        ← Scrolling direction
 ```
 
-**Key Changes:**
+**Mockup Cards Data:**
+Use relevant education/study-themed preview images:
 
-1. **Two card arrays** - one for left column, one for right column
-2. **Grid layout** with `grid-cols-2` and gap
-3. **Stronger perspective transform**:
-   ```tsx
-   transform: 'rotateX(10deg) rotateY(-15deg)'
-   ```
-4. **Vertical gradient overlays** (top/bottom instead of left/right)
-5. **Taller container** to show more cards
-6. **Each column has duplicated cards** for seamless vertical loop
-
-**Card Configuration:**
 ```tsx
-const leftColumnCards = [
-  { src: "...", alt: "Notes preview" },
-  { src: "...", alt: "Dashboard" },
-  { src: "...", alt: "Study material" },
-  // ... 6+ cards
-];
-
-const rightColumnCards = [
-  { src: "...", alt: "Practice tests" },
-  { src: "...", alt: "Progress tracking" },
-  { src: "...", alt: "AI assistant" },
-  // ... 6+ cards
+const showcaseCards = [
+  { 
+    src: "https://images.unsplash.com/photo-1517842645767-c639042777db?w=400&h=300&fit=crop",
+    alt: "Notes preview",
+    rotate: "-3deg",
+    scale: 1,
+    zIndex: 3
+  },
+  { 
+    src: "https://images.unsplash.com/photo-1434030216411-0b793f4b4173?w=400&h=300&fit=crop",
+    alt: "Study dashboard",
+    rotate: "2deg", 
+    scale: 1.05,
+    zIndex: 4
+  },
+  // ... more cards
 ];
 ```
 
-## CSS Properties
+**Implementation:**
+- Outer container with `overflow-hidden` to clip the scroll
+- Inner flex container with duplicated cards for seamless loop
+- Each card styled with `rounded-xl shadow-lg` and positioned transforms
+- Animation applied to the inner container
+
+---
+
+### Key CSS Properties
 
 | Property | Value | Purpose |
 |----------|-------|---------|
-| `perspective` | `1000px` | Creates 3D depth for child elements |
-| `rotateX` | `10deg` | Tilts grid forward (top recedes) |
-| `rotateY` | `-15deg` | Tilts grid left (right side recedes) |
-| `animation-duration` | `30s` | Slow ambient motion |
-| `translateY(-50%)` | Vertical loop | Cards duplicate for seamless reset |
+| `animation-timing-function` | `linear` | No acceleration, constant speed |
+| `animation-duration` | `40s` | Very slow, ambient motion |
+| `transform` | `translateX()` | GPU-accelerated, smooth 60fps |
+| `will-change` | `transform` | Optimize for animation |
+
+---
+
+## Visual Hierarchy
+
+The implementation preserves visual hierarchy:
+1. **Primary focus**: Headline and CTA button (static, left side)
+2. **Secondary/ambient**: Scrolling showcase (motion draws peripheral attention without distraction)
+
+---
+
+## Mobile Considerations
+
+- On smaller screens (< lg breakpoint), the showcase will be hidden or shown at reduced scale
+- The stacked arrangement works vertically on mobile with the scroll going upward instead
+
+---
 
 ## Files to Modify
 
-1. **`src/index.css`** - Add vertical scroll keyframes and utility classes
-2. **`src/components/landing/Hero.tsx`** - Restructure to two-column vertical grid
+1. **`src/index.css`** - Add `scroll-showcase` keyframe and utility class
+2. **`src/components/landing/Hero.tsx`** - Replace right content with scrolling showcase
 
-## Mobile Behavior
+---
 
-- On screens < `sm`, continue showing the simple circular image fallback
-- The two-column effect requires sufficient screen width to look good
+## Preview Images
+
+Using high-quality Unsplash images that represent:
+- Study notes and notebooks
+- Dashboard interfaces
+- Students learning
+- Educational content
+
+This creates a thematic connection to the EXAM Simplex product while maintaining the premium visual effect.
 
