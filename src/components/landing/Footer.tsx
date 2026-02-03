@@ -68,7 +68,7 @@ const Footer = forwardRef<HTMLElement>((_, ref) => {
         <div className="mt-12 pt-8 border-t border-primary-foreground/20">
           <div className="flex flex-col md:flex-row justify-between items-center gap-4">
             <p className="text-sm text-primary-foreground/80">
-              © 2024 TestPrep. All rights reserved.
+              © 2025 Simplex Labs Pvt Ltd. All rights reserved.
             </p>
             <div className="flex gap-6">
               <a href="#" className="text-sm text-primary-foreground/80 hover:text-primary-foreground transition-colors">
