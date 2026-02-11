@@ -78,48 +78,49 @@ const Hero = () => {
           {/* Right Content - Envelope Reveal */}
           <AnimatedSection animation="scale" delay={150} className="relative mt-4 lg:mt-0 flex justify-center">
             <div
-              className="relative w-72 sm:w-80 md:w-96 select-none"
+              className="relative w-52 sm:w-60 md:w-72 select-none"
+              style={{ perspective: '1200px' }}
               onMouseEnter={() => setRevealed(true)}
               onMouseLeave={() => setRevealed(false)}
               onClick={() => setRevealed((r) => !r)}
             >
-              {/* Image sliding out */}
-              <div className="relative z-10 flex justify-center">
-                <img
-                  src={heroMeme}
-                  alt="Let's get this degree"
-                  className="w-[85%] rounded-xl shadow-xl"
-                  style={{
-                    transform: revealed ? 'translateY(-30%)' : 'translateY(40%)',
-                    transition: 'transform 0.6s cubic-bezier(0.34, 1.56, 0.64, 1)',
-                  }}
-                />
-              </div>
+              <div style={{ transform: 'rotateX(4deg) rotateY(-12deg)', transformStyle: 'preserve-3d' }}>
+                {/* Image sliding out */}
+                <div className="relative z-10 flex justify-center">
+                  <img
+                    src={heroMeme}
+                    alt="Let's get this degree"
+                    className="w-[85%] rounded-xl shadow-xl"
+                    style={{
+                      transform: revealed ? 'translateY(-30%)' : 'translateY(40%)',
+                      transition: 'transform 0.6s cubic-bezier(0.34, 1.56, 0.64, 1)',
+                    }}
+                  />
+                </div>
 
-              {/* Envelope */}
-              <div className="relative z-20 -mt-4">
-                {/* Envelope flap */}
-                <div
-                  className="w-full aspect-[2/0.6] relative z-30"
-                  style={{
-                    clipPath: 'polygon(0 0, 50% 100%, 100% 0, 100% 100%, 0 100%)',
-                    background: 'hsl(35, 30%, 82%)',
-                  }}
-                />
-                {/* Envelope body */}
-                <div
-                  className="w-full aspect-[2/1.2] rounded-b-2xl relative z-20 -mt-px"
-                  style={{
-                    background: 'linear-gradient(180deg, hsl(35, 35%, 88%) 0%, hsl(30, 25%, 80%) 100%)',
-                    boxShadow: '0 8px 32px -8px hsl(var(--foreground) / 0.15)',
-                  }}
-                >
-                  {/* Inner shadow line */}
-                  <div className="absolute inset-x-4 top-0 h-px bg-foreground/5" />
-                  {/* Decorative lines on envelope */}
-                  <div className="absolute bottom-6 left-1/2 -translate-x-1/2 w-3/5 space-y-2">
-                    <div className="h-1.5 w-full bg-foreground/5 rounded-full" />
-                    <div className="h-1.5 w-2/3 bg-foreground/5 rounded-full" />
+                {/* Envelope */}
+                <div className="relative z-20 -mt-4">
+                  {/* Envelope flap */}
+                  <div
+                    className="w-full aspect-[2/0.6] relative z-30"
+                    style={{
+                      clipPath: 'polygon(0 0, 50% 100%, 100% 0, 100% 100%, 0 100%)',
+                      background: 'hsl(35, 30%, 82%)',
+                    }}
+                  />
+                  {/* Envelope body */}
+                  <div
+                    className="w-full aspect-[2/1.2] rounded-b-2xl relative z-20 -mt-px"
+                    style={{
+                      background: 'linear-gradient(180deg, hsl(35, 35%, 88%) 0%, hsl(30, 25%, 80%) 100%)',
+                      boxShadow: '0 8px 32px -8px hsl(var(--foreground) / 0.15)',
+                    }}
+                  >
+                    <div className="absolute inset-x-4 top-0 h-px bg-foreground/5" />
+                    <div className="absolute bottom-4 left-1/2 -translate-x-1/2 w-3/5 space-y-1.5">
+                      <div className="h-1 w-full bg-foreground/5 rounded-full" />
+                      <div className="h-1 w-2/3 bg-foreground/5 rounded-full" />
+                    </div>
                   </div>
                 </div>
               </div>
