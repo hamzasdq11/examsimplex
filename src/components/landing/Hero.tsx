@@ -100,7 +100,7 @@ const Hero = () => {
           <AnimatedSection animation="scale" delay={150} className="relative mt-4 lg:mt-0 hidden sm:block">
             <div 
               className="relative h-80 sm:h-[26rem] md:h-[32rem] overflow-hidden"
-              style={{ perspective: '1000px' }}
+              style={{ perspective: '1200px' }}
             >
               {/* Gradient fade on top/bottom edges */}
               <div className="absolute inset-x-0 top-0 h-24 bg-gradient-to-b from-background via-background/80 to-transparent z-10" />
@@ -110,7 +110,7 @@ const Hero = () => {
               <div 
                 className="grid grid-cols-2 gap-3 h-full"
                 style={{
-                  transform: 'rotateX(12deg) rotateY(-8deg) rotateZ(2deg)',
+                  transform: 'rotateX(4deg) rotateY(-12deg) rotateZ(0deg)',
                   transformStyle: 'preserve-3d',
                 }}
               >
