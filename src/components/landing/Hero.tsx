@@ -1,27 +1,13 @@
+import { useState } from "react";
 import { Link } from "react-router-dom";
 import { Star } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { AnimatedSection } from "@/hooks/useScrollAnimation";
-
-const leftColumnCards = [
-  { src: "https://images.unsplash.com/photo-1517842645767-c639042777db?w=400&h=300&fit=crop", alt: "Study notes" },
-  { src: "https://images.unsplash.com/photo-1434030216411-0b793f4b4173?w=400&h=300&fit=crop", alt: "Student studying" },
-  { src: "https://images.unsplash.com/photo-1456513080510-7bf3a84b82f8?w=400&h=300&fit=crop", alt: "Library study" },
-  { src: "https://images.unsplash.com/photo-1488190211105-8b0e65b80b4e?w=400&h=300&fit=crop", alt: "Note taking" },
-  { src: "https://images.unsplash.com/photo-1522202176988-66273c2fd55f?w=400&h=300&fit=crop", alt: "Group study" },
-  { src: "https://images.unsplash.com/photo-1513258496099-48168024aec0?w=400&h=300&fit=crop", alt: "Laptop study" },
-];
-
-const rightColumnCards = [
-  { src: "https://images.unsplash.com/photo-1501504905252-473c47e087f8?w=400&h=300&fit=crop", alt: "Coffee study" },
-  { src: "https://images.unsplash.com/photo-1453928582365-b6ad33cbcf64?w=400&h=300&fit=crop", alt: "Workspace" },
-  { src: "https://images.unsplash.com/photo-1497633762265-9d179a990aa6?w=400&h=300&fit=crop", alt: "Books stack" },
-  { src: "https://images.unsplash.com/photo-1503676260728-1c00da094a0b?w=400&h=300&fit=crop", alt: "Classroom" },
-  { src: "https://images.unsplash.com/photo-1523050854058-8df90110c9f1?w=400&h=300&fit=crop", alt: "Graduation" },
-  { src: "https://images.unsplash.com/photo-1516321318423-f06f85e504b3?w=400&h=300&fit=crop", alt: "Tech learning" },
-];
+import heroMeme from "@/assets/hero-meme.jpg";
 
 const Hero = () => {
+  const [revealed, setRevealed] = useState(false);
+
   const avatars = [
     { src: "https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=100&h=100&fit=crop&crop=face", bg: "bg-muted" },
     { src: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=100&h=100&fit=crop&crop=face", bg: "bg-muted" },
@@ -30,17 +16,12 @@ const Hero = () => {
     { src: "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=100&h=100&fit=crop&crop=face", bg: "bg-muted" },
   ];
 
-  // Duplicate cards for seamless vertical loop
-  const duplicatedLeftCards = [...leftColumnCards, ...leftColumnCards];
-  const duplicatedRightCards = [...rightColumnCards, ...rightColumnCards];
-
   return (
     <section className="relative overflow-hidden bg-background pt-6 pb-10 md:pt-6 md:pb-12">
       <div className="container max-w-6xl mx-auto px-4 md:px-8">
         <div className="grid lg:grid-cols-2 gap-8 lg:gap-6 items-center">
           {/* Left Content */}
           <div className="space-y-5 md:space-y-6 text-center lg:text-left">
-            {/* Social Proof - Mobile: stacked, Desktop: row */}
             <AnimatedSection animation="fade-up" delay={0}>
               <div className="flex flex-col sm:flex-row items-center justify-center lg:justify-start gap-3 sm:gap-6">
                 <div className="flex -space-x-2">
@@ -63,14 +44,13 @@ const Hero = () => {
                       <Star key={i} className="h-4 w-4 sm:h-5 sm:w-5 fill-yellow-400 text-yellow-400 transition-transform duration-300 hover:scale-125" />
                     ))}
                   </div>
-                <span className="text-xs sm:text-sm text-muted-foreground">
+                  <span className="text-xs sm:text-sm text-muted-foreground">
                     <span className="font-semibold text-foreground">500+</span> students served
                   </span>
                 </div>
               </div>
             </AnimatedSection>
 
-            {/* Main Headline */}
             <AnimatedSection animation="fade-up" delay={100}>
               <div className="space-y-3">
                 <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-display font-bold text-foreground leading-tight">
@@ -82,7 +62,6 @@ const Hero = () => {
               </div>
             </AnimatedSection>
 
-            {/* CTA Button */}
             <AnimatedSection animation="fade-up" delay={200}>
               <div className="flex justify-center lg:justify-start">
                 <Button
@@ -96,85 +75,54 @@ const Hero = () => {
             </AnimatedSection>
           </div>
 
-          {/* Right Content - Two-Column Vertical Scroll Showcase */}
-          <AnimatedSection animation="scale" delay={150} className="relative mt-4 lg:mt-0 hidden sm:block">
-            <div 
-              className="relative h-80 sm:h-[26rem] md:h-[32rem] overflow-hidden"
-              style={{ perspective: '1200px' }}
+          {/* Right Content - Envelope Reveal */}
+          <AnimatedSection animation="scale" delay={150} className="relative mt-4 lg:mt-0 flex justify-center">
+            <div
+              className="relative w-72 sm:w-80 md:w-96 select-none"
+              onMouseEnter={() => setRevealed(true)}
+              onMouseLeave={() => setRevealed(false)}
+              onClick={() => setRevealed((r) => !r)}
             >
-              {/* Gradient fade on top/bottom edges */}
-              <div className="absolute inset-x-0 top-0 h-24 bg-gradient-to-b from-background via-background/80 to-transparent z-10" />
-              <div className="absolute inset-x-0 bottom-0 h-24 bg-gradient-to-t from-background via-background/80 to-transparent z-10" />
-              
-              {/* Two-column grid with 3D transform */}
-              <div 
-                className="grid grid-cols-2 gap-3 h-full"
-                style={{
-                  transform: 'rotateX(4deg) rotateY(-12deg) rotateZ(0deg)',
-                  transformStyle: 'preserve-3d',
-                }}
-              >
-                {/* Left column - scrolls up */}
-                <div className="overflow-hidden h-full">
-                  <div className="animate-scroll-up flex flex-col gap-4">
-                    {duplicatedLeftCards.map((card, index) => (
-                      <div
-                        key={`left-${index}`}
-                        className="flex-shrink-0 transition-all duration-500 hover:scale-105"
-                      >
-                        <div className="w-full rounded-2xl overflow-hidden shadow-2xl shadow-foreground/10 bg-card border border-border/50">
-                          <img
-                            src={card.src}
-                            alt={card.alt}
-                            className="w-full h-32 sm:h-40 md:h-44 object-cover"
-                            loading="lazy"
-                          />
-                          <div className="p-3 bg-card/95">
-                            <div className="h-2 w-3/4 bg-muted rounded-full mb-1.5" />
-                            <div className="h-1.5 w-1/2 bg-muted/70 rounded-full" />
-                          </div>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                </div>
+              {/* Image sliding out */}
+              <div className="relative z-10 flex justify-center">
+                <img
+                  src={heroMeme}
+                  alt="Let's get this degree"
+                  className="w-[85%] rounded-xl shadow-xl"
+                  style={{
+                    transform: revealed ? 'translateY(-30%)' : 'translateY(40%)',
+                    transition: 'transform 0.6s cubic-bezier(0.34, 1.56, 0.64, 1)',
+                  }}
+                />
+              </div>
 
-                {/* Right column - scrolls down */}
-                <div className="overflow-hidden h-full">
-                  <div className="animate-scroll-down flex flex-col gap-4">
-                    {duplicatedRightCards.map((card, index) => (
-                      <div
-                        key={`right-${index}`}
-                        className="flex-shrink-0 transition-all duration-500 hover:scale-105"
-                      >
-                        <div className="w-full rounded-2xl overflow-hidden shadow-2xl shadow-foreground/10 bg-card border border-border/50">
-                          <img
-                            src={card.src}
-                            alt={card.alt}
-                            className="w-full h-32 sm:h-40 md:h-44 object-cover"
-                            loading="lazy"
-                          />
-                          <div className="p-3 bg-card/95">
-                            <div className="h-2 w-3/4 bg-muted rounded-full mb-1.5" />
-                            <div className="h-1.5 w-1/2 bg-muted/70 rounded-full" />
-                          </div>
-                        </div>
-                      </div>
-                    ))}
+              {/* Envelope */}
+              <div className="relative z-20 -mt-4">
+                {/* Envelope flap */}
+                <div
+                  className="w-full aspect-[2/0.6] relative z-30"
+                  style={{
+                    clipPath: 'polygon(0 0, 50% 100%, 100% 0, 100% 100%, 0 100%)',
+                    background: 'hsl(35, 30%, 82%)',
+                  }}
+                />
+                {/* Envelope body */}
+                <div
+                  className="w-full aspect-[2/1.2] rounded-b-2xl relative z-20 -mt-px"
+                  style={{
+                    background: 'linear-gradient(180deg, hsl(35, 35%, 88%) 0%, hsl(30, 25%, 80%) 100%)',
+                    boxShadow: '0 8px 32px -8px hsl(var(--foreground) / 0.15)',
+                  }}
+                >
+                  {/* Inner shadow line */}
+                  <div className="absolute inset-x-4 top-0 h-px bg-foreground/5" />
+                  {/* Decorative lines on envelope */}
+                  <div className="absolute bottom-6 left-1/2 -translate-x-1/2 w-3/5 space-y-2">
+                    <div className="h-1.5 w-full bg-foreground/5 rounded-full" />
+                    <div className="h-1.5 w-2/3 bg-foreground/5 rounded-full" />
                   </div>
                 </div>
               </div>
-            </div>
-          </AnimatedSection>
-
-          {/* Mobile fallback - simple image */}
-          <AnimatedSection animation="scale" delay={150} className="relative mt-4 sm:hidden flex justify-center">
-            <div className="w-64 h-64 rounded-full bg-primary-soft flex items-center justify-center">
-              <img
-                src="https://images.unsplash.com/photo-1522202176988-66273c2fd55f?w=500&h=500&fit=crop"
-                alt="Student studying"
-                className="w-56 h-56 rounded-full object-cover"
-              />
             </div>
           </AnimatedSection>
         </div>
