@@ -1,35 +1,46 @@
 
 
-# Plan: Fix Card Flow Diagonal Angle
+# Plan: Fix Hero Showcase Angle to Match Brix Templates
 
-## Issue Analysis
+## Problem Analysis
 
-The black lines you drew show the desired flow direction - cards should appear to flow diagonally from top-right toward bottom-left. Currently the transform creates a different tilt that doesn't match this flow.
+Comparing our current hero (screenshot) with the Brix reference:
+
+| Aspect | Current | Brix Reference |
+|--------|---------|----------------|
+| Forward tilt (rotateX) | 12deg - too aggressive, cards look flat | ~4-5deg - subtle, cards remain readable |
+| Side perspective (rotateY) | -8deg - too subtle | ~-12deg - creates clear left-to-right depth |
+| Z rotation | 2deg - adds awkward skew | 0deg - columns stay vertical |
+| Overall feel | Distorted, hard to read | Natural 3D depth, cards remain clear |
 
 ## Solution
 
-Adjust the CSS transform values to create the correct diagonal stripe effect:
+### File: `src/components/landing/Hero.tsx` (line 113)
 
-### File: `src/components/landing/Hero.tsx`
-
-**Current transform:**
-```css
-transform: 'rotateX(8deg) rotateY(-12deg) rotateZ(-8deg)'
-```
-
-**Updated transform:**
+Update the transform from:
 ```css
 transform: 'rotateX(12deg) rotateY(-8deg) rotateZ(2deg)'
 ```
 
-Key changes:
-- Increase `rotateX` to `12deg` - tilts the plane more forward (top recedes back)
-- Reduce `rotateY` to `-8deg` - less side tilt
-- Change `rotateZ` to `2deg` (positive) - rotates the grid slightly clockwise to align columns with the diagonal flow you indicated
+To:
+```css
+transform: 'rotateX(4deg) rotateY(-12deg) rotateZ(0deg)'
+```
 
-This combination will make the two vertical columns appear to flow along the diagonal direction from top-right to bottom-left, matching your reference lines.
+Changes:
+- **rotateX: 12 -> 4** -- Much less forward tilt so cards stay upright and readable
+- **rotateY: -8 -> -12** -- Stronger side angle creates the depth illusion where right side recedes, matching Brix
+- **rotateZ: 2 -> 0** -- Remove Z rotation to keep columns clean and vertical
+
+Also increase the perspective value for a more natural depth feel:
+
+```css
+perspective: '1000px' -> perspective: '1200px'
+```
+
+A larger perspective value makes the 3D effect more subtle and natural, closer to Brix's refined look.
 
 ## Files to Modify
 
-1. **`src/components/landing/Hero.tsx`** - Update the transform values on line 111
+1. **`src/components/landing/Hero.tsx`** -- Update transform values (line 113) and perspective (line 103)
 
