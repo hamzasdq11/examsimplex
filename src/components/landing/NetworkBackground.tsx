@@ -32,13 +32,22 @@ const NetworkBackground = () => {
       const w = canvas.offsetWidth;
       const h = canvas.offsetHeight;
       nodes.length = 0;
-      for (let i = 0; i < NODE_COUNT; i++) {
-        nodes.push({
-          x: Math.random() * w,
-          y: Math.random() * h,
-          vx: (Math.random() - 0.5) * 0.3,
-          vy: (Math.random() - 0.5) * 0.3,
-        });
+      // Grid-based placement for uniform distribution
+      const area = w * h;
+      const cellSize = Math.sqrt(area / NODE_COUNT);
+      const cols = Math.ceil(w / cellSize);
+      const rows = Math.ceil(h / cellSize);
+      const jitter = cellSize * 0.35;
+      for (let r = 0; r < rows; r++) {
+        for (let c = 0; c < cols; c++) {
+          if (nodes.length >= NODE_COUNT) break;
+          nodes.push({
+            x: (c + 0.5) * cellSize + (Math.random() - 0.5) * jitter,
+            y: (r + 0.5) * cellSize + (Math.random() - 0.5) * jitter,
+            vx: (Math.random() - 0.5) * 0.3,
+            vy: (Math.random() - 0.5) * 0.3,
+          });
+        }
       }
     };
 
