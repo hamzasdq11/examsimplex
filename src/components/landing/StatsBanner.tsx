@@ -1,8 +1,10 @@
 import { AnimatedSection } from "@/hooks/useScrollAnimation";
+import NetworkBackground from "@/components/landing/NetworkBackground";
 
 const StatsBanner = () => {
   return (
-    <section className="py-16 md:py-20 bg-section-dark overflow-hidden">
+    <section className="relative py-16 md:py-20 bg-section-dark overflow-hidden">
+      <NetworkBackground />
       <div className="container">
         <AnimatedSection animation="scale" className="flex flex-col md:flex-row items-center justify-center gap-6 md:gap-10 text-center md:text-left">
           <span className="text-6xl md:text-8xl font-bold text-white/95">
