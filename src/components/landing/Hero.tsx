@@ -3,6 +3,7 @@ import { Star } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { AnimatedSection } from "@/hooks/useScrollAnimation";
 import heroMeme from "@/assets/hero-meme.jpg";
+import NetworkBackground from "@/components/landing/NetworkBackground";
 
 const Hero = () => {
   const avatars = [
@@ -15,7 +16,8 @@ const Hero = () => {
 
   return (
     <section className="relative overflow-hidden bg-background pt-6 pb-10 md:pt-6 md:pb-12">
-      <div className="container max-w-6xl mx-auto px-4 md:px-8">
+      <NetworkBackground />
+      <div className="container max-w-6xl mx-auto px-4 md:px-8 relative z-10">
         <div className="grid lg:grid-cols-2 gap-8 lg:gap-6 items-center">
           {/* Left Content */}
           <div className="space-y-5 md:space-y-6 text-center lg:text-left">
