@@ -257,3 +257,20 @@ All colors MUST be HSL.
     transform: translateY(0);
   }
 }
+
+@keyframes floatUp {
+  0% {
+    transform: translateY(0);
+    opacity: 0;
+  }
+  10% {
+    opacity: 0.3;
+  }
+  90% {
+    opacity: 0.1;
+  }
+  100% {
+    transform: translateY(-500px);
+    opacity: 0;
+  }
+}
