@@ -9,8 +9,6 @@ interface Node {
 
 const NetworkBackground = () => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
-  const mouse = useRef<{ x: number; y: number } | null>(null);
-  const smoothMouse = useRef<{ x: number; y: number } | null>(null);
 
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -22,8 +20,6 @@ const NetworkBackground = () => {
     const nodes: Node[] = [];
     const NODE_COUNT = 90;
     const CONNECTION_DIST = 160;
-    const MOUSE_DIST = 220;
-    const LERP = 0.08;
 
     const resize = () => {
       canvas.width = canvas.offsetWidth * window.devicePixelRatio;
@@ -46,30 +42,11 @@ const NetworkBackground = () => {
       }
     };
 
-    const onMouseMove = (e: MouseEvent) => {
-      const rect = canvas.getBoundingClientRect();
-      mouse.current = { x: e.clientX - rect.left, y: e.clientY - rect.top };
-      if (!smoothMouse.current) smoothMouse.current = { ...mouse.current };
-    };
-
-    const onMouseLeave = () => {
-      mouse.current = null;
-    };
-
     const draw = () => {
       const w = canvas.offsetWidth;
       const h = canvas.offsetHeight;
       ctx.clearRect(0, 0, w, h);
 
-      // Smooth mouse interpolation
-      if (mouse.current && smoothMouse.current) {
-        smoothMouse.current.x += (mouse.current.x - smoothMouse.current.x) * LERP;
-        smoothMouse.current.y += (mouse.current.y - smoothMouse.current.y) * LERP;
-      } else if (!mouse.current) {
-        smoothMouse.current = null;
-      }
-
-      // Update positions with gentle momentum
       for (const node of nodes) {
         node.x += node.vx;
         node.y += node.vy;
@@ -79,7 +56,6 @@ const NetworkBackground = () => {
         if (node.y > h) { node.y = h; node.vy = -Math.abs(node.vy); }
       }
 
-      // Batch node-to-node lines
       ctx.lineWidth = 0.8;
       for (let i = 0; i < nodes.length; i++) {
         for (let j = i + 1; j < nodes.length; j++) {
@@ -98,27 +74,6 @@ const NetworkBackground = () => {
         }
       }
 
-      // Draw lines from smoothed cursor to nearby nodes
-      const m = smoothMouse.current;
-      if (m) {
-        ctx.lineWidth = 1.2;
-        for (const node of nodes) {
-          const dx = m.x - node.x;
-          const dy = m.y - node.y;
-          const distSq = dx * dx + dy * dy;
-          if (distSq < MOUSE_DIST * MOUSE_DIST) {
-            const dist = Math.sqrt(distSq);
-            const opacity = 0.3 * (1 - dist / MOUSE_DIST);
-            ctx.beginPath();
-            ctx.moveTo(m.x, m.y);
-            ctx.lineTo(node.x, node.y);
-            ctx.strokeStyle = `hsla(246, 100%, 61%, ${opacity})`;
-            ctx.stroke();
-          }
-        }
-      }
-
-      // Draw dots with glow
       for (const node of nodes) {
         ctx.beginPath();
         ctx.arc(node.x, node.y, 1.8, 0, Math.PI * 2);
@@ -132,12 +87,8 @@ const NetworkBackground = () => {
     init();
     draw();
 
-    canvas.addEventListener("mousemove", onMouseMove);
-    canvas.addEventListener("mouseleave", onMouseLeave);
     window.addEventListener("resize", init);
     return () => {
-      canvas.removeEventListener("mousemove", onMouseMove);
-      canvas.removeEventListener("mouseleave", onMouseLeave);
       window.removeEventListener("resize", init);
       cancelAnimationFrame(animationId);
     };
@@ -147,6 +98,7 @@ const NetworkBackground = () => {
     <canvas
       ref={canvasRef}
       className="absolute inset-0 w-full h-full z-0"
+      style={{ pointerEvents: "none" }}
     />
   );
 };
