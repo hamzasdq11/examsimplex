@@ -96,28 +96,34 @@ export function ResizableAIPanel({
 
   // Open state - resizable panel
   return (
-    <ResizablePanelGroup direction="horizontal" className="h-[calc(100vh-3.5rem)]">
-      <ResizablePanel defaultSize={100 - defaultSize} minSize={40} className="overflow-auto">
-        {children}
+    <ResizablePanelGroup
+      direction="horizontal"
+      className="h-[calc(100vh-3.5rem)]"
+      style={{ maxHeight: 'calc(100vh - 3.5rem)', overflow: 'hidden' }}
+    >
+      <ResizablePanel defaultSize={100 - defaultSize} minSize={40}>
+        <div className="h-full overflow-auto">
+          {children}
+        </div>
       </ResizablePanel>
-      
+
       <ResizableHandle withHandle className="bg-border hover:bg-primary/20 transition-colors" />
-      
-      <ResizablePanel 
-        defaultSize={defaultSize} 
-        minSize={25} 
+
+      <ResizablePanel
+        defaultSize={defaultSize}
+        minSize={25}
         maxSize={60}
         onResize={(size) => setDefaultSize(size)}
-        className="bg-background border-l"
+        className="bg-background border-l overflow-hidden"
       >
-        <div className="h-full flex flex-col">
+        <div className="h-full flex flex-col overflow-hidden">
           <PanelHeader
             subject={subject}
             isFullscreen={false}
             onMaximize={() => onFullscreenChange(true)}
             onClose={() => onOpenChange(false)}
           />
-          <div className="flex-1 min-h-0">
+          <div className="flex-1 min-h-0 overflow-hidden">
             <SubjectAIChat
               subject={subject}
               universityName={universityName}

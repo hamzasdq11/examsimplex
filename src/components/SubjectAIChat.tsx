@@ -4,13 +4,13 @@ import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Badge } from "@/components/ui/badge";
-import { 
-  Sparkles, 
-  Send, 
-  Copy, 
-  Check, 
-  BookOpen, 
-  FileQuestion, 
+import {
+  Sparkles,
+  Send,
+  Copy,
+  Check,
+  BookOpen,
+  FileQuestion,
   Loader2,
   Bot,
   User,
@@ -30,7 +30,7 @@ import { GraphViewer } from "@/components/ai/GraphViewer";
 import { Progress } from "@/components/ui/progress";
 
 // Strict response types matching backend schema
-type AIResponseType = 
+type AIResponseType =
   | { type: "math"; python: string; explanation: string; latex?: string; steps?: string[] }
   | { type: "graph"; python: string; description: string }
   | { type: "code"; language: string; source: string; explanation: string; executable: boolean }
@@ -60,9 +60,9 @@ interface SubjectAIChatProps {
   hideHeader?: boolean;
 }
 
-export const SubjectAIChat = ({ 
-  subject, 
-  universityName, 
+export const SubjectAIChat = ({
+  subject,
+  universityName,
   initialQuery,
   onQueryConsumed,
   externalMessages,
@@ -71,7 +71,7 @@ export const SubjectAIChat = ({
 }: SubjectAIChatProps) => {
   const { user } = useAuth();
   const { toast } = useToast();
-  
+
   // Use external messages if provided, otherwise use internal state
   const defaultMessages: Message[] = [
     {
@@ -80,23 +80,36 @@ export const SubjectAIChat = ({
       confidence: 1
     }
   ];
-  
+
   const [internalMessages, setInternalMessages] = useState<Message[]>(defaultMessages);
   const messages = externalMessages ?? internalMessages;
   const setMessages = onMessagesChange ?? setInternalMessages;
-  
+
   const [input, setInput] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [copiedIndex, setCopiedIndex] = useState<number | null>(null);
   const [queryProcessed, setQueryProcessed] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
+  const isInitialRender = useRef(true);
 
+  // Scroll to bottom on new messages, but NOT on initial render
   useEffect(() => {
+    if (isInitialRender.current) {
+      isInitialRender.current = false;
+      return;
+    }
     if (scrollRef.current) {
       scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
     }
   }, [messages]);
+
+  // Focus textarea without scrolling the panel
+  useEffect(() => {
+    if (textareaRef.current) {
+      textareaRef.current.focus({ preventScroll: true });
+    }
+  }, []);
 
   // Handle initial query - only process once
   useEffect(() => {
@@ -159,19 +172,19 @@ export const SubjectAIChat = ({
       // Handle new structured response format
       const response = data.response as AIResponseType;
       let displayContent = "";
-      
+
       if (response) {
         switch (response.type) {
           case "math":
-            displayContent = response.explanation || 
+            displayContent = response.explanation ||
               (response.python ? "Math computation generated. See code below." : "");
             break;
           case "graph":
-            displayContent = response.description || 
+            displayContent = response.description ||
               (response.python ? "Visualization generated. See graph below." : "");
             break;
           case "code":
-            displayContent = response.explanation || 
+            displayContent = response.explanation ||
               (response.source ? `Here's the ${response.language} code:` : "");
             break;
           case "answer":
@@ -230,41 +243,41 @@ export const SubjectAIChat = ({
   };
 
   const quickActions = [
-    { 
-      label: "Explain", 
-      icon: BookOpen, 
+    {
+      label: "Explain",
+      icon: BookOpen,
       action: () => {
         const topic = input.trim() || "the key concepts";
         handleSubmit("ask", `Explain ${topic} in simple terms with examples`);
       }
     },
-    { 
-      label: "Notes", 
-      icon: Sparkles, 
+    {
+      label: "Notes",
+      icon: Sparkles,
       action: () => {
         const topic = input.trim() || subject.name;
         handleSubmit("notes", topic);
       }
     },
-    { 
-      label: "Quiz", 
-      icon: FileQuestion, 
+    {
+      label: "Quiz",
+      icon: FileQuestion,
       action: () => {
         const topic = input.trim() || subject.name;
         handleSubmit("quiz", topic);
       }
     },
-    { 
-      label: "Code", 
-      icon: Code, 
+    {
+      label: "Code",
+      icon: Code,
       action: () => {
         const topic = input.trim() || subject.name;
         handleSubmit("code", `Generate an executable Python example demonstrating: ${topic}`);
       }
     },
-    { 
-      label: "Graph", 
-      icon: BarChart3, 
+    {
+      label: "Graph",
+      icon: BarChart3,
       action: () => {
         const topic = input.trim() || subject.name;
         handleSubmit("ask", `Create a Python visualization/graph for: ${topic}. Use matplotlib and make it executable.`);
@@ -273,59 +286,58 @@ export const SubjectAIChat = ({
   ];
 
   return (
-    <div className="h-full flex flex-col">
-      <Card className="flex-1 min-h-0 flex flex-col border-0 lg:border overflow-hidden">
-      {!hideHeader && (
-        <CardHeader className="pb-3 border-b shrink-0">
-          <div className="flex items-center gap-2">
-            <div className="p-1.5 rounded-lg bg-primary/10">
-              <Sparkles className="h-4 w-4 text-primary" />
+    <div className="h-full flex flex-col overflow-hidden">
+      <Card className="flex-1 min-h-0 flex flex-col border-0 lg:border overflow-hidden bg-background">
+        {!hideHeader && (
+          <CardHeader className="pb-3 border-b shrink-0 bg-background/95 backdrop-blur z-10">
+            <div className="flex items-center gap-2">
+              <div className="p-1.5 rounded-lg bg-primary/10">
+                <Sparkles className="h-4 w-4 text-primary" />
+              </div>
+              <div className="flex-1 min-w-0">
+                <CardTitle className="text-base">AI Study Assistant</CardTitle>
+                <p className="text-xs text-muted-foreground truncate">
+                  {subject.name} • {universityName || subject.code}
+                </p>
+              </div>
             </div>
-            <div className="flex-1 min-w-0">
-              <CardTitle className="text-base">AI Study Assistant</CardTitle>
-              <p className="text-xs text-muted-foreground truncate">
-                {subject.name} • {universityName || subject.code}
-              </p>
-            </div>
-          </div>
-        </CardHeader>
-      )}
+          </CardHeader>
+        )}
 
-        <ScrollArea className="flex-1 min-h-0" ref={scrollRef}>
-          <div className="p-4 space-y-4">
+        {/* Scrollable Messages Area */}
+        <div className="flex-1 min-h-0 overflow-y-auto p-4 space-y-4 scroll-smooth" ref={scrollRef}>
           {messages.map((msg, idx) => (
             <div
               key={idx}
               className={`flex gap-2 ${msg.role === "user" ? "justify-end" : "justify-start"}`}
             >
               {msg.role === "assistant" && (
-                <div className="shrink-0 w-6 h-6 rounded-full bg-primary/10 flex items-center justify-center">
+                <div className="shrink-0 w-6 h-6 rounded-full bg-primary/10 flex items-center justify-center mt-1">
                   <Bot className="h-3.5 w-3.5 text-primary" />
                 </div>
               )}
               <div
-                className={`max-w-[90%] rounded-lg px-3 py-2 text-sm ${
-                  msg.role === "user"
-                    ? "bg-primary text-primary-foreground"
-                    : "bg-muted"
-                }`}
+                className={`max-w-[90%] rounded-lg px-3 py-2 text-sm shadow-sm ${msg.role === "user"
+                  ? "bg-primary text-primary-foreground"
+                  : "bg-muted/50 border border-border/50"
+                  }`}
               >
                 {msg.role === "assistant" ? (
                   <MessageContent message={msg} />
                 ) : (
                   <div className="whitespace-pre-wrap">{msg.content}</div>
                 )}
-                
+
                 {msg.role === "assistant" && (
-                  <div className="flex flex-col gap-2 mt-2 pt-2 border-t border-border/50">
+                  <div className="flex flex-col gap-2 mt-2 pt-2 border-t border-border/40">
                     {/* Confidence indicator */}
                     {msg.confidence !== undefined && msg.confidence < 1 && (
-                      <ConfidenceIndicator 
-                        confidence={msg.confidence} 
+                      <ConfidenceIndicator
+                        confidence={msg.confidence}
                         processingTime={msg.processingTime}
                       />
                     )}
-                    
+
                     <div className="flex items-center gap-2 flex-wrap">
                       <Button
                         variant="ghost"
@@ -339,10 +351,10 @@ export const SubjectAIChat = ({
                           <><Copy className="h-3 w-3 mr-1" /> Copy</>
                         )}
                       </Button>
-                      
+
                       {/* Citations from response */}
                       {msg.response?.type === "answer" && msg.response.citations.length > 0 && (
-                        <CitationDrawer 
+                        <CitationDrawer
                           citations={msg.response.citations}
                           trigger={
                             <Button variant="ghost" size="sm" className="h-6 px-2 text-xs opacity-60 hover:opacity-100 gap-1">
@@ -352,23 +364,23 @@ export const SubjectAIChat = ({
                           }
                         />
                       )}
-                      
+
                       {/* Web source indicator */}
-                      {msg.response?.type === "answer" && 
-                       msg.response.citations.some(c => (c as any).source === "web") && (
-                        <Badge variant="outline" className="text-[10px] h-5 opacity-60 gap-1">
-                          <Globe className="h-2.5 w-2.5" />
-                          Web
-                        </Badge>
-                      )}
-                      
+                      {msg.response?.type === "answer" &&
+                        msg.response.citations.some(c => (c as any).source === "web") && (
+                          <Badge variant="outline" className="text-[10px] h-5 opacity-60 gap-1">
+                            <Globe className="h-2.5 w-2.5" />
+                            Web
+                          </Badge>
+                        )}
+
                       {/* Response type badge */}
                       {msg.response && (
                         <Badge variant="outline" className="text-[10px] h-5 opacity-60">
                           {msg.response.type.toUpperCase()}
                         </Badge>
                       )}
-                      
+
                       {msg.intent && (
                         <Badge variant="outline" className="text-[10px] h-5 opacity-60">
                           {msg.intent}
@@ -379,7 +391,7 @@ export const SubjectAIChat = ({
                 )}
               </div>
               {msg.role === "user" && (
-                <div className="shrink-0 w-6 h-6 rounded-full bg-primary flex items-center justify-center">
+                <div className="shrink-0 w-6 h-6 rounded-full bg-primary flex items-center justify-center mt-1">
                   <User className="h-3.5 w-3.5 text-primary-foreground" />
                 </div>
               )}
@@ -398,60 +410,61 @@ export const SubjectAIChat = ({
               </div>
             </div>
           )}
+          {/* Spacer to ensure last message isn't hidden behind input potentially */}
+          <div className="h-4" />
+        </div>
+
+        <CardContent className="p-3 pt-2 border-t shrink-0 space-y-2 bg-background z-20">
+          {/* Quick Actions */}
+          <div className="flex gap-1.5 flex-wrap">
+            {quickActions.map((action) => (
+              <Badge
+                key={action.label}
+                variant="secondary"
+                className="cursor-pointer hover:bg-secondary/80 transition-colors gap-1 py-1.5 px-2.5 text-xs font-normal"
+                onClick={action.action}
+              >
+                <action.icon className="h-3 w-3" />
+                {action.label}
+              </Badge>
+            ))}
           </div>
-        </ScrollArea>
 
-      <CardContent className="p-3 pt-2 border-t shrink-0 space-y-2">
-        {/* Quick Actions */}
-        <div className="flex gap-1.5 flex-wrap">
-          {quickActions.map((action) => (
-            <Badge
-              key={action.label}
-              variant="secondary"
-              className="cursor-pointer hover:bg-secondary/80 transition-colors gap-1 py-1 px-2"
-              onClick={action.action}
+          {/* Input Area */}
+          <div className="flex gap-2 items-end">
+            <Textarea
+              ref={textareaRef}
+              placeholder="Ask anything..."
+              value={input}
+              onChange={(e) => setInput(e.target.value)}
+              onKeyDown={handleKeyDown}
+              className="min-h-[44px] max-h-[120px] resize-none text-sm py-3"
+              disabled={isLoading}
+            />
+            <Button
+              size="icon"
+              onClick={() => handleSubmit()}
+              disabled={!input.trim() || isLoading}
+              className="shrink-0 h-[44px] w-[44px]"
             >
-              <action.icon className="h-3 w-3" />
-              {action.label}
-            </Badge>
-          ))}
-        </div>
-
-        {/* Input Area */}
-        <div className="flex gap-2">
-          <Textarea
-            ref={textareaRef}
-            placeholder="Ask anything..."
-            value={input}
-            onChange={(e) => setInput(e.target.value)}
-            onKeyDown={handleKeyDown}
-            className="min-h-[40px] max-h-[80px] resize-none text-sm"
-            disabled={isLoading}
-          />
-          <Button
-            size="icon"
-            onClick={() => handleSubmit()}
-            disabled={!input.trim() || isLoading}
-            className="shrink-0"
-          >
-            {isLoading ? (
-              <Loader2 className="h-4 w-4 animate-spin" />
-            ) : (
-              <Send className="h-4 w-4" />
-            )}
-          </Button>
-        </div>
-      </CardContent>
-    </Card>
+              {isLoading ? (
+                <Loader2 className="h-4 w-4 animate-spin" />
+              ) : (
+                <Send className="h-4 w-4" />
+              )}
+            </Button>
+          </div>
+        </CardContent>
+      </Card>
     </div>
   );
 };
 
 // Confidence indicator component
-function ConfidenceIndicator({ 
-  confidence, 
-  processingTime 
-}: { 
+function ConfidenceIndicator({
+  confidence,
+  processingTime
+}: {
   confidence: number;
   processingTime?: number;
 }) {
@@ -506,9 +519,9 @@ function MessageContent({ message }: { message: Message }) {
 
   // Fallback detection: check if content has code even if response type is "answer"
   const hasCodeInParsed = parsed.segments.some(s => s.type === "code");
-  const showFallbackCode = 
-    !showMathCode && !showGraphCode && !showCode && 
-    !hasCodeInParsed && 
+  const showFallbackCode =
+    !showMathCode && !showGraphCode && !showCode &&
+    !hasCodeInParsed &&
     content.includes("```python");
 
   return (
@@ -516,10 +529,10 @@ function MessageContent({ message }: { message: Message }) {
       {/* Render parsed segments */}
       <div className="whitespace-pre-wrap">
         {parsed.segments.map((segment, idx) => (
-          <SegmentRenderer 
-            key={idx} 
-            segment={segment} 
-            citations={citations} 
+          <SegmentRenderer
+            key={idx}
+            segment={segment}
+            citations={citations}
           />
         ))}
       </div>
@@ -578,25 +591,25 @@ function MessageContent({ message }: { message: Message }) {
 }
 
 // Render individual segments
-function SegmentRenderer({ 
-  segment, 
-  citations 
-}: { 
-  segment: Segment; 
+function SegmentRenderer({
+  segment,
+  citations
+}: {
+  segment: Segment;
   citations: Citation[];
 }) {
   switch (segment.type) {
     case "text":
       return <span>{segment.content}</span>;
-    
+
     case "math":
       return (
-        <MathRenderer 
-          latex={segment.latex} 
-          display={segment.display} 
+        <MathRenderer
+          latex={segment.latex}
+          display={segment.display}
         />
       );
-    
+
     case "code":
       return (
         <CodeBlock
@@ -606,7 +619,7 @@ function SegmentRenderer({
           className="my-3"
         />
       );
-    
+
     case "citation":
       const citation = citations.find(c => c.id === segment.id);
       if (citation) {
@@ -617,7 +630,7 @@ function SegmentRenderer({
           {segment.id}
         </span>
       );
-    
+
     case "graph":
       return (
         <GraphViewer
@@ -625,7 +638,7 @@ function SegmentRenderer({
           className="my-3"
         />
       );
-    
+
     default:
       return null;
   }
