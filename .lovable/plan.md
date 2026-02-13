@@ -1,76 +1,39 @@
 
 
-# Plan: Envelope Reveal Hero Effect
+# Plan: Add Animated Network Mesh Background to Hero
 
-## Overview
+## What's Changing
 
-Replace the entire two-column scrolling card showcase with a single interactive element: the uploaded meme image inside an envelope that slides up as the user hovers over it.
+Add an animated geometric network/mesh background effect (inspired by the IIT Patna Incubation Centre website) behind the hero section. This is a background-only enhancement -- all existing content, layout, typography, buttons, spacing, and colors remain untouched.
 
-## Visual Concept
+## The Effect
 
-```text
-  Before hover:          During hover:
-  ┌──────────────┐      ┌──────────────┐
-  │              │      │  ┌────────┐  │
-  │   envelope   │      │  │ image  │  │  <-- slides up
-  │   ________   │      │  │ peeking│  │
-  │  /        \  │      │  └────────┘  │
-  │ /  flap    \ │      │   ________   │
-  │/____________\│      │  /        \  │
-  │ [envelope   ]│      │ /  flap    \ │
-  │ [body      ]│      │/____________\│
-  └──────────────┘      └──────────────┘
-```
+The reference shows an animated network of interconnected dots (nodes) connected by thin lines, creating a molecular/constellation-like mesh pattern. The nodes slowly drift and the connections form/break as nodes move in and out of range. The effect is subtle -- light blue/primary-colored lines and dots on a white background.
 
-The image starts hidden inside the envelope. On mouse hover/move, it slides upward out of the envelope, revealing the "let's get this degree" meme.
+## Technical Approach
 
-## Implementation
+### 1. Create a new component: `src/components/landing/NetworkBackground.tsx`
 
-### Step 1: Copy the image to the project
+A canvas-based animated background component using the HTML5 Canvas API:
+- Renders ~80 randomly placed nodes (small circles) that drift slowly in random directions
+- Draws lines between nodes that are within a distance threshold (~150px)
+- Line opacity fades as distance increases (closer = more opaque)
+- Uses `requestAnimationFrame` for smooth 60fps animation
+- Colors: primary blue (`hsl(246, 100%, 61%)`) at low opacity for lines (~0.15), slightly higher for dots (~0.4)
+- Nodes bounce off canvas edges
+- Canvas is responsive -- resizes with window
+- Component uses `useEffect` + `useRef` for the canvas lifecycle
+- Cleans up animation frame and resize listener on unmount
 
-Copy `user-uploads://im_so_done.jpg` to `src/assets/hero-meme.jpg`
+### 2. Modify `src/components/landing/Hero.tsx`
 
-### Step 2: Modify `src/components/landing/Hero.tsx`
+- Import `NetworkBackground`
+- Add it as an absolutely positioned layer behind the hero content (inside the existing `<section>` with `relative overflow-hidden`)
+- No changes to any existing elements, classes, or styles
+- The background sits at `z-0`, content remains above via natural stacking or `z-10`
 
-- Remove all card arrays (`leftColumnCards`, `rightColumnCards`)
-- Remove the two-column scrolling grid and all related 3D transform code
-- Replace with an envelope component:
-  - An SVG/CSS envelope shape (bottom half + triangular flap)
-  - The meme image positioned behind/inside the envelope
-  - `onMouseMove` / `onMouseEnter` / `onMouseLeave` handlers to track cursor position
-  - The image translates upward (negative Y) based on cursor proximity, using CSS `transition` for smooth motion
-  - On mobile, use a simple tap-to-reveal or show the image partially peeking out
+## Files to Create/Modify
 
-### Step 3: Clean up `src/index.css`
-
-- Remove the `scroll-up` and `scroll-down` keyframe animations
-- Remove `.animate-scroll-up` and `.animate-scroll-down` classes (no longer needed)
-
-## Technical Details
-
-**Envelope construction (CSS):**
-- Container div with `overflow: hidden` on the lower portion
-- Envelope body: a rounded rectangle with a subtle paper/cream color and shadow
-- Envelope flap: a CSS triangle (using `clip-path` or borders) layered on top with a higher z-index so the image slides behind it
-- The image sits inside and translates from `translateY(80%)` (hidden) to `translateY(-20%)` (revealed)
-
-**Hover interaction:**
-```tsx
-const [revealed, setRevealed] = useState(false);
-
-// Image style
-style={{
-  transform: revealed ? 'translateY(-40%)' : 'translateY(20%)',
-  transition: 'transform 0.5s cubic-bezier(0.34, 1.56, 0.64, 1)',
-}}
-```
-
-**Mobile fallback:**
-- On mobile (`sm:` breakpoint), show the image partially peeking out of the envelope by default, with a tap to fully reveal
-
-## Files to Modify
-
-1. **Copy** `user-uploads://im_so_done.jpg` to `src/assets/hero-meme.jpg`
-2. **`src/components/landing/Hero.tsx`** -- Replace scrolling cards with envelope + image reveal
-3. **`src/index.css`** -- Remove unused scroll animation keyframes
+1. **Create** `src/components/landing/NetworkBackground.tsx` -- Canvas animation component
+2. **Modify** `src/components/landing/Hero.tsx` -- Add the background component as a positioned layer (2 lines: import + JSX element)
 
