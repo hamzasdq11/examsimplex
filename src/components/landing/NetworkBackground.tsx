@@ -18,8 +18,8 @@ const NetworkBackground = () => {
 
     let animationId: number;
     const nodes: Node[] = [];
-    const NODE_COUNT = 90;
-    const CONNECTION_DIST = 160;
+    const NODE_COUNT = 160;
+    const CONNECTION_DIST = 200;
 
     const resize = () => {
       canvas.width = canvas.offsetWidth * window.devicePixelRatio;
