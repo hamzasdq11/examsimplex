@@ -82,7 +82,7 @@ export function IntelligentSubjectCard({
   totalPyqs = 0
 }: IntelligentSubjectCardProps) {
   const navigate = useNavigate();
-  const subjectUrl = `/university/${universityId}/${courseId}/${semesterId}/${subject.id}`;
+  const subjectUrl = `/university/${universityId}/${courseId}/${semesterId}/${subject.slug}`;
 
   const notesCoverage = progress && progress.total_notes > 0
     ? Math.round((progress.notes_viewed / progress.total_notes) * 100)

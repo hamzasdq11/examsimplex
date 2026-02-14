@@ -249,9 +249,9 @@ export default function Dashboard() {
                         key={subject.id}
                         subject={subject}
                         progress={getSubjectProgress(subject.id)}
-                        universityId={profile.university_id!}
-                        courseId={profile.course_id!}
-                        semesterId={profile.semester_id!}
+                        universityId={profile.university?.slug || ''}
+                        courseId={profile.course?.code || ''}
+                        semesterId={String(profile.semester?.number || '')}
                       />
                     ))}
                   </div>
