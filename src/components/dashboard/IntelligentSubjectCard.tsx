@@ -109,7 +109,7 @@ export function IntelligentSubjectCard({
     <Link to={subjectUrl} className="block group">
       <Card className="h-full bg-white rounded-2xl shadow-sm border border-gray-100/80 hover:shadow-xl transition-all duration-300 hover:-translate-y-1.5 cursor-pointer overflow-hidden">
         {/* ── Image Thumbnail ─────────────────────── */}
-        <div className="relative h-44 overflow-hidden">
+        <div className="relative h-44 overflow-hidden rounded-t-2xl">
           <img
             src={courseImage}
             alt={subject.name}
