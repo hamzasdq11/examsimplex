@@ -9,6 +9,8 @@ interface AIBriefingHeroProps {
   userName: string;
   userEmail: string;
   universityName: string | null;
+  courseName: string | null;
+  semesterName: string | null;
   daysUntilExam: number | null;
   examType: string;
   subjectsCount: number;
@@ -23,6 +25,8 @@ export function AIBriefingHero({
   userName,
   userEmail,
   universityName,
+  courseName,
+  semesterName,
   daysUntilExam,
   examType,
   subjectsCount,
@@ -53,9 +57,11 @@ export function AIBriefingHero({
           {/* Content */}
           <div className="space-y-3 flex-1">
             <h2 className="text-2xl md:text-3xl font-bold leading-tight">
-              Ace your exams with <br className="hidden md:block" />
-              smart preparation
+              {universityName || 'Your University'}
             </h2>
+            <p className="text-lg md:text-xl font-semibold text-white/80">
+              {[courseName, semesterName].filter(Boolean).join(' • ') || 'Set up your profile'}
+            </p>
             <p className="text-blue-200 text-sm md:text-base max-w-md">
               {getUrgencyText()}
             </p>
