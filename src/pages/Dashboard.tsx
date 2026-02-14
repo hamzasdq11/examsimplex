@@ -207,10 +207,12 @@ export default function Dashboard() {
               </div>
 
               {/* Hero Banner */}
-              <AIBriefingHero
+               <AIBriefingHero
                 userName={profile.full_name || 'Student'}
                 userEmail={user.email || ''}
                 universityName={profile.university?.name || null}
+                courseName={profile.course?.name || null}
+                semesterName={profile.semester?.name || null}
                 daysUntilExam={getDaysUntilExam()}
                 examType={getExamTypeLabel()}
                 subjectsCount={subjects.length}
