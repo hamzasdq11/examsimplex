@@ -13,7 +13,7 @@ export interface Profile {
   created_at: string;
   updated_at: string;
   // Joined data
-  university?: { id: string; name: string; full_name: string } | null;
+  university?: { id: string; name: string; full_name: string; slug: string } | null;
   course?: { id: string; name: string; code: string } | null;
   semester?: { id: string; name: string; number: number } | null;
 }
@@ -37,7 +37,7 @@ export function useProfile() {
         .from('profiles')
         .select(`
           *,
-          university:universities(id, name, full_name),
+          university:universities(id, name, full_name, slug),
           course:courses(id, name, code),
           semester:semesters(id, name, number)
         `)
