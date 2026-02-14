@@ -1,3 +1,4 @@
+import { useState, useEffect, useRef, useMemo } from 'react';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Card } from '@/components/ui/card';
 import {
@@ -179,37 +180,255 @@ function CalendarWidget() {
     );
 }
 
-// ─── Activity Widget ──────────────────────────────────────────
+// ─── Activity Widget — Smooth Area Chart ─────────────────────
 function ActivityWidget({ aiSessions }: { aiSessions: number }) {
-    // Generate fake activity data based on aiSessions for visual
-    const barHeights = [30, 55, 40, 70, 50, 85, 45];
+    const svgRef = useRef<SVGSVGElement>(null);
+    const [hoveredPoint, setHoveredPoint] = useState<number | null>(null);
+    const [animProgress, setAnimProgress] = useState(0);
+
+    // Chart dimensions
+    const W = 248;
+    const H = 100;
+    const PAD_X = 2;
+    const PAD_TOP = 8;
+    const PAD_BOT = 20;
+    const chartW = W - PAD_X * 2;
+    const chartH = H - PAD_TOP - PAD_BOT;
+
+    // Generate activity data — 7 days (seeded from aiSessions for consistency)
+    const dayLabels = useMemo(() => {
+        const days = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+        const today = new Date().getDay();
+        return Array.from({ length: 7 }, (_, i) => days[(today - 6 + i + 7) % 7]);
+    }, []);
+
+    const data = useMemo(() => {
+        // Create plausible activity data. When there's real data, plug it in here.
+        const base = Math.max(aiSessions, 1);
+        const seed = base * 7 + 13;
+        return [
+            ((seed * 3) % 40) + 10,
+            ((seed * 7) % 50) + 20,
+            ((seed * 11) % 35) + 30,
+            ((seed * 5) % 60) + 25,
+            ((seed * 13) % 45) + 15,
+            ((seed * 9) % 55) + 35,
+            ((seed * 17) % 50) + 40,
+        ];
+    }, [aiSessions]);
+
+    const maxVal = Math.max(...data, 1);
+
+    // Smooth entrance animation
+    useEffect(() => {
+        let raf: number;
+        let start: number;
+        const duration = 1200;
+
+        const animate = (ts: number) => {
+            if (!start) start = ts;
+            const elapsed = ts - start;
+            const t = Math.min(elapsed / duration, 1);
+            // ease-out cubic
+            const eased = 1 - Math.pow(1 - t, 3);
+            setAnimProgress(eased);
+            if (t < 1) raf = requestAnimationFrame(animate);
+        };
+
+        raf = requestAnimationFrame(animate);
+        return () => cancelAnimationFrame(raf);
+    }, []);
+
+    // Compute data points
+    const points = useMemo(() => {
+        return data.map((val, i) => ({
+            x: PAD_X + (i / (data.length - 1)) * chartW,
+            y: PAD_TOP + chartH - (val / maxVal) * chartH * animProgress,
+            val,
+        }));
+    }, [data, maxVal, chartW, chartH, animProgress]);
+
+    // Catmull-Rom to Cubic Bezier — ultra-smooth curve
+    const smoothPath = useMemo(() => {
+        if (points.length < 2) return '';
+
+        const tension = 0.3;
+        let d = `M ${points[0].x} ${points[0].y}`;
+
+        for (let i = 0; i < points.length - 1; i++) {
+            const p0 = points[Math.max(i - 1, 0)];
+            const p1 = points[i];
+            const p2 = points[i + 1];
+            const p3 = points[Math.min(i + 2, points.length - 1)];
+
+            const cp1x = p1.x + (p2.x - p0.x) * tension;
+            const cp1y = p1.y + (p2.y - p0.y) * tension;
+            const cp2x = p2.x - (p3.x - p1.x) * tension;
+            const cp2y = p2.y - (p3.y - p1.y) * tension;
+
+            d += ` C ${cp1x} ${cp1y}, ${cp2x} ${cp2y}, ${p2.x} ${p2.y}`;
+        }
+
+        return d;
+    }, [points]);
+
+    // Area path (same as line but closes at the bottom)
+    const areaPath = useMemo(() => {
+        if (!smoothPath) return '';
+        const bottomY = PAD_TOP + chartH;
+        return `${smoothPath} L ${points[points.length - 1].x} ${bottomY} L ${points[0].x} ${bottomY} Z`;
+    }, [smoothPath, points, chartH]);
 
     return (
         <Card className="bg-white rounded-2xl shadow-sm border border-gray-100/80 p-4">
-            <div className="flex items-center justify-between mb-3">
+            <div className="flex items-center justify-between mb-1">
                 <h3 className="font-semibold text-sm text-gray-900">Your Activity</h3>
                 <span className="text-[10px] bg-gray-100 text-gray-500 px-2 py-0.5 rounded-full font-medium">
                     Last week
                 </span>
             </div>
 
-            {/* Mini bar chart */}
-            <div className="flex items-end gap-2 h-20 mt-2">
-                {barHeights.map((height, i) => (
-                    <div key={i} className="flex-1 flex flex-col items-center gap-1">
-                        <div
-                            className={cn(
-                                "w-full rounded-t-md transition-all",
-                                i === 5 ? "bg-indigo-500" : "bg-indigo-100"
-                            )}
-                            style={{ height: `${height}%` }}
-                        />
-                    </div>
+            {/* Smooth SVG Area Chart */}
+            <svg
+                ref={svgRef}
+                viewBox={`0 0 ${W} ${H}`}
+                className="w-full h-auto mt-1"
+                onMouseLeave={() => setHoveredPoint(null)}
+            >
+                <defs>
+                    {/* Gradient fill beneath the curve */}
+                    <linearGradient id="activityGrad" x1="0" y1="0" x2="0" y2="1">
+                        <stop offset="0%" stopColor="#6366f1" stopOpacity="0.35" />
+                        <stop offset="100%" stopColor="#6366f1" stopOpacity="0.02" />
+                    </linearGradient>
+                    {/* Glow filter for dots */}
+                    <filter id="dotGlow" x="-50%" y="-50%" width="200%" height="200%">
+                        <feGaussianBlur stdDeviation="2" result="glow" />
+                        <feMerge>
+                            <feMergeNode in="glow" />
+                            <feMergeNode in="SourceGraphic" />
+                        </feMerge>
+                    </filter>
+                </defs>
+
+                {/* Subtle horizontal grid lines */}
+                {[0.25, 0.5, 0.75].map((frac) => (
+                    <line
+                        key={frac}
+                        x1={PAD_X}
+                        y1={PAD_TOP + chartH * (1 - frac)}
+                        x2={W - PAD_X}
+                        y2={PAD_TOP + chartH * (1 - frac)}
+                        stroke="#f1f5f9"
+                        strokeWidth="0.5"
+                    />
                 ))}
-            </div>
+
+                {/* Filled area */}
+                <path d={areaPath} fill="url(#activityGrad)" />
+
+                {/* Smooth line */}
+                <path
+                    d={smoothPath}
+                    fill="none"
+                    stroke="#6366f1"
+                    strokeWidth="2"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                />
+
+                {/* Data point dots */}
+                {points.map((p, i) => (
+                    <g key={i}>
+                        {/* Invisible wider hit area */}
+                        <circle
+                            cx={p.x}
+                            cy={p.y}
+                            r="12"
+                            fill="transparent"
+                            onMouseEnter={() => setHoveredPoint(i)}
+                        />
+                        {/* Outer glow ring on hover */}
+                        {hoveredPoint === i && (
+                            <circle
+                                cx={p.x}
+                                cy={p.y}
+                                r="6"
+                                fill="#6366f1"
+                                fillOpacity="0.15"
+                                filter="url(#dotGlow)"
+                            />
+                        )}
+                        {/* Data dot */}
+                        <circle
+                            cx={p.x}
+                            cy={p.y}
+                            r={hoveredPoint === i ? 4 : 2.5}
+                            fill="white"
+                            stroke="#6366f1"
+                            strokeWidth={hoveredPoint === i ? 2 : 1.5}
+                            style={{ transition: 'r 0.2s ease, stroke-width 0.2s ease' }}
+                        />
+                    </g>
+                ))}
+
+                {/* Hover tooltip */}
+                {hoveredPoint !== null && points[hoveredPoint] && (
+                    <g>
+                        {/* Vertical guide line */}
+                        <line
+                            x1={points[hoveredPoint].x}
+                            y1={points[hoveredPoint].y + 6}
+                            x2={points[hoveredPoint].x}
+                            y2={PAD_TOP + chartH}
+                            stroke="#6366f1"
+                            strokeWidth="0.5"
+                            strokeDasharray="2 2"
+                            strokeOpacity="0.4"
+                        />
+                        {/* Tooltip background */}
+                        <rect
+                            x={points[hoveredPoint].x - 16}
+                            y={points[hoveredPoint].y - 20}
+                            width="32"
+                            height="14"
+                            rx="4"
+                            fill="#1e1b4b"
+                            fillOpacity="0.9"
+                        />
+                        {/* Tooltip text */}
+                        <text
+                            x={points[hoveredPoint].x}
+                            y={points[hoveredPoint].y - 11}
+                            textAnchor="middle"
+                            fill="white"
+                            fontSize="8"
+                            fontWeight="600"
+                        >
+                            {points[hoveredPoint].val}
+                        </text>
+                    </g>
+                )}
+
+                {/* Day labels */}
+                {points.map((p, i) => (
+                    <text
+                        key={i}
+                        x={p.x}
+                        y={H - 2}
+                        textAnchor="middle"
+                        fill={hoveredPoint === i ? '#6366f1' : '#94a3b8'}
+                        fontSize="8"
+                        fontWeight={hoveredPoint === i ? '600' : '400'}
+                        style={{ transition: 'fill 0.2s ease' }}
+                    >
+                        {dayLabels[i]}
+                    </text>
+                ))}
+            </svg>
 
             {aiSessions > 0 && (
-                <p className="text-[10px] text-gray-400 mt-2 text-center">
+                <p className="text-[10px] text-gray-400 mt-1 text-center">
                     {aiSessions} AI sessions completed
                 </p>
             )}
