@@ -1,16 +1,16 @@
 
+## Remove Footer from Subject/Course Pages
 
-## Make Subject Page Fullscreen
+The footer block (with University, Exams, Practice, Free Resources links) is rendered on the SubjectPage in three locations within `src/pages/SubjectPage.tsx`:
 
-Remove the `Header` component and expand the content to fill the full viewport, eliminating the top navigation bar on the Subject page.
+1. **Line ~271** - Loading state
+2. **Line ~287** - Error/not-found state  
+3. **Line ~727** - Main content render
 
 ### Changes
 
 **File: `src/pages/SubjectPage.tsx`**
+- Remove the `Footer` import (line 5)
+- Remove `<Footer />` from all three render paths (lines 271, 287, 727)
 
-1. Remove the `Header` import (line 4)
-2. Remove `<Header />` from the main render (line 349)
-3. Remove `<Header />` from the loading state (~line 264) and the error state (~line 278) if present
-4. Optionally adjust the outer container from `min-h-screen` to use full height without the header offset
-
-This will make the subject page use the full browser window without the landing-page navigation bar at the top.
+This is a straightforward deletion with no side effects.

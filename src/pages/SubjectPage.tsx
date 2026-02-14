@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { useParams, Link, useSearchParams } from "react-router-dom";
 import DOMPurify from "dompurify";
-
+import Header from "@/components/landing/Header";
 
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
@@ -264,6 +264,7 @@ const SubjectPage = () => {
   if (loading) {
     return (
       <div className="min-h-screen bg-background">
+        <Header />
         <div className="flex items-center justify-center py-32">
           <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
         </div>
@@ -274,6 +275,7 @@ const SubjectPage = () => {
   if (!subject) {
     return (
       <div className="min-h-screen bg-background">
+        <Header />
         <div className="container mx-auto px-4 py-16 text-center">
           <h1 className="text-2xl font-bold text-foreground mb-4">Subject not found</h1>
           <p className="text-muted-foreground mb-6">The subject you're looking for doesn't exist.</p>
@@ -344,7 +346,7 @@ const SubjectPage = () => {
         canonicalUrl={canonicalUrl}
         jsonLd={[breadcrumbSchema, courseSchema]}
       />
-      
+      <Header />
 
       <main className="container mx-auto px-4 py-8">
         {/* Breadcrumb */}
