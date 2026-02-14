@@ -144,37 +144,58 @@ function CalendarWidget() {
 
     return (
         <Card className="bg-white rounded-2xl shadow-sm border border-gray-100/80 p-4">
-            <div className="flex items-center justify-between mb-3">
-                <h3 className="font-semibold text-sm text-gray-900">{monthName}</h3>
-                <div className="flex gap-1">
-                    <button className="p-1 rounded-md hover:bg-gray-100 text-gray-400 transition-colors">
-                        <ChevronLeft className="h-3.5 w-3.5" />
-                    </button>
-                    <button className="p-1 rounded-md hover:bg-gray-100 text-gray-400 transition-colors">
-                        <ChevronRight className="h-3.5 w-3.5" />
-                    </button>
-                </div>
+            {/* Header — circular nav buttons, bold centered title */}
+            <div className="flex items-center justify-between mb-5">
+                <button className="w-8 h-8 rounded-full border-2 border-gray-200 flex items-center justify-center hover:border-gray-400 hover:bg-gray-50 transition-all text-gray-400 hover:text-gray-600">
+                    <ChevronLeft className="h-4 w-4" />
+                </button>
+                <h3 className="font-bold text-sm text-gray-900">{monthName}</h3>
+                <button className="w-8 h-8 rounded-full border-2 border-gray-200 flex items-center justify-center hover:border-gray-400 hover:bg-gray-50 transition-all text-gray-400 hover:text-gray-600">
+                    <ChevronRight className="h-4 w-4" />
+                </button>
             </div>
 
+            {/* Week strip — each day is a vertical column */}
             <div className="grid grid-cols-7 gap-1">
-                {weekDays.map((day, i) => (
-                    <div key={i} className="text-center text-[10px] font-medium text-gray-400 py-1">
-                        {day}
-                    </div>
-                ))}
-                {weekDates.map((date, i) => (
-                    <button
-                        key={i}
-                        className={cn(
-                            "text-center text-xs py-1.5 rounded-lg transition-colors font-medium",
-                            date === today
-                                ? "bg-indigo-600 text-white shadow-sm"
-                                : "text-gray-700 hover:bg-gray-100"
-                        )}
-                    >
-                        {date > 0 ? date : ''}
-                    </button>
-                ))}
+                {weekDays.map((day, i) => {
+                    const date = weekDates[i];
+                    const isToday = date === today;
+
+                    return (
+                        <div key={i} className="flex flex-col items-center">
+                            {/* Pill capsule for today wraps both label + date */}
+                            <div
+                                className={cn(
+                                    "flex flex-col items-center gap-1.5 py-1.5 px-1 rounded-full transition-all",
+                                    isToday
+                                        ? "bg-[#1a1f3e] shadow-md"
+                                        : ""
+                                )}
+                            >
+                                {/* Day letter */}
+                                <span
+                                    className={cn(
+                                        "text-[11px] font-semibold leading-none",
+                                        isToday ? "text-white" : "text-gray-400"
+                                    )}
+                                >
+                                    {day}
+                                </span>
+                                {/* Date circle */}
+                                <div
+                                    className={cn(
+                                        "w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold transition-all",
+                                        isToday
+                                            ? "bg-white text-[#1a1f3e] shadow-sm"
+                                            : "bg-gray-100 text-gray-600"
+                                    )}
+                                >
+                                    {date > 0 ? date : ''}
+                                </div>
+                            </div>
+                        </div>
+                    );
+                })}
             </div>
         </Card>
     );
