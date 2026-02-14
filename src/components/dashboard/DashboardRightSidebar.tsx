@@ -203,18 +203,19 @@ function ActivityWidget({ aiSessions }: { aiSessions: number }) {
     }, []);
 
     const data = useMemo(() => {
-        // Create plausible activity data. When there's real data, plug it in here.
+        // Gentle, natural-looking activity curve — no extreme jumps
         const base = Math.max(aiSessions, 1);
         const seed = base * 7 + 13;
-        return [
-            ((seed * 3) % 40) + 10,
-            ((seed * 7) % 50) + 20,
-            ((seed * 11) % 35) + 30,
-            ((seed * 5) % 60) + 25,
-            ((seed * 13) % 45) + 15,
-            ((seed * 9) % 55) + 35,
-            ((seed * 17) % 50) + 40,
+        const raw = [
+            35 + (seed % 10),
+            45 + (seed % 12),
+            40 + (seed % 8),
+            55 + (seed % 15),
+            50 + (seed % 10),
+            60 + (seed % 12),
+            65 + (seed % 10),
         ];
+        return raw;
     }, [aiSessions]);
 
     const maxVal = Math.max(...data, 1);
@@ -248,25 +249,60 @@ function ActivityWidget({ aiSessions }: { aiSessions: number }) {
         }));
     }, [data, maxVal, chartW, chartH, animProgress]);
 
-    // Catmull-Rom to Cubic Bezier — ultra-smooth curve
+    // Monotone cubic Hermite interpolation (Fritsch-Carlson) — no overshooting
     const smoothPath = useMemo(() => {
-        if (points.length < 2) return '';
+        const n = points.length;
+        if (n < 2) return '';
 
-        const tension = 0.3;
-        let d = `M ${points[0].x} ${points[0].y}`;
+        const xs = points.map(p => p.x);
+        const ys = points.map(p => p.y);
 
-        for (let i = 0; i < points.length - 1; i++) {
-            const p0 = points[Math.max(i - 1, 0)];
-            const p1 = points[i];
-            const p2 = points[i + 1];
-            const p3 = points[Math.min(i + 2, points.length - 1)];
+        // 1. Compute slopes of secant lines
+        const deltas: number[] = [];
+        const h: number[] = [];
+        for (let i = 0; i < n - 1; i++) {
+            h.push(xs[i + 1] - xs[i]);
+            deltas.push((ys[i + 1] - ys[i]) / h[i]);
+        }
 
-            const cp1x = p1.x + (p2.x - p0.x) * tension;
-            const cp1y = p1.y + (p2.y - p0.y) * tension;
-            const cp2x = p2.x - (p3.x - p1.x) * tension;
-            const cp2y = p2.y - (p3.y - p1.y) * tension;
+        // 2. Initialize tangents
+        const m: number[] = new Array(n);
+        m[0] = deltas[0];
+        m[n - 1] = deltas[n - 2];
+        for (let i = 1; i < n - 1; i++) {
+            if (deltas[i - 1] * deltas[i] <= 0) {
+                m[i] = 0;
+            } else {
+                m[i] = (deltas[i - 1] + deltas[i]) / 2;
+            }
+        }
 
-            d += ` C ${cp1x} ${cp1y}, ${cp2x} ${cp2y}, ${p2.x} ${p2.y}`;
+        // 3. Fritsch-Carlson monotonicity preservation
+        for (let i = 0; i < n - 1; i++) {
+            if (Math.abs(deltas[i]) < 1e-12) {
+                m[i] = 0;
+                m[i + 1] = 0;
+            } else {
+                const alpha = m[i] / deltas[i];
+                const beta = m[i + 1] / deltas[i];
+                const tau = alpha * alpha + beta * beta;
+                if (tau > 9) {
+                    const s = 3 / Math.sqrt(tau);
+                    m[i] = s * alpha * deltas[i];
+                    m[i + 1] = s * beta * deltas[i];
+                }
+            }
+        }
+
+        // 4. Build cubic bezier path
+        let d = `M ${xs[0]} ${ys[0]}`;
+        for (let i = 0; i < n - 1; i++) {
+            const dx = h[i] / 3;
+            const cp1x = xs[i] + dx;
+            const cp1y = ys[i] + m[i] * dx;
+            const cp2x = xs[i + 1] - dx;
+            const cp2y = ys[i + 1] - m[i + 1] * dx;
+            d += ` C ${cp1x} ${cp1y}, ${cp2x} ${cp2y}, ${xs[i + 1]} ${ys[i + 1]}`;
         }
 
         return d;
