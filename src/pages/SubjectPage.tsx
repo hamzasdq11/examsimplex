@@ -348,7 +348,7 @@ const SubjectPage = () => {
       />
       <Header />
 
-      <main className="container mx-auto px-4 py-8">
+      <main className="max-w-[1600px] mx-auto px-6 py-8">
         {/* Breadcrumb */}
         <div className="flex items-center gap-2 text-sm text-muted-foreground mb-6">
           <Link to="/" className="hover:text-foreground">
@@ -664,10 +664,10 @@ const SubjectPage = () => {
 
                   {/* Practice Mode Tab - MCQ */}
                   <TabsContent value="ai" className="mt-6">
-                    <MCQPractice 
-                      subjectId={subject.id} 
-                      subjectName={subject.name} 
-                      units={units} 
+                    <MCQPractice
+                      subjectId={subject.id}
+                      subjectName={subject.name}
+                      units={units}
                     />
                   </TabsContent>
                 </Tabs>
