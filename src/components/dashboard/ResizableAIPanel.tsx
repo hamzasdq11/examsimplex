@@ -78,7 +78,7 @@ export function ResizableAIPanel({
   // Collapsed state - just show the toggle arrow
   if (!isOpen) {
     return (
-      <div className="relative h-[calc(100vh-3.5rem)] overflow-auto">
+      <div className="flex flex-1 min-w-0 h-screen overflow-hidden relative">
         {children}
         {/* Floating toggle button */}
         <Button
@@ -98,8 +98,8 @@ export function ResizableAIPanel({
   return (
     <ResizablePanelGroup
       direction="horizontal"
-      className="h-[calc(100vh-3.5rem)]"
-      style={{ maxHeight: 'calc(100vh - 3.5rem)', overflow: 'hidden' }}
+      className="h-screen"
+      style={{ maxHeight: '100vh', overflow: 'hidden' }}
     >
       <ResizablePanel defaultSize={100 - defaultSize} minSize={40}>
         <div className="h-full overflow-auto">

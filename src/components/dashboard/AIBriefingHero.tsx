@@ -1,7 +1,7 @@
 import { useState } from 'react';
-import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Card } from '@/components/ui/card';
-import { Calendar, Flame, Target, TrendingUp } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { Calendar, Flame, Target, TrendingUp, Sparkles, ArrowRight } from 'lucide-react';
 import { SetExamDateDialog } from './SetExamDateDialog';
 import { cn } from '@/lib/utils';
 
@@ -34,121 +34,64 @@ export function AIBriefingHero({
 }: AIBriefingHeroProps) {
   const [showExamDialog, setShowExamDialog] = useState(false);
 
-  const getInitials = () => {
-    if (userName) {
-      return userName.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2);
-    }
-    return userEmail?.charAt(0).toUpperCase() || 'U';
-  };
-
-  const getUrgencyColor = () => {
-    if (daysUntilExam === null) return 'text-muted-foreground';
-    if (daysUntilExam <= 7) return 'text-destructive';
-    if (daysUntilExam <= 14) return 'text-warning';
-    return 'text-primary';
-  };
-
-  const getReadinessColor = () => {
-    if (readinessPercent >= 75) return 'text-success';
-    if (readinessPercent >= 50) return 'text-warning';
-    return 'text-destructive';
+  const getUrgencyText = () => {
+    if (daysUntilExam === null) return 'Set your exam date to get started';
+    if (daysUntilExam <= 0) return 'Exam time! You got this 💪';
+    if (daysUntilExam <= 7) return `Only ${daysUntilExam} days left — focus on key topics!`;
+    if (daysUntilExam <= 14) return `${daysUntilExam} days to go — keep up the momentum!`;
+    return `${daysUntilExam} days until your ${examType}. Start strong!`;
   };
 
   return (
     <>
-      <Card className="overflow-hidden border bg-gradient-to-br from-muted/50 via-background to-muted/30">
-        <div className="p-6 md:p-8">
-          <div className="flex flex-col md:flex-row md:items-start gap-6">
-            {/* Avatar and Name */}
-            <div className="flex items-center gap-4">
-              <Avatar className="h-16 w-16 border-2 border-border shadow-lg">
-                <AvatarFallback className="text-xl bg-primary text-primary-foreground font-semibold">
-                  {getInitials()}
-                </AvatarFallback>
-              </Avatar>
-              <div className="md:hidden">
-                <h1 className="text-xl font-bold">{userName.split(' ')[0]}, here's your exam status</h1>
-                {universityName && (
-                  <p className="text-sm text-muted-foreground">{universityName}</p>
-                )}
-              </div>
+      <Card className="relative overflow-hidden rounded-2xl border-0 bg-gradient-to-r from-[#1a1f4e] via-[#243b8a] to-[#2d5bb9] text-white shadow-lg">
+        {/* Decorative circles */}
+        <div className="absolute top-0 right-0 w-40 h-40 bg-white/5 rounded-full -translate-y-1/2 translate-x-1/4" />
+        <div className="absolute bottom-0 right-20 w-24 h-24 bg-white/5 rounded-full translate-y-1/2" />
+
+        <div className="relative p-6 md:p-8 flex flex-col md:flex-row md:items-center md:justify-between gap-6">
+          {/* Content */}
+          <div className="space-y-3 flex-1">
+            <h2 className="text-2xl md:text-3xl font-bold leading-tight">
+              Ace your exams with <br className="hidden md:block" />
+              smart preparation
+            </h2>
+            <p className="text-blue-200 text-sm md:text-base max-w-md">
+              {getUrgencyText()}
+            </p>
+
+            {/* Quick Stats Pills */}
+            <div className="flex flex-wrap gap-2 pt-2">
+              <button
+                onClick={() => setShowExamDialog(true)}
+                className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-white/10 hover:bg-white/20 backdrop-blur-sm rounded-full text-xs font-medium transition-colors"
+              >
+                <Calendar className="h-3 w-3" />
+                {daysUntilExam !== null ? `${daysUntilExam}d to ${examType}` : 'Set exam date'}
+              </button>
+              <span className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-white/10 backdrop-blur-sm rounded-full text-xs font-medium">
+                <Target className="h-3 w-3" />
+                {pendingSubjects} pending
+              </span>
+              <span className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-white/10 backdrop-blur-sm rounded-full text-xs font-medium">
+                <TrendingUp className="h-3 w-3" />
+                {readinessPercent}% ready
+              </span>
             </div>
 
-            {/* Main Content */}
-            <div className="flex-1 space-y-4">
-              <div className="hidden md:block">
-                <h1 className="text-2xl font-bold">{userName.split(' ')[0]}, here's your exam status</h1>
-                {universityName && (
-                  <p className="text-sm text-muted-foreground">{universityName}</p>
-                )}
-              </div>
+            <Button
+              className="mt-4 bg-white text-indigo-700 hover:bg-blue-50 font-semibold rounded-xl shadow-md hover:shadow-lg transition-all gap-2"
+              onClick={onEditProfile}
+            >
+              View Course
+              <ArrowRight className="h-4 w-4" />
+            </Button>
+          </div>
 
-              {/* Status Grid */}
-              <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
-                {/* Days Until Exam */}
-                <button
-                  onClick={() => setShowExamDialog(true)}
-                  className="flex items-center gap-2 p-3 rounded-lg bg-background/60 hover:bg-background/80 border border-border/50 transition-colors text-left"
-                >
-                  <Calendar className={cn("h-4 w-4 shrink-0", getUrgencyColor())} />
-                  <div className="min-w-0">
-                    {daysUntilExam !== null ? (
-                      <>
-                        <p className={cn("text-lg font-bold leading-tight", getUrgencyColor())}>
-                          {daysUntilExam} days
-                        </p>
-                        <p className="text-xs text-muted-foreground truncate">to {examType}</p>
-                      </>
-                    ) : (
-                      <>
-                        <p className="text-sm font-medium text-muted-foreground">Set exam date</p>
-                        <p className="text-xs text-muted-foreground">Click to add</p>
-                      </>
-                    )}
-                  </div>
-                </button>
-
-                {/* Subjects Pending */}
-                <div className="flex items-center gap-2 p-3 rounded-lg bg-background/60 border border-border/50">
-                  <Target className="h-4 w-4 shrink-0 text-primary" />
-                  <div className="min-w-0">
-                    <p className="text-lg font-bold leading-tight">{pendingSubjects}</p>
-                    <p className="text-xs text-muted-foreground truncate">subjects pending</p>
-                  </div>
-                </div>
-
-                {/* Highest Risk */}
-                <div className="flex items-center gap-2 p-3 rounded-lg bg-background/60 border border-border/50">
-                  <Flame className="h-4 w-4 shrink-0 text-destructive" />
-                  <div className="min-w-0">
-                    {weakestSubject ? (
-                      <>
-                        <p className="text-sm font-semibold leading-tight truncate" title={weakestSubject}>
-                          {weakestSubject.length > 15 ? weakestSubject.slice(0, 15) + '...' : weakestSubject}
-                        </p>
-                        <p className="text-xs text-muted-foreground">highest risk</p>
-                      </>
-                    ) : (
-                      <>
-                        <p className="text-sm font-medium text-muted-foreground">No data</p>
-                        <p className="text-xs text-muted-foreground">start studying</p>
-                      </>
-                    )}
-                  </div>
-                </div>
-
-                {/* Readiness */}
-                <div className="flex items-center gap-2 p-3 rounded-lg bg-background/60 border border-border/50">
-                  <TrendingUp className={cn("h-4 w-4 shrink-0", getReadinessColor())} />
-                  <div className="min-w-0">
-                    <p className={cn("text-lg font-bold leading-tight", getReadinessColor())}>
-                      {readinessPercent}%
-                    </p>
-                    <p className="text-xs text-muted-foreground truncate">readiness</p>
-                  </div>
-                </div>
-              </div>
-
+          {/* Decorative Mascot / Icon */}
+          <div className="hidden md:flex items-center justify-center">
+            <div className="w-24 h-24 rounded-2xl bg-white/10 backdrop-blur-sm flex items-center justify-center shadow-lg border border-white/10">
+              <Sparkles className="h-12 w-12 text-blue-200" />
             </div>
           </div>
         </div>
