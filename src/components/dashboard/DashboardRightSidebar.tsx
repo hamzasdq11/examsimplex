@@ -168,7 +168,7 @@ function CalendarWidget() {
                                 className={cn(
                                     "flex flex-col items-center gap-1.5 py-1.5 px-1 rounded-full transition-all",
                                     isToday
-                                        ? "bg-[#1a1f3e] shadow-md"
+                                        ? "bg-indigo-600 shadow-md"
                                         : ""
                                 )}
                             >
@@ -186,7 +186,7 @@ function CalendarWidget() {
                                     className={cn(
                                         "w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold transition-all",
                                         isToday
-                                            ? "bg-white text-[#1a1f3e] shadow-sm"
+                                            ? "bg-white text-indigo-600 shadow-sm"
                                             : "bg-gray-100 text-gray-600"
                                     )}
                                 >
