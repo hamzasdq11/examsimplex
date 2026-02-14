@@ -1,39 +1,45 @@
 
 
-# Plan: Add Animated Network Mesh Background to Hero
+## Problem
 
-## What's Changing
+Course/subject pages fail to load when navigated from the dashboard because of an **ID vs slug mismatch**.
 
-Add an animated geometric network/mesh background effect (inspired by the IIT Patna Incubation Centre website) behind the hero section. This is a background-only enhancement -- all existing content, layout, typography, buttons, spacing, and colors remain untouched.
+The route `/university/:universityId/:courseId/:semesterId/:subjectId` expects **slugs** in the URL parameters. Both `UniversityPage` and `SubjectPage` query the database using `.eq('slug', paramValue)`. However, the dashboard constructs URLs using **UUIDs** (e.g., `profile.university_id`, `subject.id`), which don't match any slug and return no data.
 
-## The Effect
+## Fix
 
-The reference shows an animated network of interconnected dots (nodes) connected by thin lines, creating a molecular/constellation-like mesh pattern. The nodes slowly drift and the connections form/break as nodes move in and out of range. The effect is subtle -- light blue/primary-colored lines and dots on a white background.
+Update the Dashboard to fetch and use **slugs** instead of UUIDs when building navigation URLs.
 
-## Technical Approach
+### Steps
 
-### 1. Create a new component: `src/components/landing/NetworkBackground.tsx`
+1. **Update the subjects query in `Dashboard.tsx`** to also fetch related semester, course, and university slugs -- or store the university/course/semester slugs from the profile data.
 
-A canvas-based animated background component using the HTML5 Canvas API:
-- Renders ~80 randomly placed nodes (small circles) that drift slowly in random directions
-- Draws lines between nodes that are within a distance threshold (~150px)
-- Line opacity fades as distance increases (closer = more opaque)
-- Uses `requestAnimationFrame` for smooth 60fps animation
-- Colors: primary blue (`hsl(246, 100%, 61%)`) at low opacity for lines (~0.15), slightly higher for dots (~0.4)
-- Nodes bounce off canvas edges
-- Canvas is responsive -- resizes with window
-- Component uses `useEffect` + `useRef` for the canvas lifecycle
-- Cleans up animation frame and resize listener on unmount
+2. **Store slugs from the profile's related entities.** The profile already fetches `university`, `course`, and `semester` objects (via `useProfile`). Extract their slugs and pass them to `IntelligentSubjectCard` instead of UUIDs.
 
-### 2. Modify `src/components/landing/Hero.tsx`
+3. **Update `IntelligentSubjectCard`** to use slugs for URL construction:
+   - Change `universityId` prop to use the university slug
+   - Change `courseId` prop to use the course slug  
+   - Change `semesterId` prop to use the semester slug
+   - Change `subject.id` to `subject.slug` in the URL path
 
-- Import `NetworkBackground`
-- Add it as an absolutely positioned layer behind the hero content (inside the existing `<section>` with `relative overflow-hidden`)
-- No changes to any existing elements, classes, or styles
-- The background sits at `z-0`, content remains above via natural stacking or `z-10`
+4. **Verify `useProfile` hook** returns slug fields on the related university, course, and semester objects. If not, update the query to include them.
 
-## Files to Create/Modify
+### Technical Details
 
-1. **Create** `src/components/landing/NetworkBackground.tsx` -- Canvas animation component
-2. **Modify** `src/components/landing/Hero.tsx` -- Add the background component as a positioned layer (2 lines: import + JSX element)
+**File: `src/pages/Dashboard.tsx`**
+- Change props passed to `IntelligentSubjectCard` from UUIDs to slugs:
+  - `universityId={profile.university?.slug}` instead of `profile.university_id`
+  - `courseId={profile.course?.slug}` instead of `profile.course_id`
+  - `semesterId={profile.semester?.slug}` instead of `profile.semester_id`
+
+**File: `src/components/dashboard/IntelligentSubjectCard.tsx`**
+- Change URL construction to use `subject.slug` instead of `subject.id`:
+  ```
+  /university/${universityId}/${courseId}/${semesterId}/${subject.slug}
+  ```
+
+**File: `src/hooks/useProfile.tsx`** (if needed)
+- Verify the profile query includes `slug` fields on the joined university, course, and semester records. If missing, update the select query.
+
+**Other dashboard components** that build similar URLs (e.g., `TodaysFocusCard`, `DashboardRightSidebar`) will also need the same slug-based fix applied.
 
