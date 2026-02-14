@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { useParams, Link, useSearchParams } from "react-router-dom";
 import DOMPurify from "dompurify";
 import Header from "@/components/landing/Header";
-import Footer from "@/components/landing/Footer";
+
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -268,7 +268,6 @@ const SubjectPage = () => {
         <div className="flex items-center justify-center py-32">
           <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
         </div>
-        <Footer />
       </div>
     );
   }
@@ -284,7 +283,6 @@ const SubjectPage = () => {
             <Button>Go Back</Button>
           </Link>
         </div>
-        <Footer />
       </div>
     );
   }
@@ -724,7 +722,6 @@ const SubjectPage = () => {
         </div>
       </main>
 
-      <Footer />
     </div>
   );
 };
