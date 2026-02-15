@@ -1,4 +1,15 @@
 import { useState, useEffect } from 'react';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { AdminLayout } from '@/components/admin/AdminLayout';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
@@ -30,7 +41,7 @@ import {
 } from '@/components/ui/select';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { useToast } from '@/hooks/use-toast';
-import { Plus, Pencil, Trash2, Loader2, Search, Upload, AlertCircle, FileText } from 'lucide-react';
+import { Plus, Pencil, Trash2, Loader2, Search, Upload, AlertCircle, FileText, RotateCw } from 'lucide-react';
 import { BulkImportDialog } from '@/components/admin/BulkImportDialog';
 import { useAdminContext } from '@/contexts/AdminContext';
 import type { Subject, Unit } from '@/types/database';
@@ -56,6 +67,11 @@ export default function Notes() {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [isImportOpen, setIsImportOpen] = useState(false);
   const [editingNote, setEditingNote] = useState<any>(null);
+  const [previewKey, setPreviewKey] = useState(0);
+
+  // Delete confirmation
+  const [noteToDelete, setNoteToDelete] = useState<string | null>(null);
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
 
   // Subject filter
   const [selectedSubjectId, setSelectedSubjectId] = useState<string>('');
@@ -65,6 +81,8 @@ export default function Notes() {
     chapter_title: '',
     points: '',
     html_content: '',
+    css_content: '',
+    js_content: '',
     order_index: 0,
   });
   const [saving, setSaving] = useState(false);
@@ -153,7 +171,7 @@ export default function Notes() {
     }
   }
 
-  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>, type: 'html' | 'css' | 'js') => {
     const file = e.target.files?.[0];
     if (!file) return;
 
@@ -218,7 +236,9 @@ export default function Notes() {
         unit_id: formData.unit_id,
         chapter_title: formData.chapter_title,
         points: pointsData,
-        html_content: formData.html_content || null, // Create this column in DB if not exists
+        html_content: formData.html_content || null,
+        css_content: formData.css_content || null,
+        js_content: formData.js_content || null,
         order_index: formData.order_index,
       };
 
@@ -250,20 +270,39 @@ export default function Notes() {
       chapter_title: note.chapter_title,
       points: Array.isArray(note.points) ? JSON.stringify(note.points, null, 2) : '',
       html_content: note.html_content || '',
+      css_content: note.css_content || '',
+      js_content: note.js_content || '',
       order_index: note.order_index,
     });
     setIsDialogOpen(true);
   };
 
-  const handleDelete = async (id: string) => {
-    if (!confirm('Delete this note?')) return;
+  const handleDelete = (id: string) => {
+    setNoteToDelete(id);
+    setIsDeleteDialogOpen(true);
+  };
+
+  const confirmDelete = async () => {
+    if (!noteToDelete) return;
+
+    console.log('Attempting to delete note:', noteToDelete);
     try {
-      const { error } = await supabase.from('notes').delete().eq('id', id);
-      if (error) throw error;
+      const { error } = await supabase.from('notes').delete().eq('id', noteToDelete);
+
+      if (error) {
+        console.error('Supabase delete error:', error);
+        throw error;
+      }
+
+      console.log('Note deleted successfully');
       toast({ title: 'Success', description: 'Note deleted' });
       fetchNotesAndUnits();
     } catch (error: any) {
-      toast({ title: 'Error', description: error.message, variant: 'destructive' });
+      console.error('Delete operation failed:', error);
+      toast({ title: 'Error', description: error.message || 'Failed to delete note', variant: 'destructive' });
+    } finally {
+      setIsDeleteDialogOpen(false);
+      setNoteToDelete(null);
     }
   };
 
@@ -273,6 +312,8 @@ export default function Notes() {
       chapter_title: '',
       points: '',
       html_content: '',
+      css_content: '',
+      js_content: '',
       order_index: notes.length,
     });
   };
@@ -473,61 +514,163 @@ export default function Notes() {
               <div className="p-4 border rounded-md bg-muted/20 space-y-4">
                 <div className="flex items-center justify-between">
                   <Label className="text-base font-semibold">Content Source</Label>
-                  {formData.html_content && (
-                    <Button
-                      type="button"
-                      variant="destructive"
-                      size="sm"
-                      onClick={() => setFormData(prev => ({ ...prev, html_content: '' }))}
-                    >
-                      Clear Rich Text
-                    </Button>
-                  )}
                 </div>
 
-                <div className="grid gap-6">
-                  {/* File Upload */}
-                  <div className="space-y-2">
-                    <Label htmlFor="file-upload">Upload File (.docx or .html)</Label>
-                    <Input
-                      id="file-upload"
-                      type="file"
-                      accept=".docx,.html,.htm"
-                      onChange={handleFileUpload}
-                      className="cursor-pointer"
-                    />
-                    <p className="text-xs text-muted-foreground">
-                      Upload a .docx or .html file to convert it to formatted notes.
-                    </p>
-                  </div>
+                <Tabs defaultValue="html" className="w-full">
+                  <TabsList className="grid w-full grid-cols-3">
+                    <TabsTrigger value="html">HTML Structure</TabsTrigger>
+                    <TabsTrigger value="css">CSS Styles</TabsTrigger>
+                    <TabsTrigger value="js">JavaScript</TabsTrigger>
+                  </TabsList>
 
-                  {formData.html_content ? (
+                  {/* HTML Content Tab */}
+                  <TabsContent value="html" className="space-y-4 mt-4">
                     <div className="space-y-2">
-                      <Label>Preview HTML Content</Label>
-                      <div className="h-60 overflow-y-auto w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background prose prose-sm max-w-none dark:prose-invert">
-                        <div dangerouslySetInnerHTML={{
-                          __html: DOMPurify.sanitize(formData.html_content, {
-                            ADD_TAGS: ['img', 'style', 'center', 'font'],
-                            ADD_ATTR: ['src', 'alt', 'style', 'class', 'width', 'height', 'align', 'face', 'size', 'color'],
-                            ALLOWED_URI_REGEXP: /^(?:(?:(?:f|ht)tps?|mailto|tel|callto|cid|xmpp|data):|[^a-z]|[a-z+.\-]+(?:[^a-z+.\-:]|$))/i,
-                          })
-                        }} />
+                      <div className="flex justify-between items-center">
+                        <Label htmlFor="html-upload">Upload Structure (.html or .docx)</Label>
+                        {formData.html_content && (
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            size="sm"
+                            className="h-8 text-destructive"
+                            onClick={() => setFormData(prev => ({ ...prev, html_content: '' }))}
+                          >
+                            Clear
+                          </Button>
+                        )}
                       </div>
+                      <Input
+                        id="html-upload"
+                        type="file"
+                        accept=".docx,.html,.htm"
+                        onChange={(e) => handleFileUpload(e, 'html')}
+                        className="cursor-pointer"
+                      />
+                      <p className="text-xs text-muted-foreground">
+                        Upload .docx for auto-conversion or .html for raw structure.
+                      </p>
                     </div>
-                  ) : (
-                    /* Fallback to Points */
+
                     <div className="space-y-2">
-                      <Label htmlFor="points">Manual Points (JSON array or one per line)</Label>
+                      <Label>HTML Preview / Edit</Label>
                       <Textarea
-                        id="points"
-                        placeholder='["Point 1", "Point 2"] or one point per line'
-                        value={formData.points}
-                        onChange={(e) => setFormData({ ...formData, points: e.target.value })}
-                        rows={6}
+                        value={formData.html_content}
+                        onChange={(e) => setFormData(prev => ({ ...prev, html_content: e.target.value }))}
+                        placeholder="<h1>Hello World</h1>"
+                        className="font-mono text-xs min-h-[200px]"
                       />
                     </div>
-                  )}
-                </div>
+                  </TabsContent>
+
+                  {/* CSS Content Tab */}
+                  <TabsContent value="css" className="space-y-4 mt-4">
+                    <div className="space-y-2">
+                      <div className="flex justify-between items-center">
+                        <Label htmlFor="css-upload">Upload Styles (.css)</Label>
+                        {formData.css_content && (
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            size="sm"
+                            className="h-8 text-destructive"
+                            onClick={() => setFormData(prev => ({ ...prev, css_content: '' }))}
+                          >
+                            Clear
+                          </Button>
+                        )}
+                      </div>
+                      <Input
+                        id="css-upload"
+                        type="file"
+                        accept=".css"
+                        onChange={(e) => handleFileUpload(e, 'css')}
+                        className="cursor-pointer"
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label>CSS Code</Label>
+                      <Textarea
+                        value={formData.css_content || ''}
+                        onChange={(e) => setFormData(prev => ({ ...prev, css_content: e.target.value }))}
+                        placeholder=".my-class { color: red; }"
+                        className="font-mono text-xs min-h-[200px]"
+                      />
+                    </div>
+                  </TabsContent>
+
+                  {/* JS Content Tab */}
+                  <TabsContent value="js" className="space-y-4 mt-4">
+                    <div className="space-y-2">
+                      <div className="flex justify-between items-center">
+                        <Label htmlFor="js-upload">Upload Script (.js)</Label>
+                        {formData.js_content && (
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            size="sm"
+                            className="h-8 text-destructive"
+                            onClick={() => setFormData(prev => ({ ...prev, js_content: '' }))}
+                          >
+                            Clear
+                          </Button>
+                        )}
+                      </div>
+                      <Input
+                        id="js-upload"
+                        type="file"
+                        accept=".js"
+                        onChange={(e) => handleFileUpload(e, 'js')}
+                        className="cursor-pointer"
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label>JavaScript Code</Label>
+                      <Textarea
+                        value={formData.js_content || ''}
+                        onChange={(e) => setFormData(prev => ({ ...prev, js_content: e.target.value }))}
+                        placeholder="console.log('Hello');"
+                        className="font-mono text-xs min-h-[200px]"
+                      />
+                    </div>
+                  </TabsContent>
+                </Tabs>
+
+                {/* Live Preview Section */}
+                {formData.html_content && (
+                  <div className="space-y-2 pt-4 border-t">
+                    <div className="flex items-center justify-between">
+                      <Label>Live Preview (Scoped)</Label>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="h-8 gap-1"
+                        onClick={() => setPreviewKey(k => k + 1)}
+                      >
+                        <RotateCw className="h-3 w-3" />
+                        Refresh
+                      </Button>
+                    </div>
+                    <div key={previewKey} className="h-60 overflow-y-auto w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background prose prose-sm max-w-none dark:prose-invert relative">
+                      {/* Inject CSS for preview */}
+                      {formData.css_content && (
+                        <style>{formData.css_content}</style>
+                      )}
+
+                      <div dangerouslySetInnerHTML={{
+                        __html: DOMPurify.sanitize(formData.html_content, {
+                          ADD_TAGS: ['img', 'style', 'center', 'font'],
+                          ADD_ATTR: ['src', 'alt', 'style', 'class', 'width', 'height', 'align', 'face', 'size', 'color', 'id'],
+                          ALLOWED_URI_REGEXP: /^(?:(?:(?:f|ht)tps?|mailto|tel|callto|cid|xmpp|data):|[^a-z]|[a-z+.\-]+(?:[^a-z+.\-:]|$))/i,
+                        })
+                      }} />
+                    </div>
+                    <p className="text-[10px] text-muted-foreground">
+                      * JS is not executed in preview for security. CSS is applied.
+                    </p>
+                  </div>
+                )}
+
               </div>
 
               <DialogFooter>
@@ -549,6 +692,23 @@ export default function Notes() {
           tableName="notes"
           onImportComplete={fetchNotesAndUnits}
         />
+
+        <AlertDialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>Are you sure?</AlertDialogTitle>
+              <AlertDialogDescription>
+                This action cannot be undone. This will permanently delete the note.
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel>Cancel</AlertDialogCancel>
+              <AlertDialogAction onClick={confirmDelete} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
+                Delete
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
       </div>
     </AdminLayout>
   );

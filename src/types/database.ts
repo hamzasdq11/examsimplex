@@ -78,6 +78,8 @@ export interface Note {
   chapter_title: string;
   points: any[];
   html_content: string | null;
+  css_content: string | null;
+  js_content: string | null;
   order_index: number;
   created_at: string;
   updated_at: string;

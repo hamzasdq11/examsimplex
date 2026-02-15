@@ -46,6 +46,7 @@ import { AddToLibraryButton } from "@/components/AddToLibraryButton";
 import { AddToStudylistButton } from "@/components/AddToStudylistButton";
 import { SubjectAIChat } from "@/components/SubjectAIChat";
 import { MCQPractice } from "@/components/MCQPractice";
+import { NoteViewer } from "@/components/NoteViewer";
 
 interface NoteWithUnit extends Note {
   units: Unit;
@@ -546,34 +547,7 @@ const SubjectPage = () => {
                                           <CardTitle className="text-base">{note.chapter_title}</CardTitle>
                                         </CardHeader>
                                         <CardContent>
-                                          {note.html_content ? (
-                                            <div
-                                              className="prose prose-sm max-w-none dark:prose-invert"
-                                              dangerouslySetInnerHTML={{
-                                                __html: DOMPurify.sanitize(note.html_content, {
-                                                  ADD_TAGS: ['img', 'style', 'center', 'font'],
-                                                  ADD_ATTR: ['src', 'alt', 'style', 'class', 'width', 'height', 'align', 'face', 'size', 'color'],
-                                                  ALLOWED_URI_REGEXP: /^(?:(?:(?:f|ht)tps?|mailto|tel|callto|cid|xmpp|data):|[^a-z]|[a-z+.\-]+(?:[^a-z+.\-:]|$))/i,
-                                                }),
-                                              }}
-                                            />
-                                          ) : (
-                                            <ul className="space-y-2">
-                                              {(note.points as string[]).map((point, idx) => (
-                                                <li
-                                                  key={idx}
-                                                  className="flex items-start gap-2 text-sm text-muted-foreground"
-                                                >
-                                                  <span className="h-1.5 w-1.5 rounded-full bg-primary/50 mt-1.5 shrink-0" />
-                                                  <span
-                                                    dangerouslySetInnerHTML={{
-                                                      __html: DOMPurify.sanitize(point),
-                                                    }}
-                                                  />
-                                                </li>
-                                              ))}
-                                            </ul>
-                                          )}
+                                          <NoteViewer note={note} />
                                         </CardContent>
                                       </Card>
                                     ))}
