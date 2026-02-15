@@ -1,4 +1,4 @@
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useCallback } from 'react';
 import DOMPurify from 'dompurify';
 import type { Note } from '@/types/database';
 
@@ -7,50 +7,101 @@ interface NoteViewerProps {
 }
 
 export const NoteViewer = ({ note }: NoteViewerProps) => {
-    const containerRef = useRef<HTMLDivElement>(null);
+    const iframeRef = useRef<HTMLIFrameElement>(null);
+    const messageId = `note-iframe-${note.id}`;
+
+    // Listen for height messages from the iframe
+    const handleMessage = useCallback((event: MessageEvent) => {
+        if (event.data?.type === 'resize' && event.data?.id === messageId) {
+            const iframe = iframeRef.current;
+            if (iframe) {
+                iframe.style.height = event.data.height + 'px';
+            }
+        }
+        // Handle link clicks - open in parent window
+        if (event.data?.type === 'navigate' && event.data?.id === messageId) {
+            window.open(event.data.url, '_blank', 'noopener');
+        }
+    }, [messageId]);
 
     useEffect(() => {
-        if (!note.js_content || !containerRef.current) return;
+        window.addEventListener('message', handleMessage);
+        return () => window.removeEventListener('message', handleMessage);
+    }, [handleMessage]);
 
-        // Create a new script element
-        const script = document.createElement('script');
-        script.text = note.js_content;
-        script.async = true;
+    useEffect(() => {
+        const iframe = iframeRef.current;
+        if (!iframe || !note.html_content) return;
 
-        // Append it to the container to execute it
-        // We append to the specific container to try to keep it scoped-ish, 
-        // though JS is always global window scope unless using shadow DOM or iframes.
-        containerRef.current.appendChild(script);
+        const sanitizedHTML = DOMPurify.sanitize(note.html_content, {
+            ADD_TAGS: ['img', 'style', 'center', 'font'],
+            ADD_ATTR: ['src', 'alt', 'style', 'class', 'width', 'height', 'align', 'face', 'size', 'color', 'id'],
+            ALLOWED_URI_REGEXP: /^(?:(?:(?:f|ht)tps?|mailto|tel|callto|cid|xmpp|data):|[^a-z]|[a-z+.\-]+(?:[^a-z+.\-:]|$))/i,
+        });
 
-        return () => {
-            // Cleanup script if needed? 
-            // Usually removing the script tag doesn't undo the JS execution, 
-            // but it keeps the DOM clean.
-            if (containerRef.current && containerRef.current.contains(script)) {
-                containerRef.current.removeChild(script);
-            }
-        };
-    }, [note.js_content]);
+        const srcdoc = `<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<style>
+  html, body {
+    margin: 0;
+    padding: 0;
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+    font-size: 14px;
+    line-height: 1.6;
+    color: #1a1a1a;
+    overflow: hidden;
+    background: transparent;
+  }
+  img { max-width: 100%; height: auto; }
+  a { color: #2563eb; }
+</style>
+${note.css_content ? `<style>${note.css_content}</style>` : ''}
+</head>
+<body>
+${sanitizedHTML}
+${note.js_content ? `<script>${note.js_content}<\/script>` : ''}
+<script>
+  // Send height to parent for auto-resize
+  function sendHeight() {
+    var height = document.documentElement.scrollHeight;
+    parent.postMessage({ type: 'resize', id: '${messageId}', height: height }, '*');
+  }
+  sendHeight();
+  // Observe DOM changes for dynamic content
+  new MutationObserver(sendHeight).observe(document.body, { childList: true, subtree: true, attributes: true });
+  // Also resize on image load
+  document.querySelectorAll('img').forEach(function(img) {
+    img.addEventListener('load', sendHeight);
+  });
+  window.addEventListener('resize', sendHeight);
+
+  // Intercept link clicks and send to parent
+  document.addEventListener('click', function(e) {
+    var link = e.target.closest('a');
+    if (link && link.href) {
+      e.preventDefault();
+      parent.postMessage({ type: 'navigate', id: '${messageId}', url: link.href }, '*');
+    }
+  });
+<\/script>
+</body>
+</html>`;
+
+        iframe.srcdoc = srcdoc;
+    }, [note.html_content, note.css_content, note.js_content, messageId]);
 
     if (note.html_content) {
         return (
-            <div ref={containerRef} className="space-y-4 w-full overflow-hidden" id={`note-content-${note.id}`}>
-                {note.css_content && (
-                    <style dangerouslySetInnerHTML={{
-                        __html: `@scope (#note-content-${note.id}) {
-                            ${note.css_content}
-                        }`
-                    }} />
-                )}
-                <div
-                    className="prose prose-sm max-w-none dark:prose-invert w-full overflow-x-auto"
-                    dangerouslySetInnerHTML={{
-                        __html: DOMPurify.sanitize(note.html_content, {
-                            ADD_TAGS: ['img', 'style', 'center', 'font'],
-                            ADD_ATTR: ['src', 'alt', 'style', 'class', 'width', 'height', 'align', 'face', 'size', 'color', 'id'],
-                            ALLOWED_URI_REGEXP: /^(?:(?:(?:f|ht)tps?|mailto|tel|callto|cid|xmpp|data):|[^a-z]|[a-z+.\-]+(?:[^a-z+.\-:]|$))/i,
-                        }),
-                    }}
+            <div className="w-full overflow-hidden">
+                <iframe
+                    ref={iframeRef}
+                    sandbox="allow-scripts"
+                    className="w-full border-0"
+                    style={{ minHeight: '50px', overflow: 'hidden' }}
+                    title={note.chapter_title}
                 />
             </div>
         );
