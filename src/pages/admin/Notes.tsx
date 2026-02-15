@@ -30,10 +30,12 @@ import {
 } from '@/components/ui/select';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { useToast } from '@/hooks/use-toast';
-import { Plus, Pencil, Trash2, Loader2, Search, Upload, AlertCircle } from 'lucide-react';
+import { Plus, Pencil, Trash2, Loader2, Search, Upload, AlertCircle, FileText } from 'lucide-react';
 import { BulkImportDialog } from '@/components/admin/BulkImportDialog';
 import { useAdminContext } from '@/contexts/AdminContext';
 import type { Subject, Unit } from '@/types/database';
+import * as mammoth from 'mammoth';
+import DOMPurify from 'dompurify';
 
 export default function Notes() {
   const {
@@ -62,6 +64,7 @@ export default function Notes() {
     unit_id: '',
     chapter_title: '',
     points: '',
+    html_content: '',
     order_index: 0,
   });
   const [saving, setSaving] = useState(false);
@@ -150,6 +153,53 @@ export default function Notes() {
     }
   }
 
+  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    try {
+      let htmlContent = '';
+
+      if (file.name.endsWith('.docx')) {
+        const arrayBuffer = await file.arrayBuffer();
+
+        const options = {
+          styleMap: [
+            "p[style-name='Heading 1'] => h1:fresh",
+            "p[style-name='Heading 2'] => h2:fresh",
+            "p[style-name='Heading 3'] => h3:fresh",
+            "p[style-name='Heading 4'] => h4:fresh",
+            "p[style-name='List Paragraph'] => li:fresh",
+            "b => strong"
+          ]
+        };
+
+        const result = await mammoth.convertToHtml({ arrayBuffer }, options);
+        htmlContent = result.value;
+
+        if (result.messages.length > 0) {
+          console.log("Mammoth messages:", result.messages);
+        }
+      } else if (file.name.endsWith('.html') || file.name.endsWith('.htm')) {
+        htmlContent = await file.text();
+      } else {
+        toast({ title: "Error", description: "Unsupported file type", variant: "destructive" });
+        return;
+      }
+
+      setFormData(prev => ({
+        ...prev,
+        html_content: htmlContent,
+      }));
+
+      toast({ title: "Success", description: "File loaded successfully" });
+    } catch (error) {
+      console.error("Error reading file:", error);
+      toast({ title: "Error", description: "Failed to read file", variant: "destructive" });
+    }
+  };
+
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setSaving(true);
@@ -168,6 +218,7 @@ export default function Notes() {
         unit_id: formData.unit_id,
         chapter_title: formData.chapter_title,
         points: pointsData,
+        html_content: formData.html_content || null, // Create this column in DB if not exists
         order_index: formData.order_index,
       };
 
@@ -198,6 +249,7 @@ export default function Notes() {
       unit_id: note.unit_id,
       chapter_title: note.chapter_title,
       points: Array.isArray(note.points) ? JSON.stringify(note.points, null, 2) : '',
+      html_content: note.html_content || '',
       order_index: note.order_index,
     });
     setIsDialogOpen(true);
@@ -220,6 +272,7 @@ export default function Notes() {
       unit_id: units.length > 0 ? units[0].id : '',
       chapter_title: '',
       points: '',
+      html_content: '',
       order_index: notes.length,
     });
   };
@@ -326,7 +379,7 @@ export default function Notes() {
                     <TableRow>
                       <TableHead>Chapter Title</TableHead>
                       <TableHead>Unit</TableHead>
-                      <TableHead>Points</TableHead>
+                      <TableHead>Content Type</TableHead>
                       <TableHead>Order</TableHead>
                       <TableHead className="text-right">Actions</TableHead>
                     </TableRow>
@@ -336,7 +389,18 @@ export default function Notes() {
                       <TableRow key={note.id}>
                         <TableCell className="font-medium">{note.chapter_title}</TableCell>
                         <TableCell>Unit {note.units?.number}: {note.units?.name}</TableCell>
-                        <TableCell>{Array.isArray(note.points) ? note.points.length : 0}</TableCell>
+                        <TableCell>
+                          {note.html_content ? (
+                            <div className="flex items-center gap-1 text-blue-600">
+                              <FileText className="h-4 w-4" />
+                              <span className="text-xs">Rich Text</span>
+                            </div>
+                          ) : (
+                            <div className="flex items-center gap-1 text-slate-500">
+                              <span className="text-xs">Points ({Array.isArray(note.points) ? note.points.length : 0})</span>
+                            </div>
+                          )}
+                        </TableCell>
                         <TableCell>{note.order_index}</TableCell>
                         <TableCell className="text-right">
                           <div className="flex justify-end gap-2">
@@ -359,7 +423,7 @@ export default function Notes() {
 
         {/* Add/Edit Dialog */}
         <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-          <DialogContent className="sm:max-w-[600px]">
+          <DialogContent className="sm:max-w-[700px] max-h-[90vh] overflow-y-auto">
             <DialogHeader>
               <DialogTitle>{editingNote ? 'Edit Note' : 'Add New Note'}</DialogTitle>
             </DialogHeader>
@@ -406,15 +470,64 @@ export default function Notes() {
                 />
               </div>
 
-              <div className="space-y-2">
-                <Label htmlFor="points">Points (JSON array or one per line)</Label>
-                <Textarea
-                  id="points"
-                  placeholder='["Point 1", "Point 2"] or one point per line'
-                  value={formData.points}
-                  onChange={(e) => setFormData({ ...formData, points: e.target.value })}
-                  rows={6}
-                />
+              <div className="p-4 border rounded-md bg-muted/20 space-y-4">
+                <div className="flex items-center justify-between">
+                  <Label className="text-base font-semibold">Content Source</Label>
+                  {formData.html_content && (
+                    <Button
+                      type="button"
+                      variant="destructive"
+                      size="sm"
+                      onClick={() => setFormData(prev => ({ ...prev, html_content: '' }))}
+                    >
+                      Clear Rich Text
+                    </Button>
+                  )}
+                </div>
+
+                <div className="grid gap-6">
+                  {/* File Upload */}
+                  <div className="space-y-2">
+                    <Label htmlFor="file-upload">Upload File (.docx or .html)</Label>
+                    <Input
+                      id="file-upload"
+                      type="file"
+                      accept=".docx,.html,.htm"
+                      onChange={handleFileUpload}
+                      className="cursor-pointer"
+                    />
+                    <p className="text-xs text-muted-foreground">
+                      Upload a .docx or .html file to convert it to formatted notes.
+                    </p>
+                  </div>
+
+                  {formData.html_content ? (
+                    <div className="space-y-2">
+                      <Label>Preview HTML Content</Label>
+                      <div className="h-60 overflow-y-auto w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background prose prose-sm max-w-none dark:prose-invert">
+                        <div dangerouslySetInnerHTML={{
+                          __html: DOMPurify.sanitize(formData.html_content, {
+                            ADD_TAGS: ['img', 'style', 'center', 'font'],
+                            ADD_ATTR: ['src', 'alt', 'style', 'class', 'width', 'height', 'align', 'face', 'size', 'color'],
+                            ALLOWED_URI_REGEXP: /^(?:(?:(?:f|ht)tps?|mailto|tel|callto|cid|xmpp|data):|[^a-z]|[a-z+.\-]+(?:[^a-z+.\-:]|$))/i,
+                          })
+                        }} />
+                      </div>
+                    </div>
+                  ) : (
+                    /* Fallback to Points */
+                    <div className="space-y-2">
+                      <Label htmlFor="points">Manual Points (JSON array or one per line)</Label>
+                      <Textarea
+                        id="points"
+                        placeholder='["Point 1", "Point 2"] or one point per line'
+                        value={formData.points}
+                        onChange={(e) => setFormData({ ...formData, points: e.target.value })}
+                        rows={6}
+                      />
+                    </div>
+                  )}
+                </div>
               </div>
 
               <DialogFooter>

@@ -77,6 +77,7 @@ export interface Note {
   unit_id: string;
   chapter_title: string;
   points: any[];
+  html_content: string | null;
   order_index: number;
   created_at: string;
   updated_at: string;
