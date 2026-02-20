@@ -207,7 +207,7 @@ export default function Dashboard() {
               </div>
 
               {/* Hero Banner */}
-               <AIBriefingHero
+              <AIBriefingHero
                 userName={profile.full_name || 'Student'}
                 userEmail={user.email || ''}
                 universityName={profile.university?.name || null}
@@ -260,18 +260,20 @@ export default function Dashboard() {
             </main>
 
             {/* Right Sidebar */}
-            <DashboardRightSidebar
-              userName={profile.full_name || 'Student'}
-              userEmail={user.email || ''}
-              universityName={profile.university?.name || null}
-              subjectsCount={subjects.length}
-              notesViewed={stats.notesViewed}
-              pyqsPracticed={stats.pyqsPracticed}
-              aiSessions={stats.aiSessions}
-              readinessPercent={readiness}
-              focus={focus}
-              focusLoading={focusLoading}
-            />
+            {!isAIPanelOpen && (
+              <DashboardRightSidebar
+                userName={profile.full_name || 'Student'}
+                userEmail={user.email || ''}
+                universityName={profile.university?.name || null}
+                subjectsCount={subjects.length}
+                notesViewed={stats.notesViewed}
+                pyqsPracticed={stats.pyqsPracticed}
+                aiSessions={stats.aiSessions}
+                readinessPercent={readiness}
+                focus={focus}
+                focusLoading={focusLoading}
+              />
+            )}
           </div>
         </ResizableAIPanel>
       </div>

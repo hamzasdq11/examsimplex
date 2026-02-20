@@ -32,7 +32,7 @@ export function ResizableAIPanel({
   messages,
   onMessagesChange
 }: ResizableAIPanelProps) {
-  const [defaultSize, setDefaultSize] = useState(25);
+  const [defaultSize, setDefaultSize] = useState(20);
 
   // Handle escape key for fullscreen
   useEffect(() => {
@@ -111,7 +111,7 @@ export function ResizableAIPanel({
 
       <ResizablePanel
         defaultSize={defaultSize}
-        minSize={25}
+        minSize={20}
         maxSize={60}
         onResize={(size) => setDefaultSize(size)}
         className="bg-background border-l overflow-hidden"

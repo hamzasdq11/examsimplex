@@ -107,6 +107,16 @@ export interface PYQQuestion {
   updated_at: string;
 }
 
+export interface CalendarEvent {
+  id: string;
+  user_id: string;
+  title: string;
+  date: string;
+  event_type: 'exam' | 'reminder' | 'submission' | 'other';
+  color: string;
+  created_at: string;
+}
+
 export interface UserRole {
   id: string;
   user_id: string;

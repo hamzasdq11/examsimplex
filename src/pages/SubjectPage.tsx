@@ -392,406 +392,406 @@ const SubjectPage = () => {
             {/* Main Content Panel */}
             <ResizablePanel defaultSize={76} minSize={50}>
               <ScrollArea className="h-full">
-              <div className="space-y-5 pr-4">
-                {/* Subject Hero Banner */}
-                <Card className="relative overflow-hidden rounded-2xl border-0 bg-gradient-to-r from-[#1a1f4e] via-[#243b8a] to-[#2d5bb9] text-white shadow-lg">
-                  {/* Decorative elements */}
-                  <div className="absolute top-0 right-0 w-40 h-40 bg-white/5 rounded-full -translate-y-1/2 translate-x-1/4" />
-                  <div className="absolute bottom-0 right-20 w-24 h-24 bg-white/5 rounded-full translate-y-1/2" />
-                  <div className="absolute top-1/2 left-1/3 w-16 h-16 bg-white/[0.03] rounded-full" />
+                <div className="space-y-5 pr-4">
+                  {/* Subject Hero Banner */}
+                  <Card className="relative overflow-hidden rounded-2xl border-0 bg-gradient-to-r from-[#1a1f4e] via-[#243b8a] to-[#2d5bb9] text-white shadow-lg">
+                    {/* Decorative elements */}
+                    <div className="absolute top-0 right-0 w-40 h-40 bg-white/5 rounded-full -translate-y-1/2 translate-x-1/4" />
+                    <div className="absolute bottom-0 right-20 w-24 h-24 bg-white/5 rounded-full translate-y-1/2" />
+                    <div className="absolute top-1/2 left-1/3 w-16 h-16 bg-white/[0.03] rounded-full" />
 
-                  <div className="relative p-6 md:p-8 flex flex-col md:flex-row md:items-center md:justify-between gap-5">
-                    <div className="space-y-3 flex-1">
-                      <div className="flex items-center gap-3">
-                        <h1 className="text-2xl md:text-3xl font-bold leading-tight">{subject.name}</h1>
-                        <span className="px-3 py-1 bg-white/15 backdrop-blur-sm rounded-full text-xs font-semibold">
-                          {subject.code}
-                        </span>
-                      </div>
-                      <p className="text-blue-200 text-sm">
-                        {university?.name} &middot; {course?.name} &middot; {semester?.name}
-                      </p>
-
-                      {/* Quick Stats Pills */}
-                      <div className="flex flex-wrap gap-2 pt-1">
-                        <span className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-white/10 backdrop-blur-sm rounded-full text-xs font-medium">
-                          <Award className="h-3 w-3" />
-                          {subject.total_marks} Marks
-                        </span>
-                        <span className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-white/10 backdrop-blur-sm rounded-full text-xs font-medium">
-                          <Timer className="h-3 w-3" />
-                          {subject.duration}
-                        </span>
-                        <span className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-white/10 backdrop-blur-sm rounded-full text-xs font-medium">
-                          <GraduationCap className="h-3 w-3" />
-                          {subject.exam_type}
-                        </span>
-                        <span className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-white/10 backdrop-blur-sm rounded-full text-xs font-medium">
-                          <Layers className="h-3 w-3" />
-                          {units.length} Units
-                        </span>
-                      </div>
-                    </div>
-
-                    {/* Right side actions */}
-                    <div className="flex items-center gap-2 [&_button]:bg-white/15 [&_button]:border-white/20 [&_button]:text-white [&_button]:hover:bg-white/25 [&_button]:backdrop-blur-sm">
-                      <AddToLibraryButton itemId={subject.id} itemType="subject" />
-                      <AddToStudylistButton itemId={subject.id} itemType="subject" />
-                    </div>
-                  </div>
-
-                  {/* Bottom stats bar */}
-                  <div className="relative border-t border-white/10 px-6 md:px-8 py-3 flex items-center gap-6">
-                    <div className="flex items-center gap-2 text-xs text-blue-200">
-                      <Hash className="h-3 w-3" />
-                      <span>Theory: <span className="text-white font-semibold">{subject.theory_marks}</span></span>
-                    </div>
-                    <div className="flex items-center gap-2 text-xs text-blue-200">
-                      <Hash className="h-3 w-3" />
-                      <span>Internal: <span className="text-white font-semibold">{subject.internal_marks}</span></span>
-                    </div>
-                    <div className="flex items-center gap-2 text-xs text-blue-200">
-                      <FileQuestion className="h-3 w-3" />
-                      <span>Questions: <span className="text-white font-semibold">{importantQuestions.length}</span></span>
-                    </div>
-                    <div className="flex items-center gap-2 text-xs text-blue-200">
-                      <FileText className="h-3 w-3" />
-                      <span>PYQs: <span className="text-white font-semibold">{pyqPapers.length}</span></span>
-                    </div>
-                  </div>
-                </Card>
-
-                {/* Tab Navigation */}
-                <div className="flex items-center gap-1.5 bg-white rounded-2xl p-1.5 shadow-sm border border-gray-100/80">
-                  {tabs.map((tab) => {
-                    const Icon = tab.icon;
-                    const isActive = activeTab === tab.id;
-                    return (
-                      <button
-                        key={tab.id}
-                        onClick={() => setActiveTab(tab.id)}
-                        className={cn(
-                          "flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-medium transition-all duration-200 flex-1 justify-center",
-                          isActive
-                            ? "bg-indigo-600 text-white shadow-md shadow-indigo-200"
-                            : "text-gray-500 hover:text-gray-700 hover:bg-gray-50"
-                        )}
-                      >
-                        <Icon className="h-4 w-4" />
-                        <span>{tab.label}</span>
-                        {tab.count !== undefined && tab.count > 0 && (
-                          <span
-                            className={cn(
-                              "text-[10px] font-bold px-1.5 py-0.5 rounded-full min-w-[20px] text-center",
-                              isActive
-                                ? "bg-white/20 text-white"
-                                : "bg-gray-100 text-gray-500"
-                            )}
-                          >
-                            {tab.count}
-                          </span>
-                        )}
-                      </button>
-                    );
-                  })}
-                </div>
-
-                {/* Tab Content */}
-                <div className="mt-1">
-                  {/* Important Questions Tab */}
-                  {activeTab === "questions" && (
-                    <Card className="bg-white rounded-2xl shadow-sm border border-gray-100/80 overflow-hidden">
-                      <div className="p-5 border-b border-gray-100">
+                    <div className="relative p-6 md:p-8 flex flex-col md:flex-row md:items-center md:justify-between gap-5">
+                      <div className="space-y-3 flex-1">
                         <div className="flex items-center gap-3">
-                          <div className="w-9 h-9 rounded-xl bg-indigo-100 flex items-center justify-center">
-                            <FileQuestion className="h-4 w-4 text-indigo-600" />
-                          </div>
-                          <div>
-                            <h2 className="font-bold text-gray-900">Important Questions</h2>
-                            <p className="text-xs text-gray-500">
-                              Frequently asked questions based on previous year patterns
-                            </p>
-                          </div>
+                          <h1 className="text-2xl md:text-3xl font-bold leading-tight">{subject.name}</h1>
+                          <span className="px-3 py-1 bg-white/15 backdrop-blur-sm rounded-full text-xs font-semibold">
+                            {subject.code}
+                          </span>
+                        </div>
+                        <p className="text-blue-200 text-sm">
+                          {university?.name} &middot; {course?.name} &middot; {semester?.name}
+                        </p>
+
+                        {/* Quick Stats Pills */}
+                        <div className="flex flex-wrap gap-2 pt-1">
+                          <span className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-white/10 backdrop-blur-sm rounded-full text-xs font-medium">
+                            <Award className="h-3 w-3" />
+                            {subject.total_marks} Marks
+                          </span>
+                          <span className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-white/10 backdrop-blur-sm rounded-full text-xs font-medium">
+                            <Timer className="h-3 w-3" />
+                            {subject.duration}
+                          </span>
+                          <span className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-white/10 backdrop-blur-sm rounded-full text-xs font-medium">
+                            <GraduationCap className="h-3 w-3" />
+                            {subject.exam_type}
+                          </span>
+                          <span className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-white/10 backdrop-blur-sm rounded-full text-xs font-medium">
+                            <Layers className="h-3 w-3" />
+                            {units.length} Units
+                          </span>
                         </div>
                       </div>
-                      <div className="p-5">
-                        {importantQuestions.length === 0 ? (
-                          <div className="text-center py-12">
-                            <div className="w-14 h-14 rounded-2xl bg-gray-50 flex items-center justify-center mx-auto mb-3">
-                              <FileQuestion className="h-6 w-6 text-gray-300" />
-                            </div>
-                            <p className="text-sm text-gray-500">No important questions available yet</p>
-                          </div>
-                        ) : (
-                          <div className="space-y-3">
-                            {units.map((unit) => {
-                              const unitQuestions = importantQuestions.filter((q) => q.unit_id === unit.id);
-                              if (unitQuestions.length === 0) return null;
 
-                              return (
-                                <Collapsible
-                                  key={unit.id}
-                                  open={openUnits.includes(unit.id)}
-                                  onOpenChange={() => toggleUnit(unit.id)}
-                                >
-                                  <CollapsibleTrigger className="flex items-center justify-between w-full p-3.5 bg-gray-50 rounded-xl hover:bg-gray-100 transition-all duration-200 group">
-                                    <div className="flex items-center gap-3">
-                                      <div className="w-8 h-8 rounded-lg bg-indigo-100 flex items-center justify-center text-xs font-bold text-indigo-600">
-                                        {unit.number}
+                      {/* Right side actions */}
+                      <div className="flex items-center gap-2 [&_button]:bg-white/15 [&_button]:border-white/20 [&_button]:text-white [&_button]:hover:bg-white/25 [&_button]:backdrop-blur-sm">
+                        <AddToLibraryButton itemId={subject.id} itemType="subject" />
+                        <AddToStudylistButton itemId={subject.id} itemType="subject" />
+                      </div>
+                    </div>
+
+                    {/* Bottom stats bar */}
+                    <div className="relative border-t border-white/10 px-6 md:px-8 py-3 flex items-center gap-6">
+                      <div className="flex items-center gap-2 text-xs text-blue-200">
+                        <Hash className="h-3 w-3" />
+                        <span>Theory: <span className="text-white font-semibold">{subject.theory_marks}</span></span>
+                      </div>
+                      <div className="flex items-center gap-2 text-xs text-blue-200">
+                        <Hash className="h-3 w-3" />
+                        <span>Internal: <span className="text-white font-semibold">{subject.internal_marks}</span></span>
+                      </div>
+                      <div className="flex items-center gap-2 text-xs text-blue-200">
+                        <FileQuestion className="h-3 w-3" />
+                        <span>Questions: <span className="text-white font-semibold">{importantQuestions.length}</span></span>
+                      </div>
+                      <div className="flex items-center gap-2 text-xs text-blue-200">
+                        <FileText className="h-3 w-3" />
+                        <span>PYQs: <span className="text-white font-semibold">{pyqPapers.length}</span></span>
+                      </div>
+                    </div>
+                  </Card>
+
+                  {/* Tab Navigation */}
+                  <div className="flex items-center gap-1.5 bg-white rounded-2xl p-1.5 shadow-sm border border-gray-100/80">
+                    {tabs.map((tab) => {
+                      const Icon = tab.icon;
+                      const isActive = activeTab === tab.id;
+                      return (
+                        <button
+                          key={tab.id}
+                          onClick={() => setActiveTab(tab.id)}
+                          className={cn(
+                            "flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-medium transition-all duration-200 flex-1 justify-center",
+                            isActive
+                              ? "bg-indigo-600 text-white shadow-md shadow-indigo-200"
+                              : "text-gray-500 hover:text-gray-700 hover:bg-gray-50"
+                          )}
+                        >
+                          <Icon className="h-4 w-4" />
+                          <span>{tab.label}</span>
+                          {tab.count !== undefined && tab.count > 0 && (
+                            <span
+                              className={cn(
+                                "text-[10px] font-bold px-1.5 py-0.5 rounded-full min-w-[20px] text-center",
+                                isActive
+                                  ? "bg-white/20 text-white"
+                                  : "bg-gray-100 text-gray-500"
+                              )}
+                            >
+                              {tab.count}
+                            </span>
+                          )}
+                        </button>
+                      );
+                    })}
+                  </div>
+
+                  {/* Tab Content */}
+                  <div className="mt-1">
+                    {/* Important Questions Tab */}
+                    {activeTab === "questions" && (
+                      <Card className="bg-white rounded-2xl shadow-sm border border-gray-100/80 overflow-hidden">
+                        <div className="p-5 border-b border-gray-100">
+                          <div className="flex items-center gap-3">
+                            <div className="w-9 h-9 rounded-xl bg-indigo-100 flex items-center justify-center">
+                              <FileQuestion className="h-4 w-4 text-indigo-600" />
+                            </div>
+                            <div>
+                              <h2 className="font-bold text-gray-900">Important Questions</h2>
+                              <p className="text-xs text-gray-500">
+                                Frequently asked questions based on previous year patterns
+                              </p>
+                            </div>
+                          </div>
+                        </div>
+                        <div className="p-5">
+                          {importantQuestions.length === 0 ? (
+                            <div className="text-center py-12">
+                              <div className="w-14 h-14 rounded-2xl bg-gray-50 flex items-center justify-center mx-auto mb-3">
+                                <FileQuestion className="h-6 w-6 text-gray-300" />
+                              </div>
+                              <p className="text-sm text-gray-500">No important questions available yet</p>
+                            </div>
+                          ) : (
+                            <div className="space-y-3">
+                              {units.map((unit) => {
+                                const unitQuestions = importantQuestions.filter((q) => q.unit_id === unit.id);
+                                if (unitQuestions.length === 0) return null;
+
+                                return (
+                                  <Collapsible
+                                    key={unit.id}
+                                    open={openUnits.includes(unit.id)}
+                                    onOpenChange={() => toggleUnit(unit.id)}
+                                  >
+                                    <CollapsibleTrigger className="flex items-center justify-between w-full p-3.5 bg-gray-50 rounded-xl hover:bg-gray-100 transition-all duration-200 group">
+                                      <div className="flex items-center gap-3">
+                                        <div className="w-8 h-8 rounded-lg bg-indigo-100 flex items-center justify-center text-xs font-bold text-indigo-600">
+                                          {unit.number}
+                                        </div>
+                                        <span className="font-semibold text-sm text-gray-900">
+                                          {unit.name}
+                                        </span>
                                       </div>
-                                      <span className="font-semibold text-sm text-gray-900">
-                                        {unit.name}
-                                      </span>
-                                    </div>
-                                    <div className="flex items-center gap-2">
-                                      <span className="text-[11px] font-medium text-gray-400 bg-white px-2.5 py-1 rounded-full border border-gray-100">
-                                        {unitQuestions.length} questions
-                                      </span>
-                                      {openUnits.includes(unit.id) ? (
-                                        <ChevronDown className="h-4 w-4 text-gray-400 transition-transform" />
+                                      <div className="flex items-center gap-2">
+                                        <span className="text-[11px] font-medium text-gray-400 bg-white px-2.5 py-1 rounded-full border border-gray-100">
+                                          {unitQuestions.length} questions
+                                        </span>
+                                        {openUnits.includes(unit.id) ? (
+                                          <ChevronDown className="h-4 w-4 text-gray-400 transition-transform" />
+                                        ) : (
+                                          <ChevronRight className="h-4 w-4 text-gray-400 group-hover:translate-x-0.5 transition-transform" />
+                                        )}
+                                      </div>
+                                    </CollapsibleTrigger>
+                                    <CollapsibleContent className="mt-2 space-y-2 pl-2">
+                                      {unitQuestions.map((q, idx) => (
+                                        <div
+                                          key={q.id}
+                                          className="flex items-start gap-3 p-3.5 bg-white border border-gray-100 rounded-xl hover:border-gray-200 hover:shadow-sm transition-all duration-200"
+                                        >
+                                          <span className="flex items-center justify-center w-6 h-6 rounded-lg bg-gray-50 text-[11px] font-bold text-gray-400 shrink-0 mt-0.5">
+                                            {idx + 1}
+                                          </span>
+                                          <p className="text-sm text-gray-700 flex-1 leading-relaxed">
+                                            {q.question}
+                                          </p>
+                                          <div className="flex items-center gap-1.5 shrink-0">
+                                            <span
+                                              className={cn(
+                                                "text-[10px] font-semibold px-2 py-1 rounded-md border",
+                                                getFrequencyColor(q.frequency)
+                                              )}
+                                            >
+                                              {q.frequency}
+                                            </span>
+                                            <span className="text-[10px] font-bold text-gray-500 bg-gray-50 px-2 py-1 rounded-md">
+                                              {q.marks}M
+                                            </span>
+                                          </div>
+                                        </div>
+                                      ))}
+                                    </CollapsibleContent>
+                                  </Collapsible>
+                                );
+                              })}
+                            </div>
+                          )}
+                        </div>
+                      </Card>
+                    )}
+
+                    {/* Notes Tab */}
+                    {activeTab === "notes" && (
+                      <Card className="bg-white rounded-2xl shadow-sm border border-gray-100/80 overflow-hidden">
+                        <div className="p-5 border-b border-gray-100">
+                          <div className="flex items-center gap-3">
+                            <div className="w-9 h-9 rounded-xl bg-emerald-100 flex items-center justify-center">
+                              <BookOpen className="h-4 w-4 text-emerald-600" />
+                            </div>
+                            <div>
+                              <h2 className="font-bold text-gray-900">Chapter-wise Notes</h2>
+                              <p className="text-xs text-gray-500">
+                                Comprehensive notes organized by units and chapters
+                              </p>
+                            </div>
+                          </div>
+                        </div>
+                        <div className="p-5">
+                          {notes.length === 0 ? (
+                            <div className="text-center py-12">
+                              <div className="w-14 h-14 rounded-2xl bg-gray-50 flex items-center justify-center mx-auto mb-3">
+                                <BookOpen className="h-6 w-6 text-gray-300" />
+                              </div>
+                              <p className="text-sm text-gray-500">No notes available yet</p>
+                            </div>
+                          ) : (
+                            <div className="space-y-3">
+                              {units.map((unit) => {
+                                const unitNotes = notes.filter((n) => n.unit_id === unit.id);
+                                if (unitNotes.length === 0) return null;
+
+                                return (
+                                  <Collapsible
+                                    key={unit.id}
+                                    open={openUnits.includes(unit.id)}
+                                    onOpenChange={() => toggleUnit(unit.id)}
+                                  >
+                                    <CollapsibleTrigger className="flex items-center justify-between w-full p-3.5 bg-gray-50 rounded-xl hover:bg-gray-100 transition-all duration-200 group">
+                                      <div className="flex items-center gap-3">
+                                        <div className="w-8 h-8 rounded-lg bg-emerald-100 flex items-center justify-center text-xs font-bold text-emerald-600">
+                                          {unit.number}
+                                        </div>
+                                        <span className="font-semibold text-sm text-gray-900">
+                                          {unit.name}
+                                        </span>
+                                      </div>
+                                      <div className="flex items-center gap-2">
+                                        <span className="text-[11px] font-medium text-gray-400 bg-white px-2.5 py-1 rounded-full border border-gray-100">
+                                          {unitNotes.length} chapters
+                                        </span>
+                                        {openUnits.includes(unit.id) ? (
+                                          <ChevronDown className="h-4 w-4 text-gray-400 transition-transform" />
+                                        ) : (
+                                          <ChevronRight className="h-4 w-4 text-gray-400 group-hover:translate-x-0.5 transition-transform" />
+                                        )}
+                                      </div>
+                                    </CollapsibleTrigger>
+                                    <CollapsibleContent className="mt-2 space-y-2.5 pl-2">
+                                      {unitNotes.map((note) => (
+                                        <div
+                                          key={note.id}
+                                          className="bg-white border border-gray-100 rounded-xl overflow-hidden hover:border-gray-200 hover:shadow-sm transition-all duration-200"
+                                        >
+                                          <div className="px-4 py-3 border-b border-gray-50 flex items-center gap-2">
+                                            <div className="w-1.5 h-1.5 rounded-full bg-indigo-400" />
+                                            <h3 className="font-semibold text-sm text-gray-900">
+                                              {note.chapter_title}
+                                            </h3>
+                                          </div>
+                                          <div className="p-4">
+                                            <NoteViewer note={note} />
+                                          </div>
+                                        </div>
+                                      ))}
+                                    </CollapsibleContent>
+                                  </Collapsible>
+                                );
+                              })}
+                            </div>
+                          )}
+                        </div>
+                      </Card>
+                    )}
+
+                    {/* PYQ Tab */}
+                    {activeTab === "pyq" && (
+                      <Card className="bg-white rounded-2xl shadow-sm border border-gray-100/80 overflow-hidden">
+                        <div className="p-5 border-b border-gray-100">
+                          <div className="flex items-center gap-3">
+                            <div className="w-9 h-9 rounded-xl bg-amber-100 flex items-center justify-center">
+                              <FileText className="h-4 w-4 text-amber-600" />
+                            </div>
+                            <div>
+                              <h2 className="font-bold text-gray-900">Previous Year Papers</h2>
+                              <p className="text-xs text-gray-500">Download and practice with actual exam papers</p>
+                            </div>
+                          </div>
+                        </div>
+                        <div className="p-5">
+                          {pyqPapers.length === 0 ? (
+                            <div className="text-center py-12">
+                              <div className="w-14 h-14 rounded-2xl bg-gray-50 flex items-center justify-center mx-auto mb-3">
+                                <FileText className="h-6 w-6 text-gray-300" />
+                              </div>
+                              <p className="text-sm text-gray-500">No previous year papers available yet</p>
+                            </div>
+                          ) : (
+                            <div className="space-y-3">
+                              {pyqPapers.map((paper) => (
+                                <Collapsible
+                                  key={paper.id}
+                                  open={openPyqYears.includes(paper.id)}
+                                  onOpenChange={() => togglePyqYear(paper.id)}
+                                >
+                                  <div className="flex items-center justify-between p-3.5 bg-gray-50 rounded-xl hover:bg-gray-100 transition-all duration-200">
+                                    <CollapsibleTrigger className="flex items-center gap-3 flex-1">
+                                      <div className="w-8 h-8 rounded-lg bg-amber-100 flex items-center justify-center">
+                                        <FileText className="h-3.5 w-3.5 text-amber-600" />
+                                      </div>
+                                      <div className="flex items-center gap-2">
+                                        <span className="font-semibold text-sm text-gray-900">{paper.year} Exam</span>
+                                        {paper.paper_code && (
+                                          <span className="text-[10px] font-medium text-gray-400 bg-white px-2 py-0.5 rounded-md border border-gray-100">
+                                            {paper.paper_code}
+                                          </span>
+                                        )}
+                                      </div>
+                                      {openPyqYears.includes(paper.id) ? (
+                                        <ChevronDown className="h-4 w-4 text-gray-400 ml-auto transition-transform" />
                                       ) : (
-                                        <ChevronRight className="h-4 w-4 text-gray-400 group-hover:translate-x-0.5 transition-transform" />
+                                        <ChevronRight className="h-4 w-4 text-gray-400 ml-auto transition-transform" />
+                                      )}
+                                    </CollapsibleTrigger>
+                                    <div className="flex items-center gap-1.5 ml-3">
+                                      {paper.pdf_url && (
+                                        <>
+                                          <a
+                                            href={paper.pdf_url}
+                                            target="_blank"
+                                            rel="noopener noreferrer"
+                                            className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-indigo-600 text-white rounded-lg text-xs font-medium hover:bg-indigo-700 transition-colors shadow-sm"
+                                          >
+                                            <Download className="h-3 w-3" />
+                                            PDF
+                                          </a>
+                                          <button
+                                            onClick={() => {
+                                              const printWindow = window.open(paper.pdf_url!, "_blank");
+                                              if (printWindow) {
+                                                printWindow.onload = () => printWindow.print();
+                                              }
+                                            }}
+                                            className="w-8 h-8 rounded-lg flex items-center justify-center text-gray-400 hover:text-gray-600 hover:bg-white transition-all"
+                                          >
+                                            <Printer className="h-3.5 w-3.5" />
+                                          </button>
+                                        </>
                                       )}
                                     </div>
-                                  </CollapsibleTrigger>
+                                  </div>
                                   <CollapsibleContent className="mt-2 space-y-2 pl-2">
-                                    {unitQuestions.map((q, idx) => (
-                                      <div
-                                        key={q.id}
-                                        className="flex items-start gap-3 p-3.5 bg-white border border-gray-100 rounded-xl hover:border-gray-200 hover:shadow-sm transition-all duration-200"
-                                      >
-                                        <span className="flex items-center justify-center w-6 h-6 rounded-lg bg-gray-50 text-[11px] font-bold text-gray-400 shrink-0 mt-0.5">
-                                          {idx + 1}
-                                        </span>
-                                        <p className="text-sm text-gray-700 flex-1 leading-relaxed">
-                                          {q.question}
-                                        </p>
-                                        <div className="flex items-center gap-1.5 shrink-0">
-                                          <span
-                                            className={cn(
-                                              "text-[10px] font-semibold px-2 py-1 rounded-md border",
-                                              getFrequencyColor(q.frequency)
-                                            )}
-                                          >
-                                            {q.frequency}
+                                    {paper.pyq_questions.length === 0 ? (
+                                      <p className="text-xs text-gray-400 p-3.5">
+                                        Questions not digitized yet. Download the PDF to view.
+                                      </p>
+                                    ) : (
+                                      paper.pyq_questions.map((q, idx) => (
+                                        <div
+                                          key={q.id}
+                                          className="flex items-start gap-3 p-3.5 bg-white border border-gray-100 rounded-xl hover:border-gray-200 hover:shadow-sm transition-all duration-200"
+                                        >
+                                          <span className="flex items-center justify-center w-6 h-6 rounded-lg bg-gray-50 text-[11px] font-bold text-gray-400 shrink-0 mt-0.5">
+                                            {idx + 1}
                                           </span>
-                                          <span className="text-[10px] font-bold text-gray-500 bg-gray-50 px-2 py-1 rounded-md">
+                                          <p className="text-sm text-gray-700 flex-1 leading-relaxed">
+                                            {q.question}
+                                          </p>
+                                          <span className="text-[10px] font-bold text-gray-500 bg-gray-50 px-2 py-1 rounded-md shrink-0">
                                             {q.marks}M
                                           </span>
                                         </div>
-                                      </div>
-                                    ))}
+                                      ))
+                                    )}
                                   </CollapsibleContent>
                                 </Collapsible>
-                              );
-                            })}
-                          </div>
-                        )}
-                      </div>
-                    </Card>
-                  )}
-
-                  {/* Notes Tab */}
-                  {activeTab === "notes" && (
-                    <Card className="bg-white rounded-2xl shadow-sm border border-gray-100/80 overflow-hidden">
-                      <div className="p-5 border-b border-gray-100">
-                        <div className="flex items-center gap-3">
-                          <div className="w-9 h-9 rounded-xl bg-emerald-100 flex items-center justify-center">
-                            <BookOpen className="h-4 w-4 text-emerald-600" />
-                          </div>
-                          <div>
-                            <h2 className="font-bold text-gray-900">Chapter-wise Notes</h2>
-                            <p className="text-xs text-gray-500">
-                              Comprehensive notes organized by units and chapters
-                            </p>
-                          </div>
-                        </div>
-                      </div>
-                      <div className="p-5">
-                        {notes.length === 0 ? (
-                          <div className="text-center py-12">
-                            <div className="w-14 h-14 rounded-2xl bg-gray-50 flex items-center justify-center mx-auto mb-3">
-                              <BookOpen className="h-6 w-6 text-gray-300" />
+                              ))}
                             </div>
-                            <p className="text-sm text-gray-500">No notes available yet</p>
-                          </div>
-                        ) : (
-                          <div className="space-y-3">
-                            {units.map((unit) => {
-                              const unitNotes = notes.filter((n) => n.unit_id === unit.id);
-                              if (unitNotes.length === 0) return null;
-
-                              return (
-                                <Collapsible
-                                  key={unit.id}
-                                  open={openUnits.includes(unit.id)}
-                                  onOpenChange={() => toggleUnit(unit.id)}
-                                >
-                                  <CollapsibleTrigger className="flex items-center justify-between w-full p-3.5 bg-gray-50 rounded-xl hover:bg-gray-100 transition-all duration-200 group">
-                                    <div className="flex items-center gap-3">
-                                      <div className="w-8 h-8 rounded-lg bg-emerald-100 flex items-center justify-center text-xs font-bold text-emerald-600">
-                                        {unit.number}
-                                      </div>
-                                      <span className="font-semibold text-sm text-gray-900">
-                                        {unit.name}
-                                      </span>
-                                    </div>
-                                    <div className="flex items-center gap-2">
-                                      <span className="text-[11px] font-medium text-gray-400 bg-white px-2.5 py-1 rounded-full border border-gray-100">
-                                        {unitNotes.length} chapters
-                                      </span>
-                                      {openUnits.includes(unit.id) ? (
-                                        <ChevronDown className="h-4 w-4 text-gray-400 transition-transform" />
-                                      ) : (
-                                        <ChevronRight className="h-4 w-4 text-gray-400 group-hover:translate-x-0.5 transition-transform" />
-                                      )}
-                                    </div>
-                                  </CollapsibleTrigger>
-                                  <CollapsibleContent className="mt-2 space-y-2.5 pl-2">
-                                    {unitNotes.map((note) => (
-                                      <div
-                                        key={note.id}
-                                        className="bg-white border border-gray-100 rounded-xl overflow-hidden hover:border-gray-200 hover:shadow-sm transition-all duration-200"
-                                      >
-                                        <div className="px-4 py-3 border-b border-gray-50 flex items-center gap-2">
-                                          <div className="w-1.5 h-1.5 rounded-full bg-indigo-400" />
-                                          <h3 className="font-semibold text-sm text-gray-900">
-                                            {note.chapter_title}
-                                          </h3>
-                                        </div>
-                                        <div className="p-4">
-                                          <NoteViewer note={note} />
-                                        </div>
-                                      </div>
-                                    ))}
-                                  </CollapsibleContent>
-                                </Collapsible>
-                              );
-                            })}
-                          </div>
-                        )}
-                      </div>
-                    </Card>
-                  )}
-
-                  {/* PYQ Tab */}
-                  {activeTab === "pyq" && (
-                    <Card className="bg-white rounded-2xl shadow-sm border border-gray-100/80 overflow-hidden">
-                      <div className="p-5 border-b border-gray-100">
-                        <div className="flex items-center gap-3">
-                          <div className="w-9 h-9 rounded-xl bg-amber-100 flex items-center justify-center">
-                            <FileText className="h-4 w-4 text-amber-600" />
-                          </div>
-                          <div>
-                            <h2 className="font-bold text-gray-900">Previous Year Papers</h2>
-                            <p className="text-xs text-gray-500">Download and practice with actual exam papers</p>
-                          </div>
+                          )}
                         </div>
-                      </div>
-                      <div className="p-5">
-                        {pyqPapers.length === 0 ? (
-                          <div className="text-center py-12">
-                            <div className="w-14 h-14 rounded-2xl bg-gray-50 flex items-center justify-center mx-auto mb-3">
-                              <FileText className="h-6 w-6 text-gray-300" />
-                            </div>
-                            <p className="text-sm text-gray-500">No previous year papers available yet</p>
-                          </div>
-                        ) : (
-                          <div className="space-y-3">
-                            {pyqPapers.map((paper) => (
-                              <Collapsible
-                                key={paper.id}
-                                open={openPyqYears.includes(paper.id)}
-                                onOpenChange={() => togglePyqYear(paper.id)}
-                              >
-                                <div className="flex items-center justify-between p-3.5 bg-gray-50 rounded-xl hover:bg-gray-100 transition-all duration-200">
-                                  <CollapsibleTrigger className="flex items-center gap-3 flex-1">
-                                    <div className="w-8 h-8 rounded-lg bg-amber-100 flex items-center justify-center">
-                                      <FileText className="h-3.5 w-3.5 text-amber-600" />
-                                    </div>
-                                    <div className="flex items-center gap-2">
-                                      <span className="font-semibold text-sm text-gray-900">{paper.year} Exam</span>
-                                      {paper.paper_code && (
-                                        <span className="text-[10px] font-medium text-gray-400 bg-white px-2 py-0.5 rounded-md border border-gray-100">
-                                          {paper.paper_code}
-                                        </span>
-                                      )}
-                                    </div>
-                                    {openPyqYears.includes(paper.id) ? (
-                                      <ChevronDown className="h-4 w-4 text-gray-400 ml-auto transition-transform" />
-                                    ) : (
-                                      <ChevronRight className="h-4 w-4 text-gray-400 ml-auto transition-transform" />
-                                    )}
-                                  </CollapsibleTrigger>
-                                  <div className="flex items-center gap-1.5 ml-3">
-                                    {paper.pdf_url && (
-                                      <>
-                                        <a
-                                          href={paper.pdf_url}
-                                          target="_blank"
-                                          rel="noopener noreferrer"
-                                          className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-indigo-600 text-white rounded-lg text-xs font-medium hover:bg-indigo-700 transition-colors shadow-sm"
-                                        >
-                                          <Download className="h-3 w-3" />
-                                          PDF
-                                        </a>
-                                        <button
-                                          onClick={() => {
-                                            const printWindow = window.open(paper.pdf_url!, "_blank");
-                                            if (printWindow) {
-                                              printWindow.onload = () => printWindow.print();
-                                            }
-                                          }}
-                                          className="w-8 h-8 rounded-lg flex items-center justify-center text-gray-400 hover:text-gray-600 hover:bg-white transition-all"
-                                        >
-                                          <Printer className="h-3.5 w-3.5" />
-                                        </button>
-                                      </>
-                                    )}
-                                  </div>
-                                </div>
-                                <CollapsibleContent className="mt-2 space-y-2 pl-2">
-                                  {paper.pyq_questions.length === 0 ? (
-                                    <p className="text-xs text-gray-400 p-3.5">
-                                      Questions not digitized yet. Download the PDF to view.
-                                    </p>
-                                  ) : (
-                                    paper.pyq_questions.map((q, idx) => (
-                                      <div
-                                        key={q.id}
-                                        className="flex items-start gap-3 p-3.5 bg-white border border-gray-100 rounded-xl hover:border-gray-200 hover:shadow-sm transition-all duration-200"
-                                      >
-                                        <span className="flex items-center justify-center w-6 h-6 rounded-lg bg-gray-50 text-[11px] font-bold text-gray-400 shrink-0 mt-0.5">
-                                          {idx + 1}
-                                        </span>
-                                        <p className="text-sm text-gray-700 flex-1 leading-relaxed">
-                                          {q.question}
-                                        </p>
-                                        <span className="text-[10px] font-bold text-gray-500 bg-gray-50 px-2 py-1 rounded-md shrink-0">
-                                          {q.marks}M
-                                        </span>
-                                      </div>
-                                    ))
-                                  )}
-                                </CollapsibleContent>
-                              </Collapsible>
-                            ))}
-                          </div>
-                        )}
-                      </div>
-                    </Card>
-                  )}
+                      </Card>
+                    )}
 
-                  {/* Practice Mode Tab - MCQ */}
-                  {activeTab === "ai" && (
-                    <MCQPractice
-                      subjectId={subject.id}
-                      subjectName={subject.name}
-                      units={units}
-                    />
-                  )}
+                    {/* Practice Mode Tab - MCQ */}
+                    {activeTab === "ai" && (
+                      <MCQPractice
+                        subjectId={subject.id}
+                        subjectName={subject.name}
+                        units={units}
+                      />
+                    )}
+                  </div>
                 </div>
-              </div>
               </ScrollArea>
             </ResizablePanel>
 
@@ -800,7 +800,7 @@ const SubjectPage = () => {
 
             {/* AI Chat Panel */}
             <ResizablePanel
-              defaultSize={24}
+              defaultSize={20}
               minSize={15}
               maxSize={45}
               collapsible
